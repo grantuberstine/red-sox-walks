@@ -58,13 +58,11 @@ export function PlayerProfile({
   walks,
   strikeouts,
   onBack,
-  rangeLabel,
 }: {
   pitcher: PitcherStats;
   walks: WalkRecord[];
   strikeouts: StrikeoutRecord[];
   onBack: () => void;
-  rangeLabel: string;
 }) {
   const fundReport = useMemo(
     () => computeFundReport(walks, strikeouts, { [pitcher.pitcherId]: pitcher }),
@@ -101,7 +99,6 @@ export function PlayerProfile({
           </svg>
           Back to gallery
         </button>
-        <span className="text-[11px] text-[var(--text-muted)]">{rangeLabel}</span>
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">

@@ -133,11 +133,18 @@ export function classifyWooSoxEvents(
       });
     }
     byType.sort((a, b) => b.count - a.count);
+    const line = feed.pitching[pid];
     veloByPitcher[pid] = {
       pitchCount: bucket.all.length,
       avgVelo: Number(avg.toFixed(2)),
       maxVelo: Number(max.toFixed(2)),
       byType,
+      outs: line?.outs ?? 0,
+      walks: line?.walks ?? 0,
+      strikeouts: line?.strikeouts ?? 0,
+      earnedRuns: line?.earnedRuns ?? 0,
+      homeRuns: line?.homeRuns ?? 0,
+      hitByPitch: line?.hitByPitch ?? 0,
     };
   }
 

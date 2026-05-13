@@ -89,6 +89,28 @@ function useIsDark(): boolean {
   return isDark;
 }
 
+// IP shown the way MLB does it: outs/3 with the remainder as ".1" or ".2"
+function formatIp(outs: number | undefined): string {
+  if (!outs) return "—";
+  const innings = Math.floor(outs / 3);
+  const rem = outs % 3;
+  return `${innings}.${rem}`;
+}
+
+// FIP = ((13*HR + 3*(BB+HBP) - 2*K) / IP) + constant
+// Constant ~3.10 is a reasonable approximation; varies by league but
+// good enough for relative comparison between a pitcher's own outings.
+const FIP_CONSTANT = 3.1;
+function computeFip(a: AppearanceVelo): number {
+  if (!a.outs) return 0;
+  const ip = a.outs / 3;
+  const hr = a.homeRuns ?? 0;
+  const bb = a.walks ?? 0;
+  const hbp = a.hitByPitch ?? 0;
+  const k = a.strikeouts ?? 0;
+  return (13 * hr + 3 * (bb + hbp) - 2 * k) / ip + FIP_CONSTANT;
+}
+
 function labelFor(type: string): string {
   return PITCH_TYPE_LABELS[type] ?? type;
 }
@@ -1225,23 +1247,68 @@ function OutingsGrid({
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-1.5">
+            <div className="mt-2 flex items-baseline gap-3 text-[11px] tabular text-[var(--text-secondary)]">
+              <span>
+                <span className="font-bold text-[var(--text)]">{a.pitchCount}</span>{" "}
+                pitches
+              </span>
+              {fbAvg !== null && (
+                <span>
+                  <span className="font-bold text-[var(--text)]">
+                    {fbAvg.toFixed(1)}
+                  </span>{" "}
+                  FB
+                </span>
+              )}
+              <span>
+                <span
+                  className={`font-bold ${
+                    isBestMax
+                      ? "text-[var(--color-sox-red)] dark:text-red-400"
+                      : "text-[var(--text)]"
+                  }`}
+                >
+                  {a.maxVelo.toFixed(1)}
+                </span>{" "}
+                max
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-4 gap-1.5">
+              <MiniStat label="IP" value={formatIp(a.outs)} />
+              <MiniStat label="BB" value={a.walks ?? 0} />
+              <MiniStat label="K" value={a.strikeouts ?? 0} />
               <MiniStat
-                label="Pitches"
-                value={a.pitchCount}
-                accent={isBestPitches}
+                label="ERA"
+                value={
+                  a.outs > 0
+                    ? (((a.earnedRuns ?? 0) * 27) / a.outs).toFixed(2)
+                    : "—"
+                }
+              />
+            </div>
+            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+              <MiniStat
+                label="K/9"
+                value={
+                  a.outs > 0
+                    ? (((a.strikeouts ?? 0) * 27) / a.outs).toFixed(1)
+                    : "—"
+                }
               />
               <MiniStat
-                label="FB avg"
-                value={fbAvg !== null ? fbAvg.toFixed(1) : "—"}
-                suffix={fbAvg !== null ? "mph" : ""}
+                label="BB/9"
+                value={
+                  a.outs > 0
+                    ? (((a.walks ?? 0) * 27) / a.outs).toFixed(1)
+                    : "—"
+                }
               />
               <MiniStat
-                label="Max"
-                value={a.maxVelo.toFixed(1)}
-                suffix="mph"
-                accent={isBestMax}
+                label="FIP"
+                value={a.outs > 0 ? computeFip(a).toFixed(2) : "—"}
               />
+              <MiniStat label="HR" value={a.homeRuns ?? 0} />
             </div>
 
             {a.byType.length > 0 && (
@@ -1267,6 +1334,7 @@ function OutingsGrid({
                 <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-[var(--text-secondary)]">
                   {a.byType.slice(0, 5).map((t) => {
                     const c = colorFor(t.type);
+                    const pct = (t.count / a.pitchCount) * 100;
                     return (
                       <span
                         key={t.type}
@@ -1277,7 +1345,7 @@ function OutingsGrid({
                           style={{ background: isDark ? c.dark : c.light }}
                         />
                         {labelFor(t.type)}{" "}
-                        <span className="tabular">{t.count}</span>
+                        <span className="tabular">{pct.toFixed(0)}%</span>
                       </span>
                     );
                   })}

@@ -359,7 +359,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
                   walks={filteredWalks}
                   strikeouts={filteredK}
                   onBack={() => setProfileId(null)}
-                  rangeLabel={RANGE_LABELS[range]}
                 />
               ) : (
                 <PlayersGallery

@@ -74,6 +74,13 @@ export type AppearanceVelo = {
   avgVelo: number;
   maxVelo: number;
   byType: PitchTypeStats[];
+  // Per-outing pitching line (from MLB boxscore)
+  outs: number;
+  walks: number;
+  strikeouts: number;
+  earnedRuns: number;
+  homeRuns: number;
+  hitByPitch: number;
 };
 
 export type SeasonState = {

@@ -51,11 +51,21 @@ export async function fetchWooSoxSchedule(
   return games;
 }
 
+export type BoxscorePitching = {
+  outs: number;
+  walks: number;
+  strikeouts: number;
+  earnedRuns: number;
+  homeRuns: number;
+  hitByPitch: number;
+};
+
 export type LiveFeed = {
   gamePk: number;
   homeTeamId: number;
   awayTeamId: number;
   plays: LivePlay[];
+  pitching: Record<number, BoxscorePitching>;
 };
 
 export type LivePlay = {
@@ -126,11 +136,37 @@ export async function fetchGameFeed(gamePk: number): Promise<LiveFeed> {
         );
       }
       const data = await res.json();
+      const pitching: Record<number, BoxscorePitching> = {};
+      const teams = data.liveData?.boxscore?.teams ?? {};
+      for (const side of [teams.home, teams.away]) {
+        const players = side?.players ?? {};
+        for (const player of Object.values(players) as Array<{
+          person?: { id?: number };
+          stats?: { pitching?: Record<string, number> };
+        }>) {
+          const pid = player?.person?.id;
+          const pit = player?.stats?.pitching;
+          if (!pid || !pit) continue;
+          const outs = (pit.outs as number) ?? 0;
+          const bb = (pit.baseOnBalls as number) ?? 0;
+          const k = (pit.strikeOuts as number) ?? 0;
+          if (outs === 0 && bb === 0 && k === 0) continue;
+          pitching[pid] = {
+            outs,
+            walks: bb,
+            strikeouts: k,
+            earnedRuns: (pit.earnedRuns as number) ?? 0,
+            homeRuns: (pit.homeRuns as number) ?? 0,
+            hitByPitch: (pit.hitByPitch as number) ?? 0,
+          };
+        }
+      }
       return {
         gamePk,
         homeTeamId: data.gameData?.teams?.home?.id,
         awayTeamId: data.gameData?.teams?.away?.id,
         plays: (data.liveData?.plays?.allPlays ?? []) as LivePlay[],
+        pitching,
       };
     } catch (e) {
       lastErr = e;
