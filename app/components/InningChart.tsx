@@ -1,0 +1,58 @@
+"use client";
+
+type Bin = { inning: number; count: number };
+
+export function InningChart({ data }: { data: Bin[] }) {
+  const max = Math.max(1, ...data.map((d) => d.count));
+  const total = data.reduce((s, d) => s + d.count, 0);
+  if (total === 0) {
+    return (
+      <div className="px-5 py-8 text-center text-sm text-slate-500">
+        No walks to bin by inning.
+      </div>
+    );
+  }
+  return (
+    <div className="px-4 pb-4 pt-2">
+      <div className="mb-2 flex items-baseline justify-between text-[11px] text-slate-500">
+        <span>Walks by inning</span>
+        <span className="tabular">
+          peak inning {data.reduce((a, b) => (b.count > a.count ? b : a)).inning}
+        </span>
+      </div>
+      <div className="grid grid-cols-9 gap-1">
+        {data.slice(0, 9).map((d) => {
+          const h = Math.max(6, Math.round((d.count / max) * 88));
+          return (
+            <div key={d.inning} className="flex flex-col items-center gap-1">
+              <div className="flex h-24 w-full items-end">
+                <div
+                  className="w-full rounded-t bg-[var(--color-sox-red)]/70 transition-all hover:bg-[var(--color-sox-red)]"
+                  style={{ height: `${h}px` }}
+                  title={`Inning ${d.inning}: ${d.count} walks`}
+                />
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="text-[10px] font-semibold tabular text-[var(--color-sox-navy)]">
+                  {d.count}
+                </div>
+                <div className="text-[10px] text-slate-500 tabular">
+                  {d.inning}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {data.some((d) => d.inning > 9) && (
+        <div className="mt-2 text-[10px] text-slate-400">
+          Extra innings:{" "}
+          {data
+            .filter((d) => d.inning > 9 && d.count > 0)
+            .map((d) => `${d.inning}=${d.count}`)
+            .join(", ")}
+        </div>
+      )}
+    </div>
+  );
+}

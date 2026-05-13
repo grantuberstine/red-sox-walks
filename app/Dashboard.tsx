@@ -3,17 +3,26 @@
 import { useMemo, useState } from "react";
 import type { SeasonState } from "@/lib/types";
 import {
+  CATEGORY_LABELS,
+  CategoryFilter,
   RANGE_LABELS,
   RangeKey,
   aggregateByPitcher,
+  computeInsights,
   filterWalks,
   formatRangeContext,
 } from "@/lib/filters";
 import { PitcherTable } from "./PitcherTable";
+import { PitcherCards } from "./components/PitcherCards";
 import { CategoryLeaders } from "./components/CategoryLeaders";
 import { RecentWalksFeed } from "./components/RecentWalksFeed";
 import { FilterBar } from "./components/FilterBar";
 import { HeroBar } from "./components/HeroBar";
+import { CategoryChips } from "./components/CategoryChips";
+import { ViewToggle, type ViewMode } from "./components/ViewToggle";
+import { TrendChart } from "./components/TrendChart";
+import { InningChart } from "./components/InningChart";
+import { InsightsRow } from "./components/InsightsRow";
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "never";
@@ -32,10 +41,12 @@ function pluralize(n: number, s: string, p: string): string {
 export function Dashboard({ state }: { state: SeasonState }) {
   const [range, setRange] = useState<RangeKey>("season");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [view, setView] = useState<ViewMode>("table");
 
   const filteredWalks = useMemo(
-    () => filterWalks(state.walks, range, state, query),
-    [state, range, query],
+    () => filterWalks(state.walks, range, state, query, category),
+    [state, range, query, category],
   );
 
   const filteredPitchers = useMemo(
@@ -63,8 +74,14 @@ export function Dashboard({ state }: { state: SeasonState }) {
     [filteredPitchers],
   );
 
+  const insights = useMemo(
+    () => computeInsights(filteredWalks),
+    [filteredWalks],
+  );
+
   const rangeContext = formatRangeContext(range, state);
-  const isFiltered = range !== "season" || query.trim().length > 0;
+  const isFiltered =
+    range !== "season" || query.trim().length > 0 || category !== "all";
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-10">
@@ -87,8 +104,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
             <span>
               {pluralize(state.meta.totalGames, "game", "games")} ·{" "}
               {pluralize(state.meta.totalWalks, "walk", "walks")} ·{" "}
-              {pluralize(Object.keys(state.pitchers).length, "pitcher", "pitchers")}{" "}
-              tracked
+              {pluralize(Object.keys(state.pitchers).length, "pitcher", "pitchers")}
             </span>
             <span className="tabular">
               Last refresh: {formatTimestamp(state.meta.lastRefreshAt)}
@@ -97,7 +113,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
         </div>
       </header>
 
-      <section className="fade-in mb-4">
+      <section className="fade-in mb-3">
         <FilterBar
           range={range}
           onRangeChange={setRange}
@@ -106,6 +122,13 @@ export function Dashboard({ state }: { state: SeasonState }) {
           rangeContext={rangeContext}
           resultCount={filteredWalks.length}
         />
+      </section>
+
+      <section className="fade-in mb-5">
+        <CategoryChips value={category} onChange={setCategory} />
+        <div className="mt-1 text-[10px] text-slate-400">
+          Showing {CATEGORY_LABELS[category].toLowerCase()}
+        </div>
       </section>
 
       <section className="fade-in mb-5">
@@ -122,6 +145,29 @@ export function Dashboard({ state }: { state: SeasonState }) {
       </section>
 
       <section className="fade-in mb-5">
+        <InsightsRow insights={insights} />
+      </section>
+
+      <section className="fade-in mb-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
+              Walks Per Game
+            </h3>
+          </div>
+          <TrendChart data={insights.walksByGame} />
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
+              Walks By Inning
+            </h3>
+          </div>
+          <InningChart data={insights.walksByInning} />
+        </div>
+      </section>
+
+      <section className="fade-in mb-5">
         <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">
           <span>Walk Hall of Shame</span>
           <span className="opacity-60">· {RANGE_LABELS[range]}</span>
@@ -132,29 +178,38 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
       <section className="fade-in mb-5">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-            <div>
+          <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-3">
+            <div className="min-w-0 flex-1">
               <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
                 Pitcher Leaderboard
               </h2>
               <p className="mt-0.5 text-[11px] text-slate-500">
                 {filteredPitchers.length === 0
                   ? "No matching pitchers"
-                  : `${filteredPitchers.length} ${filteredPitchers.length === 1 ? "pitcher" : "pitchers"} · click any row for walk detail`}
+                  : `${filteredPitchers.length} ${filteredPitchers.length === 1 ? "pitcher" : "pitchers"} · tap any row for detail`}
               </p>
             </div>
-            {isFiltered && (
-              <span className="rounded-full bg-[var(--color-sox-red)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-sox-red)]">
-                filtered
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {isFiltered && (
+                <span className="rounded-full bg-[var(--color-sox-red)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-sox-red)]">
+                  filtered
+                </span>
+              )}
+              <ViewToggle value={view} onChange={setView} />
+            </div>
           </div>
           {filteredPitchers.length === 0 ? (
             <EmptyState query={query} range={RANGE_LABELS[range]} />
-          ) : (
+          ) : view === "table" ? (
             <PitcherTable
               pitchers={filteredPitchers}
               allWalks={filteredWalks}
+            />
+          ) : (
+            <PitcherCards
+              pitchers={filteredPitchers}
+              allWalks={filteredWalks}
+              query={query}
             />
           )}
         </div>
@@ -168,8 +223,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
             </h2>
             <p className="mt-0.5 text-[11px] text-slate-500">
               {filteredWalks.length === 0
-                ? "No walks in this range"
-                : `${filteredWalks.length} ${filteredWalks.length === 1 ? "walk" : "walks"} · most recent first`}
+                ? "No walks in this filter"
+                : `${filteredWalks.length} ${filteredWalks.length === 1 ? "walk" : "walks"} · newest first`}
             </p>
           </div>
           <RecentWalksFeed walks={filteredWalks} limit={30} />
