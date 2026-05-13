@@ -420,11 +420,7 @@ function WalksView({
         eventLabel="walks"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
-        totalSub={
-          totals.total > 0
-            ? `${feeCount} fee triggers across 4 categories`
-            : undefined
-        }
+        totalSub={undefined}
         breakdown={[
           { label: "4-Pitch", value: totals.fourPitch, tone: "neutral" },
           { label: "0-2", value: totals.ohTwo, tone: "neutral" },

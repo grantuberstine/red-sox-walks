@@ -144,7 +144,7 @@ export function PlayerProfile({
           <MoneyCard
             label="Owes the fund"
             value={formatMoney(fees)}
-            sub={`${pitcher.fourPitchWalks + pitcher.ohTwoWalks + pitcher.leadoffWalks + pitcher.twoOutWalks} fee triggers · $1 each`}
+            sub="$1 per walk category"
             tone="rose"
           />
         </div>

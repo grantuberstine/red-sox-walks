@@ -79,22 +79,15 @@ export function FundView({
           )}
         </div>
 
-        <div className="mt-3 text-[10px] uppercase tracking-widest text-white/50">
-          {rangeLabel} · {report.entries.length} pitchers on the books
-        </div>
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <div className="border-b border-[var(--border)] px-5 py-3">
           <h2 className="text-sm font-bold text-[var(--text)]">The Rules</h2>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Two separate ledgers — they don&apos;t cancel out.
-          </p>
         </div>
         <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
           <RuleBlock
             title="Players → No Pass Fund"
-            description="Each player pays the fund for every walk that fits one of these:"
             color="rose"
             rules={[
               { label: "4-pitch walk", detail: "Never threw a strike", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
@@ -106,7 +99,6 @@ export function FundView({
           />
           <RuleBlock
             title="Coaches → No Pass Fund"
-            description="Coaches pay the fund for every team K achievement:"
             color="emerald"
             rules={[
               { label: "3-pitch K", detail: "Strikeout in 3 straight strikes", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
@@ -286,13 +278,11 @@ function TopCallout({
 
 function RuleBlock({
   title,
-  description,
   color,
   rules,
   footnote,
 }: {
   title: string;
-  description: string;
   color: "rose" | "emerald";
   rules: Array<{ label: string; detail?: string; amount: string }>;
   footnote: string;
@@ -310,9 +300,6 @@ function RuleBlock({
       <div className={`text-xs font-bold uppercase tracking-wider ${titleColor}`}>
         {title}
       </div>
-      <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-        {description}
-      </p>
       <ul className="mt-3 space-y-2">
         {rules.map((r) => (
           <li
