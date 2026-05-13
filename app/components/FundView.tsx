@@ -13,8 +13,8 @@ import { PitcherAvatar } from "./PitcherAvatar";
 type SortKey = "feesOwed" | "bonusEarned" | "name";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: "feesOwed", label: "Owes most" },
-  { key: "bonusEarned", label: "Earned most" },
+  { key: "feesOwed", label: "Player owes most" },
+  { key: "bonusEarned", label: "Coaches owe most" },
   { key: "name", label: "Name (A→Z)" },
 ];
 
@@ -71,9 +71,9 @@ export function FundView({
           )}
           {topEarner && topEarner.bonusEarned > 0 && (
             <TopCallout
-              title="Top earner (coaches owe)"
+              title="Coaches owe most to"
               entry={topEarner}
-              valueLabel={`${formatMoney(topEarner.bonusEarned)} earned`}
+              valueLabel={`${formatMoney(topEarner.bonusEarned)} owed`}
               tone="emerald"
             />
           )}
