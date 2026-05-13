@@ -72,7 +72,6 @@ export function PlayerProfile({
   const entry = fundReport.entries.find((e) => e.pitcherId === pitcher.pitcherId);
   const fees = entry?.feesOwed ?? 0;
   const bonus = entry?.bonusEarned ?? 0;
-  const net = bonus - fees;
 
   const playerWalks = useMemo(
     () => walks.filter((w) => w.pitcherId === pitcher.pitcherId),
@@ -82,13 +81,6 @@ export function PlayerProfile({
     () => strikeouts.filter((s) => s.pitcherId === pitcher.pitcherId),
     [strikeouts, pitcher.pitcherId],
   );
-
-  const kbb =
-    pitcher.totalStrikeouts === 0
-      ? 0
-      : pitcher.totalWalks === 0
-        ? Infinity
-        : pitcher.totalStrikeouts / pitcher.totalWalks;
 
   return (
     <div className="space-y-5">
@@ -126,12 +118,17 @@ export function PlayerProfile({
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Stat label="Walks" value={pitcher.totalWalks} sub={`${fmt(walksPerNine(pitcher))} BB/9`} />
           <Stat label="Strikeouts" value={pitcher.totalStrikeouts} sub={`${fmt(strikeoutsPerNine(pitcher))} K/9`} />
-          <Stat label="K / BB" value={kbb === Infinity ? "∞" : fmt(kbb)} sub="ratio" />
           <Stat
-            label="Fund net"
-            value={formatMoney(net)}
-            sub={`${formatMoney(bonus)} earned · ${formatMoney(fees)} owed`}
-            tone={net > 0 ? "gold" : net < 0 ? "rose" : "neutral"}
+            label="Owes the fund"
+            value={formatMoney(fees)}
+            sub="From walks"
+            tone="rose"
+          />
+          <Stat
+            label="Coaches owe player"
+            value={formatMoney(bonus)}
+            sub="From K's"
+            tone="emerald"
           />
         </div>
       </section>
@@ -283,12 +280,13 @@ function Stat({
   label: string;
   value: string | number;
   sub: string;
-  tone?: "neutral" | "gold" | "rose";
+  tone?: "neutral" | "gold" | "rose" | "emerald";
 }) {
   const valueClass = {
     neutral: "text-white",
     gold: "text-[var(--color-woo-gold)]",
     rose: "text-rose-200",
+    emerald: "text-emerald-200",
   }[tone];
   return (
     <div className="rounded-xl bg-white/5 px-3 py-2 ring-1 ring-inset ring-white/10">

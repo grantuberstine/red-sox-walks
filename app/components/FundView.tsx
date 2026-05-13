@@ -10,17 +10,22 @@ import {
 } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
 
-type SortKey = "net" | "feesOwed" | "bonusEarned" | "name";
+type SortKey = "feesOwed" | "bonusEarned" | "name";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: "net", label: "Net (best first)" },
-  { key: "feesOwed", label: "Fees owed (most first)" },
-  { key: "bonusEarned", label: "Bonus earned (most first)" },
-  { key: "name", label: "Name (A–Z)" },
+  { key: "feesOwed", label: "Owes most" },
+  { key: "bonusEarned", label: "Earned most" },
+  { key: "name", label: "Name (A→Z)" },
 ];
 
-export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabel: string }) {
-  const [sortKey, setSortKey] = useState<SortKey>("net");
+export function FundView({
+  report,
+  rangeLabel,
+}: {
+  report: FundReport;
+  rangeLabel: string;
+}) {
+  const [sortKey, setSortKey] = useState<SortKey>("feesOwed");
   const sorted = useMemo(() => {
     const rows = [...report.entries];
     rows.sort((a, b) => {
@@ -30,71 +35,66 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
     return rows;
   }, [report.entries, sortKey]);
 
-  const topOwer = [...report.entries].sort((a, b) => b.feesOwed - a.feesOwed)[0];
-  const topEarner = [...report.entries].sort((a, b) => b.bonusEarned - a.bonusEarned)[0];
+  const topOwer = [...report.entries].sort(
+    (a, b) => b.feesOwed - a.feesOwed,
+  )[0];
+  const topEarner = [...report.entries].sort(
+    (a, b) => b.bonusEarned - a.bonusEarned,
+  )[0];
 
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-sox-navy)] via-[var(--color-sox-ink)] to-[#1d2f4b] p-5 text-white shadow-md sm:p-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <BigStat
-            label="Pot"
+            label="Players owe the fund"
             value={formatMoney(report.team.totalFees)}
-            sub={`${report.team.walkCount} walk fees`}
-            tone="red"
+            sub={`${report.team.walkCount} walk fees · ${WALK_FEE_PER_CATEGORY} per category`}
+            tone="rose"
           />
           <BigStat
-            label="Coaches owe"
+            label="Coaches owe players"
             value={formatMoney(report.team.totalBonus)}
-            sub={`${report.team.threePitchCount} 3P-K + ${report.team.sideInningCount} 3UP`}
-            tone="gold"
-          />
-          <BigStat
-            label="Team net"
-            value={formatMoney(report.team.netBalance)}
-            sub={
-              report.team.netBalance > 0
-                ? "Coaches paying out"
-                : report.team.netBalance < 0
-                  ? "Pot growing"
-                  : "Dead even"
-            }
-            tone={report.team.netBalance >= 0 ? "emerald" : "rose"}
-          />
-          <BigStat
-            label="Range"
-            value={rangeLabel}
-            sub={`${report.entries.length} pitchers in book`}
+            sub={`${report.team.threePitchCount} 3-pitch K × $${THREE_PITCH_K_BONUS} + ${report.team.sideInningCount} 3-up-3-down × $${SIDE_K_BONUS}`}
+            tone="emerald"
           />
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {topOwer && topOwer.feesOwed > 0 && (
             <TopCallout
-              title="Top contributor (sorry buddy)"
+              title="Biggest contributor to the fund"
               entry={topOwer}
-              valueLabel={`${formatMoney(topOwer.feesOwed)} owed`}
-              tone="red"
+              valueLabel={`${formatMoney(topOwer.feesOwed)} owes`}
+              tone="rose"
             />
           )}
           {topEarner && topEarner.bonusEarned > 0 && (
             <TopCallout
-              title="Top earner"
+              title="Top earner (coaches owe)"
               entry={topEarner}
               valueLabel={`${formatMoney(topEarner.bonusEarned)} earned`}
-              tone="gold"
+              tone="emerald"
             />
           )}
+        </div>
+
+        <div className="mt-3 text-[10px] uppercase tracking-widest text-white/50">
+          {rangeLabel} · {report.entries.length} pitchers on the books
         </div>
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <div className="border-b border-[var(--border)] px-5 py-3">
           <h2 className="text-sm font-bold text-[var(--text)]">The Rules</h2>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            Two separate ledgers — they don&apos;t cancel out.
+          </p>
         </div>
         <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
           <RuleBlock
-            title="Players pay (No Pass Fund)"
+            title="Players → No Pass Fund"
+            description="Each player pays the fund for every walk that fits one of these:"
             color="rose"
             rules={[
               { label: "4-pitch walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
@@ -102,18 +102,18 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
               { label: "Leadoff walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
               { label: "2-out walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
             ]}
+            footnote="A walk that hits multiple categories gets charged for each."
           />
           <RuleBlock
-            title="Coaches pay (K Bonus)"
+            title="Coaches → Players"
+            description="Coaches owe each pitcher a bonus for these K achievements:"
             color="emerald"
             rules={[
-              { label: "3-pitch K", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
+              { label: "3-pitch strikeout", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
               { label: "3-up-3-down inning", amount: `${formatMoney(SIDE_K_BONUS)} per inning` },
             ]}
+            footnote="Paid out per pitcher — independent of what they owe the fund."
           />
-        </div>
-        <div className="border-t border-[var(--border)] px-5 py-2 text-[10px] text-[var(--text-muted)]">
-          A walk that hits multiple categories gets charged for each one. Coaches pay players net of fees.
         </div>
       </section>
 
@@ -122,23 +122,25 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
           <div>
             <h2 className="text-sm font-bold text-[var(--text)]">Ledger</h2>
             <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              {sorted.length === 0
-                ? "Nobody on the books yet"
-                : `${sorted.length} pitchers · ${rangeLabel.toLowerCase()}`}
+              Two columns: what they owe · what coaches owe them
             </p>
           </div>
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]"
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.key} value={o.key}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+            <span className="font-semibold">Sort</span>
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
+
         <div className="hidden md:block">
           <table className="min-w-full text-sm">
             <thead>
@@ -148,11 +150,14 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
                 <th className="px-3 py-2.5 text-right">0-2</th>
                 <th className="px-3 py-2.5 text-right">LO</th>
                 <th className="px-3 py-2.5 text-right">2O</th>
-                <th className="px-3 py-2.5 text-right text-rose-700">Owes</th>
+                <th className="px-3 py-2.5 text-right text-rose-700">
+                  Player owes
+                </th>
                 <th className="px-3 py-2.5 text-right">3P-K</th>
-                <th className="px-3 py-2.5 text-right">3-up</th>
-                <th className="px-3 py-2.5 text-right text-emerald-700">Earned</th>
-                <th className="px-4 py-2.5 text-right">Net</th>
+                <th className="px-3 py-2.5 text-right">3UP</th>
+                <th className="px-3 py-2.5 text-right text-emerald-700">
+                  Coaches owe
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -165,7 +170,11 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <PitcherAvatar name={e.name} src={e.headshotUrl} size={32} />
+                      <PitcherAvatar
+                        name={e.name}
+                        src={e.headshotUrl}
+                        size={32}
+                      />
                       <span className="font-medium text-[var(--text)]">
                         {e.name}
                       </span>
@@ -175,21 +184,13 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
                   <NumCell value={e.walkBuckets.ohTwo} tint="text-rose-700" />
                   <NumCell value={e.walkBuckets.leadoff} tint="text-sky-700" />
                   <NumCell value={e.walkBuckets.twoOut} tint="text-violet-700" />
-                  <MoneyCell value={e.feesOwed} tint="text-rose-700" />
+                  <MoneyCell value={e.feesOwed} tint="rose" />
                   <NumCell value={e.threePitchKs} tint="text-emerald-700" />
-                  <NumCell value={e.threeUpThreeDownInnings} tint="text-indigo-700" />
-                  <MoneyCell value={e.bonusEarned} tint="text-emerald-700" />
-                  <td
-                    className={`px-4 py-2.5 text-right text-base font-bold tabular ${
-                      e.net > 0
-                        ? "text-emerald-700"
-                        : e.net < 0
-                          ? "text-rose-700"
-                          : "text-[var(--text-muted)]"
-                    }`}
-                  >
-                    {formatMoney(e.net)}
-                  </td>
+                  <NumCell
+                    value={e.threeUpThreeDownInnings}
+                    tint="text-indigo-700"
+                  />
+                  <MoneyCell value={e.bonusEarned} tint="emerald" />
                 </tr>
               ))}
             </tbody>
@@ -200,31 +201,32 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
           {sorted.map((e) => (
             <li key={e.pitcherId} className="px-4 py-3">
               <div className="flex items-center gap-3">
-                <PitcherAvatar name={e.name} src={e.headshotUrl} size={44} />
+                <PitcherAvatar
+                  name={e.name}
+                  src={e.headshotUrl}
+                  size={48}
+                />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate font-semibold text-[var(--text)]">
-                      {e.name}
-                    </span>
-                    <span
-                      className={`text-lg font-bold tabular ${
-                        e.net > 0
-                          ? "text-emerald-700"
-                          : e.net < 0
-                            ? "text-rose-700"
-                            : "text-[var(--text-muted)]"
-                      }`}
-                    >
-                      {formatMoney(e.net)}
-                    </span>
+                  <div className="truncate font-semibold text-[var(--text)]">
+                    {e.name}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px]">
-                    <span className="rounded-md bg-rose-50 px-1.5 py-0.5 font-semibold text-rose-700">
-                      -{formatMoney(e.feesOwed)}
-                    </span>
-                    <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">
-                      +{formatMoney(e.bonusEarned)}
-                    </span>
+                  <div className="mt-1 grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="rounded-md bg-rose-50 px-2 py-1 dark:bg-rose-500/10">
+                      <div className="text-[9px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-300">
+                        Player owes
+                      </div>
+                      <div className="text-base font-bold tabular text-rose-700 dark:text-rose-300">
+                        {formatMoney(e.feesOwed)}
+                      </div>
+                    </div>
+                    <div className="rounded-md bg-emerald-50 px-2 py-1 dark:bg-emerald-500/10">
+                      <div className="text-[9px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                        Coaches owe
+                      </div>
+                      <div className="text-base font-bold tabular text-emerald-700 dark:text-emerald-300">
+                        {formatMoney(e.bonusEarned)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -248,31 +250,26 @@ function BigStat({
   label,
   value,
   sub,
-  tone = "neutral",
+  tone,
 }: {
   label: string;
   value: string | number;
   sub: string;
-  tone?: "red" | "gold" | "emerald" | "rose" | "neutral";
+  tone: "rose" | "emerald";
 }) {
-  const toneClass = {
-    red: "text-rose-200",
-    gold: "text-[var(--color-woo-gold)]",
-    emerald: "text-emerald-200",
-    rose: "text-rose-200",
-    neutral: "text-white",
-  }[tone];
+  const valueTone =
+    tone === "rose"
+      ? "text-rose-200"
+      : "text-emerald-200";
   return (
-    <div className="rounded-xl bg-white/5 px-3 py-2 ring-1 ring-inset ring-white/10">
+    <div className="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-inset ring-white/10">
       <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
         {label}
       </div>
-      <div className={`mt-1 text-2xl font-bold tabular leading-none ${toneClass}`}>
+      <div className={`mt-1 text-4xl font-bold tabular leading-none ${valueTone}`}>
         {value}
       </div>
-      <div className="mt-1 truncate text-[10px] uppercase tracking-wider text-white/60">
-        {sub}
-      </div>
+      <div className="mt-1.5 text-[11px] text-white/60">{sub}</div>
     </div>
   );
 }
@@ -286,7 +283,7 @@ function TopCallout({
   title: string;
   entry: LedgerEntry;
   valueLabel: string;
-  tone: "red" | "gold";
+  tone: "rose" | "emerald";
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5 ring-1 ring-inset ring-white/10">
@@ -301,7 +298,7 @@ function TopCallout({
       </div>
       <div
         className={`text-sm font-bold tabular ${
-          tone === "gold" ? "text-[var(--color-woo-gold)]" : "text-rose-200"
+          tone === "emerald" ? "text-emerald-200" : "text-rose-200"
         }`}
       >
         {valueLabel}
@@ -312,34 +309,45 @@ function TopCallout({
 
 function RuleBlock({
   title,
+  description,
   color,
   rules,
+  footnote,
 }: {
   title: string;
+  description: string;
   color: "rose" | "emerald";
   rules: Array<{ label: string; amount: string }>;
+  footnote: string;
 }) {
+  const bg =
+    color === "rose"
+      ? "border-rose-100 bg-rose-50/40 dark:border-rose-500/20 dark:bg-rose-500/5"
+      : "border-emerald-100 bg-emerald-50/40 dark:border-emerald-500/20 dark:bg-emerald-500/5";
+  const titleColor =
+    color === "rose"
+      ? "text-rose-800 dark:text-rose-300"
+      : "text-emerald-800 dark:text-emerald-300";
+
   return (
-    <div
-      className={`rounded-xl border p-3 ${
-        color === "rose" ? "border-rose-100 bg-rose-50/40" : "border-emerald-100 bg-emerald-50/40"
-      }`}
-    >
-      <div
-        className={`mb-2 text-xs font-bold uppercase tracking-wider ${
-          color === "rose" ? "text-rose-800" : "text-emerald-800"
-        }`}
-      >
+    <div className={`rounded-xl border p-3 ${bg}`}>
+      <div className={`text-xs font-bold uppercase tracking-wider ${titleColor}`}>
         {title}
       </div>
-      <ul className="space-y-1.5">
+      <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
+        {description}
+      </p>
+      <ul className="mt-2 space-y-1.5">
         {rules.map((r) => (
           <li key={r.label} className="flex items-center justify-between text-sm">
             <span className="text-[var(--text-secondary)]">{r.label}</span>
-            <span className="font-bold tabular text-[var(--text)]">{r.amount}</span>
+            <span className="font-bold tabular text-[var(--text)]">
+              {r.amount}
+            </span>
           </li>
         ))}
       </ul>
+      <p className="mt-2 text-[10px] text-[var(--text-muted)]">{footnote}</p>
     </div>
   );
 }
@@ -356,11 +364,15 @@ function NumCell({ value, tint }: { value: number; tint: string }) {
   );
 }
 
-function MoneyCell({ value, tint }: { value: number; tint: string }) {
+function MoneyCell({ value, tint }: { value: number; tint: "rose" | "emerald" }) {
+  const color =
+    tint === "rose"
+      ? "text-rose-700 dark:text-rose-300"
+      : "text-emerald-700 dark:text-emerald-300";
   return (
     <td
-      className={`px-3 py-2.5 text-right tabular ${
-        value > 0 ? `font-semibold ${tint}` : "text-[var(--text-muted)]/60"
+      className={`px-3 py-2.5 text-right text-base font-bold tabular ${
+        value > 0 ? color : "text-[var(--text-muted)]/60"
       }`}
     >
       {formatMoney(value)}
@@ -368,9 +380,19 @@ function MoneyCell({ value, tint }: { value: number; tint: string }) {
   );
 }
 
-function SmallCell({ label, value, on }: { label: string; value: number; on: string }) {
+function SmallCell({
+  label,
+  value,
+  on,
+}: {
+  label: string;
+  value: number;
+  on: string;
+}) {
   return (
-    <div className={`rounded-md py-1 ${value > 0 ? on : "bg-[var(--surface-hover)] text-[var(--text-muted)]/60"}`}>
+    <div
+      className={`rounded-md py-1 ${value > 0 ? on : "bg-[var(--surface-hover)] text-[var(--text-muted)]/60"}`}
+    >
       <div className="text-[8px] font-medium uppercase tracking-wider opacity-80">
         {label}
       </div>
