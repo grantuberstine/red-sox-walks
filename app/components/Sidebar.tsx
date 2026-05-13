@@ -2,7 +2,7 @@
 
 import { WooSoxLogo } from "./WooSoxLogo";
 
-export type Section = "players" | "team" | "fund";
+export type Section = "walks" | "strikeouts" | "players" | "team" | "fund";
 
 const NAV: Array<{
   key: Section;
@@ -11,9 +11,39 @@ const NAV: Array<{
   icon: React.ReactNode;
 }> = [
   {
+    key: "walks",
+    label: "Walks",
+    description: "Team walk tracker",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M9 4v6l-3 3v7M15 4v6l3 3v7M12 4v16M9 13h6"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "strikeouts",
+    label: "Strikeouts",
+    description: "Team K tracker",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M5 5l14 14M19 5L5 19"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     key: "players",
     label: "Players",
-    description: "Per-pitcher breakdowns",
+    description: "Profiles & gallery",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth="2" />
@@ -36,7 +66,7 @@ const NAV: Array<{
   {
     key: "team",
     label: "Team",
-    description: "Record, charts, game log",
+    description: "Record, log, charts",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path
@@ -52,7 +82,7 @@ const NAV: Array<{
   {
     key: "fund",
     label: "No Pass Fund",
-    description: "Walk fees · K bonuses",
+    description: "Walk fees · K bonus",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
@@ -81,18 +111,18 @@ export function Sidebar({
   totalsLine: string;
 }) {
   return (
-    <aside className="hidden h-[calc(100vh-0px)] flex-col border-r border-[var(--color-line)] bg-white lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0">
+    <aside className="hidden h-screen flex-col border-r border-[var(--color-line)] bg-white lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0 xl:w-[240px]">
       <div className="flex items-center gap-2.5 border-b border-[var(--color-line)] px-4 py-4">
         <WooSoxLogo size={36} />
-        <div>
-          <div className="text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
+        <div className="min-w-0">
+          <div className="truncate text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
             WooSox
           </div>
           <div className="text-[10px] leading-tight text-slate-500">Tracker</div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-2 py-3">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
         {NAV.map((item) => {
           const active = item.key === section;
           return (
@@ -101,7 +131,7 @@ export function Sidebar({
               type="button"
               onClick={() => onSectionChange(item.key)}
               aria-pressed={active}
-              className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
+              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
                 active
                   ? "bg-[var(--color-sox-navy)] text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 hover:text-[var(--color-sox-navy)]"
@@ -113,7 +143,7 @@ export function Sidebar({
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-semibold">{item.label}</span>
                 <span
-                  className={`block text-[10px] ${active ? "text-white/70" : "text-slate-400"}`}
+                  className={`block truncate text-[10px] ${active ? "text-white/70" : "text-slate-400"}`}
                 >
                   {item.description}
                 </span>
@@ -127,7 +157,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onOpenRoster}
-          className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)]"
+          className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)]"
         >
           <span className="inline-flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -158,7 +188,7 @@ export function MobileTabBar({
   onSectionChange: (s: Section) => void;
 }) {
   return (
-    <nav className="sticky bottom-0 z-30 grid grid-cols-3 border-t border-[var(--color-line)] bg-white shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden">
+    <nav className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-[var(--color-line)] bg-white shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden">
       {NAV.map((item) => {
         const active = item.key === section;
         return (
@@ -167,14 +197,14 @@ export function MobileTabBar({
             type="button"
             onClick={() => onSectionChange(item.key)}
             aria-pressed={active}
-            className={`flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-semibold transition ${
+            className={`flex cursor-pointer flex-col items-center justify-center gap-0.5 py-2 text-[9px] font-semibold transition ${
               active
                 ? "text-[var(--color-sox-red)]"
-                : "text-slate-500 hover:text-[var(--color-sox-navy)]"
+                : "text-slate-500"
             }`}
           >
             <span>{item.icon}</span>
-            <span>{item.label}</span>
+            <span className="leading-tight">{item.label}</span>
           </button>
         );
       })}

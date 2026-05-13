@@ -94,11 +94,13 @@ export function PitcherTable({
   allWalks = [],
   allStrikeouts = [],
   mode = "walks",
+  onSelect,
 }: {
   pitchers: PitcherStats[];
   allWalks?: WalkRecord[];
   allStrikeouts?: StrikeoutRecord[];
   mode?: Mode;
+  onSelect?: (pitcherId: number) => void;
 }) {
   const cols = mode === "walks" ? WALK_COLS : K_COLS;
   const defaultSort: WalkSortKey | KSortKey =
@@ -154,6 +156,10 @@ export function PitcherTable({
   };
 
   const toggleExpand = (id: number) => {
+    if (onSelect) {
+      onSelect(id);
+      return;
+    }
     setExpanded((cur) => (cur === id ? null : id));
   };
 
@@ -321,7 +327,7 @@ function PitcherRowDesktop({
     <>
       <tr
         onClick={onToggle}
-        className={`cursor-pointer border-b border-slate-100 last:border-0 transition hover:bg-slate-50 ${
+        className={`cursor-pointer border-b border-slate-100 last:border-0 transition hover:bg-[var(--color-sox-navy)]/5 ${
           idx % 2 === 1 ? "bg-slate-50/30" : ""
         } ${open ? "bg-slate-50" : ""}`}
       >
@@ -336,20 +342,13 @@ function PitcherRowDesktop({
                 <span className="text-[9px] text-slate-400">{open ? "▲" : "▼"}</span>
               </div>
               {p.achievements.length > 0 && (
-                <div className="mt-0.5 flex flex-wrap gap-0.5">
-                  {p.achievements.slice(0, 8).map((id) => {
-                    const a = achievementById(id);
-                    if (!a) return null;
-                    return (
-                      <span
-                        key={id}
-                        title={`${a.label}: ${a.description}`}
-                        className="text-[11px] leading-none"
-                      >
-                        {a.emoji}
-                      </span>
-                    );
-                  })}
+                <div className="mt-0.5 truncate text-[10px] text-slate-400">
+                  {p.achievements
+                    .slice(0, 3)
+                    .map((id) => achievementById(id)?.label)
+                    .filter(Boolean)
+                    .join(" · ")}
+                  {p.achievements.length > 3 && ` +${p.achievements.length - 3}`}
                 </div>
               )}
             </div>

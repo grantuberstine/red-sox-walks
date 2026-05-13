@@ -23,16 +23,12 @@ export function HeroBar({
   eventLabel,
   rangeLabel,
   total,
-  leaderName,
-  leaderValue,
   breakdown,
 }: {
   accent: keyof typeof ACCENT_GRADIENTS;
   eventLabel: string;
   rangeLabel: string;
   total: number;
-  leaderName?: string;
-  leaderValue: number;
   breakdown: Array<{ label: string; value: number; tone: ToneKey }>;
 }) {
   return (
@@ -44,21 +40,8 @@ export function HeroBar({
           <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
             Total {eventLabel} · {rangeLabel}
           </div>
-          <div className="flex items-baseline gap-3">
-            <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
-              {total}
-            </div>
-            {leaderName && (
-              <div className="text-xs text-white/70">
-                <div className="text-[10px] uppercase tracking-widest text-white/50">
-                  Most by one pitcher
-                </div>
-                <div className="font-medium text-white">
-                  {leaderName}
-                  <span className="ml-1 text-white/60">({leaderValue})</span>
-                </div>
-              </div>
-            )}
+          <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
+            {total}
           </div>
         </div>
         <div

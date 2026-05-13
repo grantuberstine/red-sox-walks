@@ -15,11 +15,10 @@ import {
 } from "@/lib/filters";
 import { computeFundReport } from "@/lib/fund";
 import { useHiddenPitchers } from "@/lib/preferences";
-import { SearchInput as SearchInputInline, type SearchSuggestion } from "./components/SearchInput";
 import { Sidebar, MobileTabBar, type Section } from "./components/Sidebar";
 import { WooSoxLogo } from "./components/WooSoxLogo";
-import { SubHeader } from "./components/SubHeader";
-import type { Mode } from "./components/TopNav";
+import { FilterRow } from "./components/FilterRow";
+import type { SearchSuggestion } from "./components/SearchInput";
 import { RosterDrawer } from "./components/RosterDrawer";
 import { HeroBar } from "./components/HeroBar";
 import { CategoryLeaders } from "./components/CategoryLeaders";
@@ -32,6 +31,8 @@ import { RecentWalksFeed } from "./components/RecentWalksFeed";
 import { StrikeoutsFeed } from "./components/StrikeoutsFeed";
 import { TeamView } from "./components/TeamView";
 import { FundView } from "./components/FundView";
+import { PlayersGallery } from "./components/PlayersGallery";
+import { PlayerProfile } from "./components/PlayerProfile";
 
 const WALK_CATEGORIES: CategoryDef[] = [
   { key: "all", label: "All", emoji: "", tone: "neutral" },
@@ -43,23 +44,9 @@ const WALK_CATEGORIES: CategoryDef[] = [
 
 const K_CATEGORIES: CategoryDef[] = [
   { key: "all", label: "All", emoji: "", tone: "neutral" },
-  { key: "threePitch", label: "3-Pitch K", emoji: "", tone: "emerald" },
+  { key: "threePitch", label: "3-Pitch", emoji: "", tone: "emerald" },
   { key: "side", label: "3-Up-3-Dn", emoji: "", tone: "indigo" },
 ];
-
-const WALK_CATEGORY_LABELS: Record<WalkCategoryFilter, string> = {
-  all: "all walks",
-  fourPitch: "4-pitch walks",
-  ohTwo: "0-2 walks",
-  leadoff: "leadoff walks",
-  twoOut: "2-out walks",
-};
-
-const K_CATEGORY_LABELS: Record<StrikeoutCategoryFilter, string> = {
-  all: "all strikeouts",
-  threePitch: "3-pitch K's",
-  side: "3-up-3-down K's",
-};
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "never";
@@ -72,14 +59,14 @@ function formatTimestamp(iso: string | null): string {
 }
 
 export function Dashboard({ state }: { state: SeasonState }) {
-  const [section, setSection] = useState<Section>("players");
-  const [mode, setMode] = useState<Mode>("walks");
+  const [section, setSection] = useState<Section>("walks");
   const [range, setRange] = useState<RangeKey>("season");
   const [query, setQuery] = useState("");
   const [walkCat, setWalkCat] = useState<WalkCategoryFilter>("all");
   const [kCat, setKCat] = useState<StrikeoutCategoryFilter>("all");
   const [view, setView] = useState<ViewMode>("table");
   const [rosterOpen, setRosterOpen] = useState(false);
+  const [profileId, setProfileId] = useState<number | null>(null);
 
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
 
@@ -110,14 +97,43 @@ export function Dashboard({ state }: { state: SeasonState }) {
     [filteredK, state.pitchers],
   );
 
-  const fundReport = useMemo(
-    () => computeFundReport(filteredWalksAllCats, filteredKAllCats, state.pitchers),
-    [filteredWalksAllCats, filteredKAllCats, state.pitchers],
-  );
+  const allPitchersFiltered = useMemo(() => {
+    const both = new Map<number, ReturnType<typeof aggregatePitchersFromWalks>[number]>();
+    for (const p of walkPitchers) both.set(p.pitcherId, p);
+    for (const p of kPitchers) {
+      const existing = both.get(p.pitcherId);
+      if (existing) {
+        existing.totalStrikeouts = p.totalStrikeouts;
+        existing.threePitchStrikeouts = p.threePitchStrikeouts;
+        existing.sideStrikeouts = p.sideStrikeouts;
+        existing.lastStrikeoutDate = p.lastStrikeoutDate;
+      } else {
+        both.set(p.pitcherId, p);
+      }
+    }
+    for (const p of both.values()) {
+      const meta = state.pitchers[String(p.pitcherId)];
+      if (meta) {
+        p.outsRecorded = meta.outsRecorded;
+        p.achievements = meta.achievements;
+      }
+    }
+    const q = query.trim().toLowerCase();
+    return [...both.values()].filter((p) => {
+      if (hidden.has(p.pitcherId)) return false;
+      if (q && !p.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [walkPitchers, kPitchers, state.pitchers, hidden, query]);
 
   const allPitchers = useMemo(
     () => Object.values(state.pitchers),
     [state.pitchers],
+  );
+
+  const fundReport = useMemo(
+    () => computeFundReport(filteredWalksAllCats, filteredKAllCats, state.pitchers),
+    [filteredWalksAllCats, filteredKAllCats, state.pitchers],
   );
 
   const searchSuggestions: SearchSuggestion[] = useMemo(
@@ -134,11 +150,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
   );
 
   const rangeContext = formatRangeContext(range, state);
-  const isFiltered =
-    range !== "season" ||
-    query.trim().length > 0 ||
-    (mode === "walks" ? walkCat !== "all" : kCat !== "all") ||
-    hidden.size > 0;
 
   const walkTotals = useMemo(
     () =>
@@ -167,43 +178,81 @@ export function Dashboard({ state }: { state: SeasonState }) {
     return { total: filteredK.length, threePitch, side: sideInnings.size };
   }, [filteredK]);
 
-  const walkLeader = useMemo(
-    () => [...walkPitchers].sort((a, b) => b.totalWalks - a.totalWalks)[0],
-    [walkPitchers],
-  );
-  const kLeader = useMemo(
-    () => [...kPitchers].sort((a, b) => b.totalStrikeouts - a.totalStrikeouts)[0],
-    [kPitchers],
-  );
-
-  const isPlayers = section === "players";
-  const isFund = section === "fund";
-  const currentCategories = mode === "walks" ? WALK_CATEGORIES : K_CATEGORIES;
-  const currentCatValue = mode === "walks" ? walkCat : kCat;
-  const currentCatLabel =
-    mode === "walks"
-      ? `Showing ${WALK_CATEGORY_LABELS[walkCat]}`
-      : `Showing ${K_CATEGORY_LABELS[kCat]}`;
+  const profilePitcher = useMemo(() => {
+    if (profileId === null) return null;
+    return state.pitchers[String(profileId)] ?? null;
+  }, [profileId, state.pitchers]);
 
   const totalsLine = `${state.meta.totalGames}g · ${state.meta.totalWalks} BB · ${state.meta.totalStrikeouts} K`;
+
   const sectionLabel: Record<Section, string> = {
-    players: mode === "walks" ? "Player Walks" : "Player Strikeouts",
-    team: mode === "walks" ? "Team — Walks" : "Team — Strikeouts",
+    walks: "Walks",
+    strikeouts: "Strikeouts",
+    players: profilePitcher ? profilePitcher.name : "Players",
+    team: "Team",
     fund: "No Pass Fund",
   };
 
-  const headerCount =
-    section === "fund"
-      ? fundReport.entries.length
-      : mode === "walks"
-        ? filteredWalks.length
-        : filteredK.length;
+  const openProfile = (id: number) => {
+    setProfileId(id);
+    setSection("players");
+  };
+
+  const changeSection = (s: Section) => {
+    setSection(s);
+    if (s !== "players") setProfileId(null);
+  };
+
+  const showFilters = section !== "players" || profileId === null;
+
+  const filterCategories =
+    section === "walks"
+      ? WALK_CATEGORIES
+      : section === "strikeouts"
+        ? K_CATEGORIES
+        : undefined;
+  const filterCategoryValue =
+    section === "walks" ? walkCat : section === "strikeouts" ? kCat : undefined;
+  const onFilterCategoryChange = (v: string) => {
+    if (section === "walks") setWalkCat(v as WalkCategoryFilter);
+    if (section === "strikeouts") setKCat(v as StrikeoutCategoryFilter);
+  };
+
+  const filterResultCount = (() => {
+    switch (section) {
+      case "walks":
+        return filteredWalks.length;
+      case "strikeouts":
+        return filteredK.length;
+      case "players":
+        return allPitchersFiltered.length;
+      case "team":
+        return filteredWalksAllCats.length + filteredKAllCats.length;
+      case "fund":
+        return fundReport.entries.length;
+    }
+  })();
+
+  const filterResultUnit = (() => {
+    switch (section) {
+      case "walks":
+        return "walk";
+      case "strikeouts":
+        return "strikeout";
+      case "players":
+        return "pitcher";
+      case "team":
+        return "event";
+      case "fund":
+        return "pitcher";
+    }
+  })();
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-sand)] lg:flex-row">
       <Sidebar
         section={section}
-        onSectionChange={setSection}
+        onSectionChange={changeSection}
         onOpenRoster={() => setRosterOpen(true)}
         hiddenCount={hidden.size}
         totalsLine={totalsLine}
@@ -220,12 +269,12 @@ export function Dashboard({ state }: { state: SeasonState }) {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-line)] bg-white/95 px-4 py-2.5 backdrop-blur lg:px-6">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-line)] bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5 lg:hidden">
             <WooSoxLogo size={28} />
-            <div>
+            <div className="min-w-0">
               <div className="text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
-                WooSox Tracker
+                {sectionLabel[section]}
               </div>
               <div className="text-[10px] leading-tight text-slate-500">
                 {totalsLine}
@@ -243,97 +292,86 @@ export function Dashboard({ state }: { state: SeasonState }) {
               </span>
             </p>
           </div>
-          <div className="flex items-center gap-2 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setRosterOpen(true)}
-              className="relative inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-600"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-                <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              {hidden.size > 0 && (
-                <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
-                  {hidden.size}
-                </span>
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setRosterOpen(true)}
+            className="relative inline-flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)] lg:hidden"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+              <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            {hidden.size > 0 && (
+              <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
+                {hidden.size}
+              </span>
+            )}
+          </button>
         </header>
 
-        {!isFund && (
-          <SubHeader
-            mode={mode}
-            onModeChange={setMode}
-            walkCount={state.meta.totalWalks}
-            strikeoutCount={state.meta.totalStrikeouts}
+        {showFilters && (
+          <FilterRow
             range={range}
             onRangeChange={setRange}
             query={query}
             onQueryChange={setQuery}
             rangeContext={rangeContext}
-            resultCount={headerCount}
-            categories={isPlayers ? currentCategories : undefined}
-            categoryValue={isPlayers ? currentCatValue : undefined}
+            resultCount={filterResultCount}
+            resultUnit={filterResultUnit}
+            suggestions={searchSuggestions}
+            categories={filterCategories}
+            categoryValue={filterCategoryValue}
             onCategoryChange={
-              isPlayers
-                ? (v) =>
-                    mode === "walks"
-                      ? setWalkCat(v as WalkCategoryFilter)
-                      : setKCat(v as StrikeoutCategoryFilter)
-                : undefined
+              filterCategories ? onFilterCategoryChange : undefined
             }
-            categoryLabel={isPlayers ? currentCatLabel : undefined}
-            suggestions={searchSuggestions}
           />
         )}
 
-        {isFund && (
-          <FundFilters
-            range={range}
-            onRangeChange={setRange}
-            query={query}
-            onQueryChange={setQuery}
-            rangeContext={rangeContext}
-            entryCount={fundReport.entries.length}
-            suggestions={searchSuggestions}
-          />
-        )}
+        <main className="min-w-0 flex-1 px-4 pb-20 pt-4 sm:px-6 lg:pb-8 lg:pt-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1400px]">
+            {section === "walks" && (
+              <WalksView
+                range={range}
+                totals={walkTotals}
+                pitchers={walkPitchers}
+                walks={filteredWalks}
+                view={view}
+                onViewChange={setView}
+                query={query}
+                onSelect={openProfile}
+              />
+            )}
 
-        <main className="min-w-0 flex-1 px-4 pb-20 pt-4 sm:px-6 lg:pb-8 lg:pt-6">
-          <div className="mx-auto max-w-5xl">
-            <h1 className="mb-4 text-lg font-bold tracking-tight text-[var(--color-sox-navy)] sm:text-xl lg:hidden">
-              {sectionLabel[section]}
-            </h1>
+            {section === "strikeouts" && (
+              <StrikeoutsView
+                range={range}
+                totals={kTotals}
+                pitchers={kPitchers}
+                strikeouts={filteredK}
+                view={view}
+                onViewChange={setView}
+                query={query}
+                onSelect={openProfile}
+              />
+            )}
 
-            {section === "players" ? (
-              mode === "walks" ? (
-                <PlayerWalksContent
-                  range={range}
-                  totals={walkTotals}
-                  leader={walkLeader}
-                  pitchers={walkPitchers}
-                  walks={filteredWalks}
-                  view={view}
-                  onViewChange={setView}
-                  isFiltered={isFiltered}
-                  query={query}
+            {section === "players" &&
+              (profilePitcher ? (
+                <PlayerProfile
+                  pitcher={profilePitcher}
+                  walks={filteredWalksAllCats}
+                  strikeouts={filteredKAllCats}
+                  onBack={() => setProfileId(null)}
+                  rangeLabel={RANGE_LABELS[range]}
                 />
               ) : (
-                <PlayerStrikeoutsContent
-                  range={range}
-                  totals={kTotals}
-                  leader={kLeader}
-                  pitchers={kPitchers}
-                  strikeouts={filteredK}
-                  view={view}
-                  onViewChange={setView}
-                  isFiltered={isFiltered}
-                  query={query}
+                <PlayersGallery
+                  pitchers={allPitchersFiltered}
+                  onSelect={openProfile}
                 />
-              )
-            ) : section === "team" ? (
+              ))}
+
+            {section === "team" && (
               <TeamView
                 state={state}
                 range={range}
@@ -341,8 +379,13 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 filteredK={filteredKAllCats}
                 rangeLabel={RANGE_LABELS[range]}
               />
-            ) : (
-              <FundView report={fundReport} rangeLabel={RANGE_LABELS[range]} />
+            )}
+
+            {section === "fund" && (
+              <FundView
+                report={fundReport}
+                rangeLabel={RANGE_LABELS[range]}
+              />
             )}
 
             <footer className="mt-8 text-center text-[11px] text-slate-400">
@@ -351,88 +394,31 @@ export function Dashboard({ state }: { state: SeasonState }) {
           </div>
         </main>
 
-        <MobileTabBar section={section} onSectionChange={setSection} />
+        <MobileTabBar section={section} onSectionChange={changeSection} />
       </div>
     </div>
   );
 }
 
-function FundFilters({
+function WalksView({
   range,
-  onRangeChange,
+  totals,
+  pitchers,
+  walks,
+  view,
+  onViewChange,
   query,
-  onQueryChange,
-  rangeContext,
-  entryCount,
-  suggestions,
+  onSelect,
 }: {
   range: RangeKey;
-  onRangeChange: (r: RangeKey) => void;
-  query: string;
-  onQueryChange: (q: string) => void;
-  rangeContext: string;
-  entryCount: number;
-  suggestions?: SearchSuggestion[];
-}) {
-  const RANGES: RangeKey[] = ["today", "week", "month", "season"];
-  const SHORT = { today: "Today", week: "7D", month: "30D", season: "Season" };
-  return (
-    <div className="border-b border-[var(--color-line)] bg-white">
-      <div className="mx-auto max-w-5xl space-y-3 px-4 py-3 sm:px-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div
-            role="tablist"
-            className="flex w-full overflow-hidden rounded-xl bg-slate-100 p-1 sm:w-auto"
-          >
-            {RANGES.map((k) => {
-              const active = k === range;
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => onRangeChange(k)}
-                  className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition sm:flex-initial ${
-                    active
-                      ? "bg-[var(--color-sox-navy)] text-white shadow"
-                      : "text-slate-600 hover:text-[var(--color-sox-navy)]"
-                  }`}
-                >
-                  {SHORT[k]}
-                </button>
-              );
-            })}
-          </div>
-          <SearchInputInline
-            value={query}
-            onChange={onQueryChange}
-            suggestions={suggestions ?? []}
-          />
-        </div>
-        <div className="flex items-center justify-between text-[11px] text-slate-500">
-          <span>{rangeContext}</span>
-          <span className="tabular">
-            {entryCount} {entryCount === 1 ? "pitcher" : "pitchers"} on the books
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PlayerWalksContent(props: {
-  range: RangeKey;
   totals: { total: number; fourPitch: number; ohTwo: number; leadoff: number; twoOut: number };
-  leader?: { name: string; totalWalks: number };
   pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
   walks: ReturnType<typeof filterWalks>;
   view: ViewMode;
   onViewChange: (v: ViewMode) => void;
-  isFiltered: boolean;
   query: string;
+  onSelect: (id: number) => void;
 }) {
-  const { range, totals, leader, pitchers, walks, view, onViewChange, isFiltered, query } = props;
   return (
     <div className="space-y-5">
       <HeroBar
@@ -440,8 +426,6 @@ function PlayerWalksContent(props: {
         eventLabel="walks issued"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
-        leaderName={leader?.name}
-        leaderValue={leader?.totalWalks ?? 0}
         breakdown={[
           { label: "4-Pitch", value: totals.fourPitch, tone: "amber" },
           { label: "0-2", value: totals.ohTwo, tone: "rose" },
@@ -449,39 +433,49 @@ function PlayerWalksContent(props: {
           { label: "2-Out", value: totals.twoOut, tone: "violet" },
         ]}
       />
-      <SectionHeader title="Walk Hall of Shame" subtitle={RANGE_LABELS[range]} />
+      <SectionHeader title="Top of each category" subtitle={RANGE_LABELS[range]} />
       <CategoryLeaders pitchers={pitchers} />
       <LeaderboardSection
-        title="Pitcher Leaderboard"
-        hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — "Walks" column shows total free passes issued`}
+        title="Walks Leaderboard"
+        hint={`"Walks" = total free passes issued by that pitcher`}
         pitchers={pitchers}
         walks={walks}
         strikeouts={[]}
         view={view}
         onViewChange={onViewChange}
-        isFiltered={isFiltered}
         query={query}
         mode="walks"
+        onSelect={onSelect}
       />
-      <FeedSection title="Walk Feed" emptyLabel="walks">
+      <FeedSection
+        title="Walk Feed"
+        subtitle={`${walks.length} ${walks.length === 1 ? "walk" : "walks"} · newest first`}
+      >
         <RecentWalksFeed walks={walks} limit={30} />
       </FeedSection>
     </div>
   );
 }
 
-function PlayerStrikeoutsContent(props: {
+function StrikeoutsView({
+  range,
+  totals,
+  pitchers,
+  strikeouts,
+  view,
+  onViewChange,
+  query,
+  onSelect,
+}: {
   range: RangeKey;
   totals: { total: number; threePitch: number; side: number };
-  leader?: { name: string; totalStrikeouts: number };
   pitchers: ReturnType<typeof aggregatePitchersFromStrikeouts>;
   strikeouts: ReturnType<typeof filterStrikeouts>;
   view: ViewMode;
   onViewChange: (v: ViewMode) => void;
-  isFiltered: boolean;
   query: string;
+  onSelect: (id: number) => void;
 }) {
-  const { range, totals, leader, pitchers, strikeouts, view, onViewChange, isFiltered, query } = props;
   return (
     <div className="space-y-5">
       <HeroBar
@@ -489,28 +483,29 @@ function PlayerStrikeoutsContent(props: {
         eventLabel="strikeouts recorded"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
-        leaderName={leader?.name}
-        leaderValue={leader?.totalStrikeouts ?? 0}
         breakdown={[
           { label: "3-Pitch K", value: totals.threePitch, tone: "emerald" },
           { label: "3-Up-3-Dn", value: totals.side, tone: "indigo" },
         ]}
       />
-      <SectionHeader title="K Hall of Fame" subtitle={RANGE_LABELS[range]} />
+      <SectionHeader title="Top of each category" subtitle={RANGE_LABELS[range]} />
       <StrikeoutLeaders pitchers={pitchers} />
       <LeaderboardSection
-        title="Pitcher Leaderboard"
-        hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — "Strikeouts" column shows total K's recorded`}
+        title="Strikeouts Leaderboard"
+        hint={`"Strikeouts" = total K's recorded by that pitcher`}
         pitchers={pitchers}
         walks={[]}
         strikeouts={strikeouts}
         view={view}
         onViewChange={onViewChange}
-        isFiltered={isFiltered}
         query={query}
         mode="strikeouts"
+        onSelect={onSelect}
       />
-      <FeedSection title="Strikeout Feed" emptyLabel="strikeouts">
+      <FeedSection
+        title="Strikeout Feed"
+        subtitle={`${strikeouts.length} ${strikeouts.length === 1 ? "K" : "K's"} · newest first`}
+      >
         <StrikeoutsFeed strikeouts={strikeouts} limit={30} />
       </FeedSection>
     </div>
@@ -525,9 +520,9 @@ function LeaderboardSection({
   strikeouts,
   view,
   onViewChange,
-  isFiltered,
   query,
   mode,
+  onSelect,
 }: {
   title: string;
   hint: string;
@@ -536,13 +531,13 @@ function LeaderboardSection({
   strikeouts: ReturnType<typeof filterStrikeouts>;
   view: ViewMode;
   onViewChange: (v: ViewMode) => void;
-  isFiltered: boolean;
   query: string;
-  mode: Mode;
+  mode: "walks" | "strikeouts";
+  onSelect: (id: number) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--color-line)] px-5 py-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
             {title}
@@ -550,17 +545,10 @@ function LeaderboardSection({
           <p className="mt-0.5 text-[11px] text-slate-500">
             {pitchers.length === 0
               ? "No matching pitchers"
-              : `${hint} · tap a row for the full log`}
+              : `${hint} · click a row for the full profile`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {isFiltered && (
-            <span className="rounded-full bg-[var(--color-sox-red)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-sox-red)]">
-              filtered
-            </span>
-          )}
-          <ViewToggle value={view} onChange={onViewChange} />
-        </div>
+        <ViewToggle value={view} onChange={onViewChange} />
       </div>
       {pitchers.length === 0 ? (
         <div className="px-6 py-14 text-center text-sm text-slate-500">
@@ -572,6 +560,7 @@ function LeaderboardSection({
           allWalks={walks}
           allStrikeouts={strikeouts}
           mode={mode}
+          onSelect={onSelect}
         />
       ) : (
         <PitcherCards
@@ -604,20 +593,18 @@ function SectionHeader({
 
 function FeedSection({
   title,
-  emptyLabel,
+  subtitle,
   children,
 }: {
   title: string;
-  emptyLabel: string;
+  subtitle: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-5 py-3">
+      <div className="border-b border-[var(--color-line)] px-5 py-3">
         <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">{title}</h2>
-        <p className="mt-0.5 text-[11px] text-slate-500">
-          {emptyLabel} feed · newest first
-        </p>
+        <p className="mt-0.5 text-[11px] text-slate-500">{subtitle}</p>
       </div>
       {children}
     </div>
