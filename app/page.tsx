@@ -1,9 +1,9 @@
 import { loadState } from "@/lib/storage";
-import { Dashboard } from "./Dashboard";
+import { DashboardClient } from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const state = await loadState();
-  return <Dashboard state={state} />;
+  return <DashboardClient state={state} />;
 }

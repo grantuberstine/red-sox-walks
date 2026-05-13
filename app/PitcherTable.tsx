@@ -54,24 +54,24 @@ type ColDef<K extends string> = {
 
 const WALK_COLS: Array<ColDef<WalkSortKey>> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "owes", label: "Owes", align: "right", width: "w-[88px]" },
-  { key: "fourPitchWalks", label: "4-Pitch", align: "right", width: "w-[72px]" },
-  { key: "ohTwoWalks", label: "0-2", align: "right", width: "w-[72px]" },
-  { key: "leadoffWalks", label: "Leadoff", align: "right", width: "w-[72px]" },
-  { key: "twoOutWalks", label: "2-Out", align: "right", width: "w-[72px]" },
-  { key: "totalWalks", label: "Walks", align: "right", width: "w-[72px]" },
-  { key: "inningsPitched", label: "IP", align: "right", width: "w-[72px]" },
-  { key: "walksPerNine", label: "BB/9", align: "right", width: "w-[72px]" },
+  { key: "owes", label: "Owes", align: "right", width: "w-[100px]" },
+  { key: "fourPitchWalks", label: "4-Pitch", align: "right", width: "w-[92px]" },
+  { key: "ohTwoWalks", label: "0-2", align: "right", width: "w-[92px]" },
+  { key: "leadoffWalks", label: "Leadoff", align: "right", width: "w-[92px]" },
+  { key: "twoOutWalks", label: "2-Out", align: "right", width: "w-[92px]" },
+  { key: "totalWalks", label: "Walks", align: "right", width: "w-[92px]" },
+  { key: "inningsPitched", label: "IP", align: "right", width: "w-[92px]" },
+  { key: "walksPerNine", label: "BB/9", align: "right", width: "w-[92px]" },
 ];
 
 const K_COLS: Array<ColDef<KSortKey>> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "coachesOwe", label: "Coaches owe", align: "right", width: "w-[110px]" },
-  { key: "threePitchStrikeouts", label: "3-Pitch", align: "right", width: "w-[72px]" },
-  { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right", width: "w-[88px]" },
-  { key: "totalStrikeouts", label: "K's", align: "right", width: "w-[72px]" },
-  { key: "inningsPitched", label: "IP", align: "right", width: "w-[72px]" },
-  { key: "ksPerNine", label: "K/9", align: "right", width: "w-[72px]" },
+  { key: "coachesOwe", label: "Coaches owe", align: "right", width: "w-[120px]" },
+  { key: "threePitchStrikeouts", label: "3-Pitch", align: "right", width: "w-[92px]" },
+  { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right", width: "w-[104px]" },
+  { key: "totalStrikeouts", label: "K's", align: "right", width: "w-[92px]" },
+  { key: "inningsPitched", label: "IP", align: "right", width: "w-[92px]" },
+  { key: "ksPerNine", label: "K/9", align: "right", width: "w-[92px]" },
 ];
 
 const WALK_TAG_LABELS: Record<WalkType, string> = {
@@ -384,37 +384,37 @@ function PitcherRowDesktop({
         </td>
         {mode === "walks" ? (
           <>
-            <td className="w-[88px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-bold tabular text-[var(--color-sox-red)]">
+            <td className="w-[100px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-bold tabular text-[var(--color-sox-red)]">
               {formatMoney(feesOwed(p))}
             </td>
             <NumberCell value={p.fourPitchWalks} />
             <NumberCell value={p.ohTwoWalks} />
             <NumberCell value={p.leadoffWalks} />
             <NumberCell value={p.twoOutWalks} />
-            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[92px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {p.totalWalks}
             </td>
-            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[92px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>
-            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[92px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {fmtRate(walksPerNine(p))}
             </td>
           </>
         ) : (
           <>
-            <td className="w-[110px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-bold tabular text-emerald-700 dark:text-emerald-400">
+            <td className="w-[120px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-bold tabular text-emerald-700 dark:text-emerald-400">
               {formatMoney(coachesOwe(p))}
             </td>
             <NumberCell value={p.threePitchStrikeouts} />
-            <NumberCell value={p.sideStrikeouts} />
-            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <NumberCell value={p.sideStrikeouts} wide />
+            <td className="w-[92px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {p.totalStrikeouts}
             </td>
-            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[92px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>
-            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[92px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
           </>
@@ -528,9 +528,9 @@ function KDetail({
   );
 }
 
-function NumberCell({ value }: { value: number }) {
+function NumberCell({ value, wide = false }: { value: number; wide?: boolean }) {
   return (
-    <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+    <td className={`${wide ? "w-[104px]" : "w-[92px]"} px-3 py-2.5 text-right text-sm tabular text-[var(--text)]`}>
       {value}
     </td>
   );
