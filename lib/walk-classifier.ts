@@ -2,18 +2,6 @@ import { WOOSOX_TEAM_ID } from "./constants";
 import type { LiveFeed, LivePlay, PlayEvent } from "./mlb-api";
 import type { WalkClassification } from "./types";
 
-const BALL_CODES = new Set(["B", "*B", "BD", "BI", "BP", "IB", "PO", "VB"]);
-
-function isBall(event: PlayEvent): boolean {
-  if (event.details?.isBall === true) return true;
-  const code = event.details?.call?.code;
-  return code ? BALL_CODES.has(code) : false;
-}
-
-function pitchOnly(events: PlayEvent[]): PlayEvent[] {
-  return events.filter((e) => e.isPitch === true);
-}
-
 function teamPitchingInHalf(
   feed: LiveFeed,
   halfInning: "top" | "bottom",
@@ -22,30 +10,15 @@ function teamPitchingInHalf(
 }
 
 function reached0_2(events: PlayEvent[]): boolean {
-  const pitches = pitchOnly(events);
-  let balls = 0;
-  let strikes = 0;
-  for (const p of pitches) {
-    if (isBall(p)) {
-      balls += 1;
-    } else {
-      strikes = Math.min(2, strikes + 1);
-    }
-    if (balls === 0 && strikes === 2) return true;
+  for (const ev of events) {
+    if (ev.count?.balls === 0 && ev.count?.strikes === 2) return true;
   }
   return false;
 }
 
-function isFourPitchWalk(play: LivePlay): boolean {
-  const pitches = pitchOnly(play.playEvents);
-  if (pitches.length !== 4) return false;
-  return pitches.every(isBall);
-}
-
 function outsAtStart(play: LivePlay): number {
-  const pitches = pitchOnly(play.playEvents);
-  const first = pitches[0];
-  if (first?.count) return first.count.outs;
+  const firstPitch = (play.playEvents ?? []).find((e) => e.isPitch);
+  if (firstPitch?.count) return firstPitch.count.outs;
   return play.count.outs;
 }
 
@@ -78,6 +51,7 @@ export function classifyWooSoxWalks(
     const halfKey = `${play.about.inning}-${play.about.halfInning}`;
     const isLeadoff = firstPlayInHalf.get(halfKey) === play.about.atBatIndex;
     const startOuts = outsAtStart(play);
+    const pitches = (play.playEvents ?? []).filter((e) => e.isPitch).length;
 
     results.push({
       pitcherId: play.matchup.pitcher.id,
@@ -90,8 +64,9 @@ export function classifyWooSoxWalks(
         balls: play.count.balls,
         strikes: play.count.strikes,
       },
-      isFourPitch: isFourPitchWalk(play),
-      isOhTwo: reached0_2(play.playEvents),
+      pitchesInPA: pitches,
+      isFourPitch: play.count.strikes === 0,
+      isOhTwo: reached0_2(play.playEvents ?? []),
       isLeadoff,
       isTwoOut: startOuts === 2,
     });

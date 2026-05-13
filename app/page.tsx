@@ -2,8 +2,9 @@ import { loadState } from "@/lib/storage";
 import { SEASON } from "@/lib/constants";
 import type { PitcherStats } from "@/lib/types";
 import { PitcherTable } from "./PitcherTable";
+import { CategoryLeaders } from "./components/CategoryLeaders";
+import { RecentWalksFeed } from "./components/RecentWalksFeed";
 
-export const revalidate = 60;
 export const dynamic = "force-dynamic";
 
 function formatTimestamp(iso: string | null): string {
@@ -14,6 +15,10 @@ function formatTimestamp(iso: string | null): string {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function pluralize(n: number, s: string, p: string): string {
+  return n === 1 ? `${n} ${s}` : `${n} ${p}`;
 }
 
 export default async function Page() {
@@ -31,101 +36,175 @@ export default async function Page() {
     { total: 0, fourPitch: 0, ohTwo: 0, leadoff: 0, twoOut: 0 },
   );
 
+  const teamLeader = [...pitchers].sort((a, b) => b.totalWalks - a.totalWalks)[0];
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-1.5 rounded-full bg-[var(--color-sox-red)]" />
-            <h1 className="text-3xl font-bold tracking-tight text-[var(--color-sox-navy)] sm:text-4xl">
-              WooSox Walk Tracker
-            </h1>
-          </div>
-          <p className="mt-2 text-sm text-slate-600">
-            Worcester Red Sox pitcher walks by category — {SEASON} season.
-          </p>
-        </div>
-        <div className="text-right text-xs text-slate-500">
+    <main className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-10">
+      <header className="fade-in mb-6 sm:mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            Last refresh:{" "}
-            <span className="font-mono text-slate-700">
-              {formatTimestamp(state.meta.lastRefreshAt)}
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-1.5 rounded-full bg-[var(--color-sox-red)]" />
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--color-sox-navy)] sm:text-3xl">
+                  WooSox Walk Tracker
+                </h1>
+                <p className="text-xs text-slate-500 sm:text-sm">
+                  Free passes by category — {SEASON} season
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-0.5 text-[11px] text-slate-500 sm:text-right sm:text-xs">
+            <span>
+              {pluralize(state.meta.totalGames, "game", "games")} ·{" "}
+              {pluralize(state.meta.totalWalks, "walk", "walks")} ·{" "}
+              {pluralize(pitchers.length, "pitcher", "pitchers")}
             </span>
-          </div>
-          <div>
-            Games tracked:{" "}
-            <span className="font-mono text-slate-700">
-              {state.meta.totalGames}
-            </span>{" "}
-            · Total walks:{" "}
-            <span className="font-mono text-slate-700">
-              {state.meta.totalWalks}
+            <span className="tabular">
+              Last refresh: {formatTimestamp(state.meta.lastRefreshAt)}
             </span>
           </div>
         </div>
       </header>
 
-      <section className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard label="Total walks" value={totals.total} accent />
-        <StatCard label="4-pitch" value={totals.fourPitch} />
-        <StatCard label="0-2 → BB" value={totals.ohTwo} />
-        <StatCard label="Leadoff" value={totals.leadoff} />
-        <StatCard label="2-out" value={totals.twoOut} />
+      <section className="fade-in mb-6">
+        <HeroBar
+          total={totals.total}
+          fourPitch={totals.fourPitch}
+          ohTwo={totals.ohTwo}
+          leadoff={totals.leadoff}
+          twoOut={totals.twoOut}
+          leaderName={teamLeader?.name}
+          leaderWalks={teamLeader?.totalWalks ?? 0}
+        />
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-            Pitcher Walk Breakdown
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Click any column to sort. A single walk can fall in multiple
-            categories.
-          </p>
+      <section className="fade-in mb-6">
+        <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <span>Walk Hall of Shame</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </h2>
+        <CategoryLeaders pitchers={pitchers} />
+      </section>
+
+      <section className="fade-in mb-6">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-5 py-3">
+            <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
+              Full Leaderboard
+            </h2>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              All pitchers · click headers to sort · one walk can fall in
+              multiple categories
+            </p>
+          </div>
+          {pitchers.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <PitcherTable pitchers={pitchers} />
+          )}
         </div>
-        {pitchers.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <PitcherTable pitchers={pitchers} />
-        )}
       </section>
 
-      <footer className="mt-10 text-xs text-slate-500">
-        <p>
-          Data source: MLB Stats API. Updates daily via Vercel Cron. Walk
-          categories track sequences against WooSox pitchers only — opponent
-          walks are filtered out.
-        </p>
+      <section className="fade-in mb-6">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-5 py-3">
+            <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
+              Recent Walks
+            </h2>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              Last {Math.min(state.recentWalks.length, 20)} walks issued by
+              WooSox pitchers
+            </p>
+          </div>
+          <RecentWalksFeed walks={state.recentWalks} limit={20} />
+        </div>
+      </section>
+
+      <footer className="text-center text-[11px] text-slate-400">
+        Data: MLB Stats API · Refresh: daily via Vercel Cron · Built with Next.js
       </footer>
     </main>
   );
 }
 
-function StatCard({
+function HeroBar({
+  total,
+  fourPitch,
+  ohTwo,
+  leadoff,
+  twoOut,
+  leaderName,
+  leaderWalks,
+}: {
+  total: number;
+  fourPitch: number;
+  ohTwo: number;
+  leadoff: number;
+  twoOut: number;
+  leaderName?: string;
+  leaderWalks: number;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-sox-navy)] via-[var(--color-sox-ink)] to-[#1d2f4b] p-5 text-white shadow-md sm:p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-white/60">
+            Season walk total
+          </div>
+          <div className="flex items-baseline gap-3">
+            <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
+              {total}
+            </div>
+            {leaderName && (
+              <div className="text-xs text-white/70">
+                <div className="text-[10px] uppercase tracking-widest text-white/50">
+                  Team leader
+                </div>
+                <div className="font-medium text-white">
+                  {leaderName}
+                  <span className="ml-1 text-white/60">({leaderWalks})</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="grid w-full grid-cols-4 gap-1 sm:w-auto sm:gap-2">
+          <HeroStat tone="amber" label="4-Pitch" value={fourPitch} />
+          <HeroStat tone="rose" label="0-2" value={ohTwo} />
+          <HeroStat tone="sky" label="Leadoff" value={leadoff} />
+          <HeroStat tone="violet" label="2-Out" value={twoOut} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const HERO_TONES = {
+  amber: "from-amber-400/20 to-amber-300/5 text-amber-100",
+  rose: "from-rose-400/20 to-rose-300/5 text-rose-100",
+  sky: "from-sky-400/20 to-sky-300/5 text-sky-100",
+  violet: "from-violet-400/20 to-violet-300/5 text-violet-100",
+} as const;
+
+function HeroStat({
+  tone,
   label,
   value,
-  accent = false,
 }: {
+  tone: keyof typeof HERO_TONES;
   label: string;
   value: number;
-  accent?: boolean;
 }) {
   return (
     <div
-      className={`rounded-xl border px-4 py-3 ${
-        accent
-          ? "border-[var(--color-sox-red)]/20 bg-[var(--color-sox-red)]/5"
-          : "border-slate-200 bg-white"
-      }`}
+      className={`rounded-xl bg-gradient-to-br ${HERO_TONES[tone]} px-2.5 py-2 sm:px-3 sm:py-2.5 ring-1 ring-inset ring-white/10`}
     >
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+      <div className="text-[9px] font-semibold uppercase tracking-widest opacity-80 sm:text-[10px]">
         {label}
       </div>
-      <div
-        className={`mt-1 text-2xl font-bold tabular-nums ${
-          accent ? "text-[var(--color-sox-red)]" : "text-[var(--color-sox-navy)]"
-        }`}
-      >
+      <div className="mt-0.5 text-xl font-bold tabular leading-none text-white sm:text-2xl">
         {value}
       </div>
     </div>
@@ -136,11 +215,11 @@ function EmptyState() {
   return (
     <div className="px-6 py-16 text-center">
       <p className="text-sm text-slate-500">
-        No walks recorded yet. Run a backfill from the deployed{" "}
+        No walks recorded yet. Hit{" "}
         <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">
           /api/backfill
         </code>{" "}
-        endpoint to load season-to-date data.
+        with your cron token to load the season.
       </p>
     </div>
   );

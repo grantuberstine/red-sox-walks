@@ -1,6 +1,16 @@
 import { put, list, del } from "@vercel/blob";
 import { BLOB_KEY, SEASON, WOOSOX_TEAM_ID } from "./constants";
-import type { PitcherStats, SeasonState, WalkClassification, GameSummary } from "./types";
+import { computeAchievements, headshotUrl } from "./achievements";
+import type {
+  GameSummary,
+  PitcherStats,
+  RecentWalk,
+  SeasonState,
+  WalkClassification,
+  WalkType,
+} from "./types";
+
+const RECENT_LIMIT = 50;
 
 const emptyState = (): SeasonState => ({
   season: SEASON,
@@ -8,6 +18,7 @@ const emptyState = (): SeasonState => ({
   processedGamePks: [],
   pitchers: {},
   games: [],
+  recentWalks: [],
   meta: {
     lastRefreshAt: null,
     lastGameDate: null,
@@ -60,13 +71,22 @@ export async function saveState(state: SeasonState): Promise<void> {
       await del(existing);
     }
   } catch {
-    // ignore — first write
+    // first write
   }
   await put(BLOB_KEY, JSON.stringify(state, null, 2), {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
   });
+}
+
+function tagsFor(w: WalkClassification): WalkType[] {
+  const t: WalkType[] = [];
+  if (w.isFourPitch) t.push("fourPitch");
+  if (w.isOhTwo) t.push("ohTwo");
+  if (w.isLeadoff) t.push("leadoff");
+  if (w.isTwoOut) t.push("twoOut");
+  return t;
 }
 
 export function applyWalksToState(
@@ -79,6 +99,7 @@ export function applyWalksToState(
     pitchers: { ...state.pitchers },
     games: [...state.games],
     processedGamePks: [...state.processedGamePks],
+    recentWalks: [...state.recentWalks],
   };
 
   if (next.processedGamePks.includes(game.gamePk)) return next;
@@ -91,6 +112,7 @@ export function applyWalksToState(
     const prev: PitcherStats = next.pitchers[key] ?? {
       pitcherId: w.pitcherId,
       name: w.pitcherName,
+      headshotUrl: headshotUrl(w.pitcherId),
       appearances: 0,
       totalWalks: 0,
       fourPitchWalks: 0,
@@ -98,10 +120,12 @@ export function applyWalksToState(
       leadoffWalks: 0,
       twoOutWalks: 0,
       lastWalkDate: null,
+      achievements: [],
     };
     next.pitchers[key] = {
       ...prev,
       name: w.pitcherName,
+      headshotUrl: headshotUrl(w.pitcherId),
       totalWalks: prev.totalWalks + 1,
       fourPitchWalks: prev.fourPitchWalks + (w.isFourPitch ? 1 : 0),
       ohTwoWalks: prev.ohTwoWalks + (w.isOhTwo ? 1 : 0),
@@ -109,6 +133,20 @@ export function applyWalksToState(
       twoOutWalks: prev.twoOutWalks + (w.isTwoOut ? 1 : 0),
       lastWalkDate: w.date,
     };
+
+    const recent: RecentWalk = {
+      pitcherId: w.pitcherId,
+      pitcherName: w.pitcherName,
+      date: w.date,
+      opponent: game.opponent,
+      inning: w.inning,
+      halfInning: w.halfInning,
+      batterName: w.batterName,
+      finalCount: w.finalCount,
+      pitchesInPA: w.pitchesInPA,
+      tags: tagsFor(w),
+    };
+    next.recentWalks.unshift(recent);
   }
 
   for (const pid of pitcherIdsThisGame) {
@@ -121,6 +159,14 @@ export function applyWalksToState(
     }
   }
 
+  for (const key of Object.keys(next.pitchers)) {
+    next.pitchers[key] = {
+      ...next.pitchers[key],
+      achievements: computeAchievements(next.pitchers[key]),
+    };
+  }
+
+  next.recentWalks = next.recentWalks.slice(0, RECENT_LIMIT);
   next.games.push(game);
   next.processedGamePks.push(game.gamePk);
   next.meta = {
