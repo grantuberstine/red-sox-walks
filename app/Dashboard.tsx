@@ -223,7 +223,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
         section={section}
         onSectionChange={changeSection}
         onOpenRoster={() => setRosterOpen(true)}
-        hiddenCount={hidden.size}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -285,17 +284,12 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 type="button"
                 onClick={() => setRosterOpen(true)}
                 aria-label="Roster"
-                className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] transition hover:border-[var(--border-strong)]"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="16" rx="2" />
                   <path d="M7 9h10M7 13h10M7 17h6" />
                 </svg>
-                {hidden.size > 0 && (
-                  <span className="absolute -top-1 -right-1 rounded-full bg-[var(--color-sox-red)] px-1 text-[9px] font-bold text-white">
-                    {hidden.size}
-                  </span>
-                )}
               </button>
             </div>
           </div>

@@ -104,40 +104,38 @@ export function PlayerProfile({
         <span className="text-[11px] text-[var(--text-muted)]">{rangeLabel}</span>
       </div>
 
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-sox-navy)] via-[var(--color-sox-ink)] to-[#1d2f4b] p-5 text-white shadow-md sm:p-6">
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
         <div className="flex items-center gap-4">
           <PitcherAvatar name={pitcher.name} src={pitcher.headshotUrl} size={72} />
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold leading-tight">{pitcher.name}</h1>
-            <p className="mt-1 text-xs text-white/70">
-              {inningsPitched(pitcher)} IP · {pitcher.appearances} appearances
+            <h1 className="text-2xl font-bold leading-tight text-[var(--text)]">
+              {pitcher.name}
+            </h1>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              {inningsPitched(pitcher)} IP · {pitcher.appearances} appearances ·{" "}
+              {pitcher.totalWalks} walks · {pitcher.totalStrikeouts} K
+              {pitcher.outsRecorded > 0 && (
+                <>
+                  {" · "}
+                  {fmt(walksPerNine(pitcher))} BB/9 ·{" "}
+                  {fmt(strikeoutsPerNine(pitcher))} K/9
+                </>
+              )}
             </p>
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Stat
-            label="Walks"
-            value={pitcher.totalWalks}
-            sub={`${fmt(walksPerNine(pitcher))} BB/9`}
-            tone="rose"
-          />
-          <Stat
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <MoneyCard
             label="Owes the fund"
             value={formatMoney(fees)}
-            sub="From walks"
+            sub={`${pitcher.fourPitchWalks + pitcher.ohTwoWalks + pitcher.leadoffWalks + pitcher.twoOutWalks} fee triggers · $1 each`}
             tone="rose"
           />
-          <Stat
-            label="Strikeouts"
-            value={pitcher.totalStrikeouts}
-            sub={`${fmt(strikeoutsPerNine(pitcher))} K/9`}
-            tone="emerald"
-          />
-          <Stat
-            label="Coaches owe"
+          <MoneyCard
+            label="Coaches owe player"
             value={formatMoney(bonus)}
-            sub="From K's"
+            sub={`${pitcher.threePitchStrikeouts} 3-pitch K + ${pitcher.sideStrikeouts} 3-up-3-down`}
             tone="emerald"
           />
         </div>
@@ -281,32 +279,30 @@ export function PlayerProfile({
   );
 }
 
-function Stat({
+function MoneyCard({
   label,
   value,
   sub,
-  tone = "neutral",
+  tone,
 }: {
   label: string;
-  value: string | number;
+  value: string;
   sub: string;
-  tone?: "neutral" | "gold" | "rose" | "emerald";
+  tone: "rose" | "emerald";
 }) {
-  const valueClass = {
-    neutral: "text-white",
-    gold: "text-[var(--color-woo-gold)]",
-    rose: "text-rose-200",
-    emerald: "text-emerald-200",
-  }[tone];
+  const valueColor =
+    tone === "rose"
+      ? "text-[var(--color-sox-red)]"
+      : "text-emerald-700 dark:text-emerald-400";
   return (
-    <div className="rounded-xl bg-white/5 px-3 py-2 ring-1 ring-inset ring-white/10">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-4 py-3">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
         {label}
       </div>
-      <div className={`mt-1 text-2xl font-bold tabular leading-none ${valueClass}`}>
+      <div className={`mt-1 text-3xl font-bold tabular leading-none ${valueColor}`}>
         {value}
       </div>
-      <div className="mt-1 truncate text-[10px] uppercase tracking-wider text-white/60">
+      <div className="mt-1.5 truncate text-[11px] text-[var(--text-muted)]">
         {sub}
       </div>
     </div>

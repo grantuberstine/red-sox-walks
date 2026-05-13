@@ -146,7 +146,7 @@ export function RosterDrawer({
                     type="button"
                     onClick={() => onToggle(p.pitcherId)}
                     aria-pressed={!isHidden}
-                    className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full ring-1 ring-inset ring-black/5 transition ${
+                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full ring-1 ring-inset ring-black/5 transition ${
                       isHidden
                         ? "bg-slate-300 dark:bg-slate-700"
                         : "bg-emerald-500"

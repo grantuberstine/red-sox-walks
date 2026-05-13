@@ -11,8 +11,8 @@ const HERO_TONES: Record<ToneKey, string> = {
 };
 
 const ACCENT_GRADIENTS = {
-  red: "from-[var(--color-sox-navy)] via-[var(--color-sox-ink)] to-[#1d2f4b]",
-  emerald: "from-emerald-900 via-emerald-800 to-emerald-700",
+  red: "from-[#8e1f26] via-[var(--color-sox-red)] to-[#8e1f26]",
+  emerald: "from-emerald-800 via-emerald-700 to-emerald-800",
 } as const;
 
 export type Breakdown = {

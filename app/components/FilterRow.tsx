@@ -24,7 +24,7 @@ export function TimeRangePills({
     <div
       role="tablist"
       aria-label="Time range"
-      className={`inline-flex overflow-hidden rounded-lg bg-[var(--surface-hover)] p-0.5 ${
+      className={`inline-flex h-9 overflow-hidden rounded-lg bg-[var(--surface-hover)] p-0.5 ${
         compact ? "" : "grid grid-cols-4 sm:inline-flex"
       }`}
     >
@@ -37,10 +37,10 @@ export function TimeRangePills({
             role="tab"
             aria-selected={active}
             onClick={() => onRangeChange(k)}
-            className={`min-h-[34px] cursor-pointer rounded-md px-2.5 text-sm font-semibold transition sm:px-3 ${
+            className={`flex h-full cursor-pointer items-center rounded-md px-3 text-sm font-semibold transition ${
               active
                 ? "bg-[var(--color-sox-red)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text)]"
+                : "text-[var(--text)] hover:text-[var(--text)]"
             }`}
             title={RANGE_LABELS[k]}
           >

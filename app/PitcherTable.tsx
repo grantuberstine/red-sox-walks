@@ -198,12 +198,13 @@ export function PitcherTable({
                 return (
                   <th
                     key={col.key}
-                    className={`px-3 py-2.5 text-xs font-semibold uppercase tracking-wider ${
+                    className={`px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider ${
                       isMoney
-                        ? mode === "walks"
-                          ? "text-[var(--color-sox-red)]"
-                          : "text-emerald-700 dark:text-emerald-300"
-                        : "text-[var(--text-muted)]"
+                        ? "border-r border-[var(--border-strong)] " +
+                          (mode === "walks"
+                            ? "text-[var(--color-sox-red)]"
+                            : "text-emerald-700 dark:text-emerald-300")
+                        : "text-[var(--text-secondary)]"
                     } ${col.align === "right" ? "text-right" : "text-left"}`}
                   >
                     <button
@@ -374,7 +375,7 @@ function PitcherRowDesktop({
             </span>
           </div>
         </td>
-        <td className={`px-3 py-2.5 text-right text-base font-bold tabular ${moneyColor}`}>
+        <td className={`border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-semibold tabular ${moneyColor}`}>
           {formatMoney(owed)}
         </td>
         {mode === "walks" ? (
@@ -383,13 +384,13 @@ function PitcherRowDesktop({
             <NumberCell value={p.ohTwoWalks} />
             <NumberCell value={p.leadoffWalks} />
             <NumberCell value={p.twoOutWalks} />
-            <td className="px-3 py-2.5 text-right tabular font-semibold text-[var(--text)]">
+            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {p.totalWalks}
             </td>
-            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>
-            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {fmtRate(walksPerNine(p))}
             </td>
           </>
@@ -397,13 +398,13 @@ function PitcherRowDesktop({
           <>
             <NumberCell value={p.threePitchStrikeouts} />
             <NumberCell value={p.sideStrikeouts} />
-            <td className="px-3 py-2.5 text-right tabular font-semibold text-[var(--text)]">
+            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {p.totalStrikeouts}
             </td>
-            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>
-            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
           </>
@@ -520,8 +521,8 @@ function KDetail({
 function NumberCell({ value }: { value: number }) {
   return (
     <td
-      className={`px-3 py-2.5 text-right tabular ${
-        value > 0 ? "text-[var(--text)]" : "text-[var(--text-muted)]/60"
+      className={`px-3 py-2.5 text-right text-sm tabular ${
+        value > 0 ? "text-[var(--text)]" : "text-[var(--text-muted)]/50"
       }`}
     >
       {value}

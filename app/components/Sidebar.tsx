@@ -119,14 +119,12 @@ export function Sidebar({
   section,
   onSectionChange,
   onOpenRoster,
-  hiddenCount,
   theme,
   onToggleTheme,
 }: {
   section: Section;
   onSectionChange: (s: Section) => void;
   onOpenRoster: () => void;
-  hiddenCount: number;
   theme: Theme;
   onToggleTheme: () => void;
 }) {
@@ -181,7 +179,6 @@ export function Sidebar({
           icon={<RosterIcon />}
           label="Roster"
           onClick={onOpenRoster}
-          badge={hiddenCount > 0 ? hiddenCount : undefined}
         />
         <SidebarFooterButton
           icon={isDark ? <SunIcon /> : <MoonIcon />}
@@ -197,28 +194,19 @@ function SidebarFooterButton({
   icon,
   label,
   onClick,
-  badge,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
-  badge?: number;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+      className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-[11px] font-semibold text-[var(--text)] transition hover:border-[var(--border-strong)]"
     >
-      <span className="inline-flex items-center gap-1.5">
-        {icon}
-        {label}
-      </span>
-      {badge !== undefined && (
-        <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
-          {badge}
-        </span>
-      )}
+      {icon}
+      {label}
     </button>
   );
 }
