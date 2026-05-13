@@ -13,8 +13,8 @@ import { PitcherAvatar } from "./PitcherAvatar";
 type SortKey = "feesOwed" | "bonusEarned" | "name";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: "feesOwed", label: "Player owes most" },
-  { key: "bonusEarned", label: "Coaches owe most" },
+  { key: "feesOwed", label: "Players Owe Most" },
+  { key: "bonusEarned", label: "Coaches Owe Most" },
   { key: "name", label: "Name (A→Z)" },
 ];
 
@@ -33,13 +33,13 @@ export function FundView({ report }: { report: FundReport }) {
     <div className="space-y-5">
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FilledStat
-          label="Players owe the fund"
+          label="Players Owe the Fund"
           value={formatMoney(report.team.totalFees)}
           sub={`${report.team.walkCount} walk fees · $${WALK_FEE_PER_CATEGORY} per category`}
           tone="rose"
         />
         <FilledStat
-          label="Coaches owe the fund"
+          label="Coaches Owe the Fund"
           value={formatMoney(report.team.totalBonus)}
           sub={`${report.team.threePitchCount} 3-pitch K · ${report.team.sideInningCount} 3-up-3-down`}
           tone="emerald"
@@ -108,7 +108,7 @@ export function FundView({ report }: { report: FundReport }) {
                 <th className="w-[80px] px-3 py-2.5 text-right">3-Pitch K</th>
                 <th className="w-[90px] px-3 py-2.5 text-right">3-Up-3-Dn</th>
                 <th className="w-[120px] px-3 py-2.5 text-right text-emerald-700 dark:text-emerald-400">
-                  Coaches owe
+                  Coaches Owe
                 </th>
               </tr>
             </thead>
@@ -167,7 +167,7 @@ export function FundView({ report }: { report: FundReport }) {
                       </span>
                     </span>
                     <span className="text-[var(--text-secondary)]">
-                      Coaches owe{" "}
+                      Coaches Owe{" "}
                       <span className="font-bold tabular text-emerald-700 dark:text-emerald-400">
                         {formatMoney(e.bonusEarned)}
                       </span>

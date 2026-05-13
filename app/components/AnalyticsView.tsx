@@ -810,6 +810,23 @@ function UsageChart({
                       />
                     );
                   })}
+                  {segments.map((s) =>
+                    s.height >= 14 && barW >= 14 ? (
+                      <text
+                        key={`l-${s.type}`}
+                        x={xPos + barW / 2}
+                        y={s.y + s.height / 2}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize="9"
+                        fontWeight="700"
+                        fill="white"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        {s.type}
+                      </text>
+                    ) : null,
+                  )}
                 </g>
               );
             })}

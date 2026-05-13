@@ -142,7 +142,7 @@ export function PlayerProfile({
 
         <div className="mt-5">
           <MoneyCard
-            label="Owes the fund"
+            label="Owes the Fund"
             value={formatMoney(fees)}
             sub="$1 per walk category"
             tone="rose"

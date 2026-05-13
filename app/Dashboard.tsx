@@ -434,7 +434,7 @@ function WalksView({
         ]}
         fundLine={
           feeTotal > 0
-            ? { label: "Total owed to fund", value: formatMoney(feeTotal) }
+            ? { label: "Total Owed to Fund", value: formatMoney(feeTotal) }
             : undefined
         }
       />

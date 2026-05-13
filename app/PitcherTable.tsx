@@ -66,7 +66,7 @@ const WALK_COLS: Array<ColDef<WalkSortKey>> = [
 
 const K_COLS: Array<ColDef<KSortKey>> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "coachesOwe", label: "Coaches owe", align: "right", width: "w-[120px]" },
+  { key: "coachesOwe", label: "Coaches Owe", align: "right", width: "w-[120px]" },
   { key: "threePitchStrikeouts", label: "3-Pitch", align: "right", width: "w-[92px]" },
   { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right", width: "w-[104px]" },
   { key: "totalStrikeouts", label: "K's", align: "right", width: "w-[92px]" },

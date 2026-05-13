@@ -14,10 +14,10 @@ type SortKey =
   | "outsRecorded";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: "owes", label: "Owes most" },
-  { key: "totalWalks", label: "Most walks" },
-  { key: "totalStrikeouts", label: "Most strikeouts" },
-  { key: "outsRecorded", label: "Innings pitched" },
+  { key: "owes", label: "Owes Most" },
+  { key: "totalWalks", label: "Most Walks" },
+  { key: "totalStrikeouts", label: "Most Strikeouts" },
+  { key: "outsRecorded", label: "Innings Pitched" },
   { key: "name", label: "Name (A→Z)" },
 ];
 
@@ -103,7 +103,7 @@ export function PlayersGallery({
                 </div>
               </div>
               <div className="mt-4">
-                <MoneyBlock label="Owes the fund" value={owes} />
+                <MoneyBlock label="Owes the Fund" value={owes} />
               </div>
               <div className="mt-3 flex flex-wrap gap-1">
                 <Pill label="4P" value={p.fourPitchWalks} tone="walk" />
