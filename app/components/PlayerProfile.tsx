@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type {
+  AppearanceVelo,
   PitcherStats,
   StrikeoutRecord,
   StrikeoutType,
@@ -15,6 +16,15 @@ import {
 } from "@/lib/filters";
 import { computeFundReport, formatMoney } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
+
+const FIP_CONSTANT = 3.1;
+
+function formatIp(outs: number): string {
+  if (!outs) return "—";
+  const innings = Math.floor(outs / 3);
+  const rem = outs % 3;
+  return `${innings}.${rem}`;
+}
 
 const WALK_TAG_OUTLINE = "border border-rose-300 text-rose-700 dark:border-rose-400/50 dark:text-rose-300";
 const WALK_TAG_COLORS: Record<WalkType, string> = {
@@ -57,11 +67,13 @@ export function PlayerProfile({
   pitcher,
   walks,
   strikeouts,
+  appearances,
   onBack,
 }: {
   pitcher: PitcherStats;
   walks: WalkRecord[];
   strikeouts: StrikeoutRecord[];
+  appearances: AppearanceVelo[];
   onBack: () => void;
 }) {
   const fundReport = useMemo(
@@ -79,6 +91,29 @@ export function PlayerProfile({
     () => strikeouts.filter((s) => s.pitcherId === pitcher.pitcherId),
     [strikeouts, pitcher.pitcherId],
   );
+
+  const seasonLine = useMemo(() => {
+    const t = appearances.reduce(
+      (acc, a) => ({
+        outs: acc.outs + (a.outs ?? 0),
+        walks: acc.walks + (a.walks ?? 0),
+        strikeouts: acc.strikeouts + (a.strikeouts ?? 0),
+        earnedRuns: acc.earnedRuns + (a.earnedRuns ?? 0),
+        homeRuns: acc.homeRuns + (a.homeRuns ?? 0),
+        hitByPitch: acc.hitByPitch + (a.hitByPitch ?? 0),
+      }),
+      { outs: 0, walks: 0, strikeouts: 0, earnedRuns: 0, homeRuns: 0, hitByPitch: 0 },
+    );
+    const ipDecimal = t.outs / 3;
+    const era = t.outs > 0 ? (t.earnedRuns * 27) / t.outs : null;
+    const fip =
+      t.outs > 0
+        ? (13 * t.homeRuns + 3 * (t.walks + t.hitByPitch) - 2 * t.strikeouts) /
+            ipDecimal +
+          FIP_CONSTANT
+        : null;
+    return { ...t, era, fip };
+  }, [appearances]);
 
   return (
     <div className="space-y-5">
@@ -123,18 +158,34 @@ export function PlayerProfile({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6">
-          <StatCard label="IP" value={inningsPitched(pitcher)} />
-          <StatCard label="Apps" value={pitcher.appearances} />
-          <StatCard label="Walks" value={pitcher.totalWalks} />
-          <StatCard label="K's" value={pitcher.totalStrikeouts} />
+        <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
           <StatCard
-            label="BB/9"
-            value={pitcher.outsRecorded > 0 ? fmt(walksPerNine(pitcher)) : "—"}
+            label="IP"
+            value={
+              seasonLine.outs > 0
+                ? formatIp(seasonLine.outs)
+                : inningsPitched(pitcher)
+            }
+          />
+          <StatCard label="Apps" value={pitcher.appearances} />
+          <StatCard label="K" value={pitcher.totalStrikeouts} />
+          <StatCard label="BB" value={pitcher.totalWalks} />
+          <StatCard label="HR" value={seasonLine.homeRuns} />
+          <StatCard
+            label="ERA"
+            value={seasonLine.era !== null ? seasonLine.era.toFixed(2) : "—"}
+          />
+          <StatCard
+            label="FIP"
+            value={seasonLine.fip !== null ? seasonLine.fip.toFixed(2) : "—"}
           />
           <StatCard
             label="K/9"
             value={pitcher.outsRecorded > 0 ? fmt(strikeoutsPerNine(pitcher)) : "—"}
+          />
+          <StatCard
+            label="BB/9"
+            value={pitcher.outsRecorded > 0 ? fmt(walksPerNine(pitcher)) : "—"}
           />
         </div>
 

@@ -358,6 +358,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
                   pitcher={profilePitcher}
                   walks={filteredWalks}
                   strikeouts={filteredK}
+                  appearances={state.velocity[String(profilePitcher.pitcherId)] ?? []}
                   onBack={() => setProfileId(null)}
                 />
               ) : (
