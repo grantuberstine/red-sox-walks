@@ -18,10 +18,11 @@ export async function GET(req: NextRequest) {
   const reset = url.searchParams.get("reset") === "1";
 
   try {
-    if (reset) {
-      await saveState(emptyState());
-    }
-    const { report } = await processGames({ startDate, endDate });
+    const { report } = await processGames({
+      startDate,
+      endDate,
+      ...(reset ? { initialState: emptyState() } : {}),
+    });
     return NextResponse.json({
       ok: true,
       mode: "backfill",

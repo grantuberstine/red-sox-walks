@@ -27,11 +27,12 @@ export type ProcessReport = {
 export async function processGames(options?: {
   startDate?: string;
   endDate?: string;
+  initialState?: SeasonState;
 }): Promise<{ state: SeasonState; report: ProcessReport }> {
   const startDate = options?.startDate;
   const endDate = options?.endDate;
 
-  let state = await loadState();
+  let state = options?.initialState ?? (await loadState());
   const games = await fetchWooSoxSchedule(startDate, endDate);
 
   const report: ProcessReport = {
