@@ -1,12 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type {
   AppearanceVelo,
   PitcherStats,
   SeasonState,
 } from "@/lib/types";
 import { PitcherAvatar } from "./PitcherAvatar";
+
+type RangeKey = "last5" | "last10" | "last20" | "season";
+
+const RANGE_OPTIONS: Array<{ key: RangeKey; label: string; take: number | null }> = [
+  { key: "last5", label: "Last 5", take: 5 },
+  { key: "last10", label: "Last 10", take: 10 },
+  { key: "last20", label: "Last 20", take: 20 },
+  { key: "season", label: "Season", take: null },
+];
 
 const PITCH_TYPE_LABELS: Record<string, string> = {
   FF: "4-Seam",
@@ -47,10 +56,18 @@ export function AnalyticsView({
   state: SeasonState;
   pitcher: PitcherStats | null;
 }) {
-  const appearances: AppearanceVelo[] = useMemo(() => {
+  const [range, setRange] = useState<RangeKey>("last10");
+
+  const allAppearances: AppearanceVelo[] = useMemo(() => {
     if (!pitcher) return [];
     return state.velocity[String(pitcher.pitcherId)] ?? [];
   }, [pitcher, state.velocity]);
+
+  const appearances: AppearanceVelo[] = useMemo(() => {
+    const take = RANGE_OPTIONS.find((r) => r.key === range)?.take ?? null;
+    if (take === null || allAppearances.length <= take) return allAppearances;
+    return allAppearances.slice(-take);
+  }, [allAppearances, range]);
 
   const career = useMemo(() => {
     if (appearances.length === 0) {
@@ -137,11 +154,13 @@ export function AnalyticsView({
               {pitcher.name}
             </h1>
             <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-              {career.appearances}{" "}
-              {career.appearances === 1 ? "outing" : "outings"} ·{" "}
-              {career.totalPitches} pitches tracked
+              {allAppearances.length}{" "}
+              {allAppearances.length === 1 ? "outing" : "outings"} this season ·{" "}
+              showing {career.appearances}{" "}
+              {career.appearances === 1 ? "outing" : "outings"}
             </p>
           </div>
+          <RangePills value={range} onChange={setRange} />
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -198,7 +217,7 @@ export function AnalyticsView({
             Pitch mix
           </h3>
           <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Career totals — usage and velocity per pitch type
+            Usage and velocity per pitch type
           </p>
         </div>
         <PitchMixTable byType={career.byType} total={career.totalPitches} />
@@ -210,11 +229,43 @@ export function AnalyticsView({
             Outing log
           </h3>
           <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            {appearances.length} appearances · newest first
+            {appearances.length}{" "}
+            {appearances.length === 1 ? "appearance" : "appearances"} · newest first
           </p>
         </div>
         <OutingsTable appearances={[...appearances].reverse()} />
       </section>
+    </div>
+  );
+}
+
+function RangePills({
+  value,
+  onChange,
+}: {
+  value: RangeKey;
+  onChange: (k: RangeKey) => void;
+}) {
+  return (
+    <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0.5">
+      {RANGE_OPTIONS.map((r) => {
+        const active = r.key === value;
+        return (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => onChange(r.key)}
+            aria-pressed={active}
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+              active
+                ? "bg-[var(--color-sox-red)] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-[var(--text)]"
+            }`}
+          >
+            {r.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -308,11 +359,11 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
           {minV.toFixed(0)}–{maxV.toFixed(0)} mph
         </span>
       </div>
-      <div className="w-full overflow-x-auto">
+      <div className="mx-auto w-full max-w-[720px] overflow-x-auto">
         <svg
           viewBox={`0 0 ${w} ${h}`}
-          preserveAspectRatio="none"
-          className="block h-[200px] w-full min-w-[480px]"
+          preserveAspectRatio="xMidYMid meet"
+          className="block h-[220px] w-full"
         >
           <g transform={`translate(${pad.left} ${pad.top})`}>
             {yTicks.map((t, i) => (
@@ -424,13 +475,15 @@ function VeloBarChart({ appearances }: { appearances: AppearanceVelo[] }) {
           {appearances.length} outings · {min.toFixed(0)}–{max.toFixed(0)} mph
         </span>
       </div>
-      <div
-        className="grid items-end gap-1"
-        style={{
-          gridTemplateColumns: `repeat(${appearances.length}, minmax(18px, 1fr))`,
-          minHeight: 160,
-        }}
-      >
+      <div className="w-full overflow-x-auto">
+        <div
+          className="mx-auto grid items-end gap-2"
+          style={{
+            gridTemplateColumns: `repeat(${appearances.length}, 48px)`,
+            minHeight: 160,
+            width: "fit-content",
+          }}
+        >
         {appearances.map((a) => {
           const avgPct = ((a.avgVelo - min) / range) * 100;
           const maxPct = ((a.maxVelo - min) / range) * 100;
@@ -456,6 +509,7 @@ function VeloBarChart({ appearances }: { appearances: AppearanceVelo[] }) {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
