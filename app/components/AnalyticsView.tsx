@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   AppearanceVelo,
   PitcherStats,
@@ -9,12 +9,19 @@ import type {
 import { PitcherAvatar } from "./PitcherAvatar";
 
 type RangeKey = "last5" | "last10" | "last20" | "season";
+type ChartView = "velocity" | "usage" | "count";
 
 const RANGE_OPTIONS: Array<{ key: RangeKey; label: string; take: number | null }> = [
   { key: "last5", label: "Last 5", take: 5 },
   { key: "last10", label: "Last 10", take: 10 },
   { key: "last20", label: "Last 20", take: 20 },
   { key: "season", label: "Season", take: null },
+];
+
+const VIEW_OPTIONS: Array<{ key: ChartView; label: string }> = [
+  { key: "velocity", label: "Velocity" },
+  { key: "usage", label: "Pitch usage" },
+  { key: "count", label: "Pitch count" },
 ];
 
 const PITCH_TYPE_LABELS: Record<string, string> = {
@@ -35,6 +42,29 @@ const PITCH_TYPE_LABELS: Record<string, string> = {
 };
 
 const FASTBALL_CODES = new Set(["FF", "FT", "SI", "FC"]);
+
+const PITCH_COLORS: Record<string, { light: string; dark: string }> = {
+  FF: { light: "#bd3039", dark: "#f87171" },
+  FT: { light: "#e11d48", dark: "#fb7185" },
+  SI: { light: "#ec4899", dark: "#f472b6" },
+  FC: { light: "#d946ef", dark: "#e879f9" },
+  SL: { light: "#8b5cf6", dark: "#a78bfa" },
+  ST: { light: "#6366f1", dark: "#818cf8" },
+  CU: { light: "#3b82f6", dark: "#60a5fa" },
+  KC: { light: "#0ea5e9", dark: "#38bdf8" },
+  CH: { light: "#10b981", dark: "#34d399" },
+  FS: { light: "#14b8a6", dark: "#2dd4bf" },
+  SV: { light: "#06b6d4", dark: "#22d3ee" },
+  KN: { light: "#64748b", dark: "#94a3b8" },
+  EP: { light: "#78716c", dark: "#a8a29e" },
+  PO: { light: "#71717a", dark: "#a1a1aa" },
+};
+
+const DEFAULT_PITCH_COLOR = { light: "#475569", dark: "#94a3b8" };
+
+function colorFor(type: string): { light: string; dark: string } {
+  return PITCH_COLORS[type] ?? DEFAULT_PITCH_COLOR;
+}
 
 function labelFor(type: string): string {
   return PITCH_TYPE_LABELS[type] ?? type;
@@ -72,7 +102,6 @@ export function AnalyticsView({
   const career = useMemo(() => {
     if (appearances.length === 0) {
       return {
-        avgVelo: 0,
         maxVelo: 0,
         totalPitches: 0,
         appearances: 0,
@@ -83,12 +112,10 @@ export function AnalyticsView({
       };
     }
     let total = 0;
-    let sumVelo = 0;
     let max = 0;
     const byTypeAcc = new Map<string, { count: number; sumVelo: number; maxVelo: number }>();
     for (const a of appearances) {
       total += a.pitchCount;
-      sumVelo += a.avgVelo * a.pitchCount;
       if (a.maxVelo > max) max = a.maxVelo;
       for (const t of a.byType) {
         const cur = byTypeAcc.get(t.type) ?? { count: 0, sumVelo: 0, maxVelo: 0 };
@@ -119,7 +146,6 @@ export function AnalyticsView({
     const fastballAvg = fbCount > 0 ? fbSumVelo / fbCount : 0;
 
     return {
-      avgVelo: sumVelo / Math.max(1, total),
       maxVelo: max,
       totalPitches: total,
       appearances: appearances.length,
@@ -143,7 +169,7 @@ export function AnalyticsView({
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <PitcherAvatar
             name={pitcher.name}
             src={pitcher.headshotUrl}
@@ -187,35 +213,11 @@ export function AnalyticsView({
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-        <div className="border-b border-[var(--border)] px-5 py-3">
-          <h3 className="text-sm font-bold text-[var(--text)]">
-            Velocity trend
-          </h3>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Avg + max per appearance, newest right
-          </p>
-        </div>
-        <VeloLineChart appearances={appearances} />
-      </section>
+      <PitcherChartCard appearances={appearances} byType={career.byType} />
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <div className="border-b border-[var(--border)] px-5 py-3">
-          <h3 className="text-sm font-bold text-[var(--text)]">
-            Velocity by outing
-          </h3>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Stacked bars — outer is max, inner is avg
-          </p>
-        </div>
-        <VeloBarChart appearances={appearances} />
-      </section>
-
-      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-        <div className="border-b border-[var(--border)] px-5 py-3">
-          <h3 className="text-sm font-bold text-[var(--text)]">
-            Pitch mix
-          </h3>
+          <h3 className="text-sm font-bold text-[var(--text)]">Pitch mix</h3>
           <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
             Usage and velocity per pitch type
           </p>
@@ -225,9 +227,7 @@ export function AnalyticsView({
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <div className="border-b border-[var(--border)] px-5 py-3">
-          <h3 className="text-sm font-bold text-[var(--text)]">
-            Outing log
-          </h3>
+          <h3 className="text-sm font-bold text-[var(--text)]">Outing log</h3>
           <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
             {appearances.length}{" "}
             {appearances.length === 1 ? "appearance" : "appearances"} · newest first
@@ -306,37 +306,230 @@ function BigStat({
   );
 }
 
-function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
-  if (appearances.length === 0) {
+function PitcherChartCard({
+  appearances,
+  byType,
+}: {
+  appearances: AppearanceVelo[];
+  byType: Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>;
+}) {
+  const [view, setView] = useState<ChartView>("velocity");
+
+  const availableTypes = byType.map((b) => b.type);
+  const defaultType =
+    availableTypes.find((t) => t === "FF") ??
+    availableTypes.find((t) => FASTBALL_CODES.has(t)) ??
+    availableTypes[0] ??
+    null;
+  const [selectedType, setSelectedType] = useState<string | null>(defaultType);
+
+  useEffect(() => {
+    if (selectedType && !availableTypes.includes(selectedType)) {
+      setSelectedType(defaultType);
+    }
+    if (!selectedType && defaultType) {
+      setSelectedType(defaultType);
+    }
+  }, [availableTypes, defaultType, selectedType]);
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className="border-b border-[var(--border)] px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-[var(--text)]">
+              {view === "velocity"
+                ? `Velocity — ${selectedType ? labelFor(selectedType) : ""}`
+                : view === "usage"
+                  ? "Pitch usage by outing"
+                  : "Pitch count by outing"}
+            </h3>
+            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+              {view === "velocity"
+                ? "Avg + max per outing for the selected pitch type · hover for detail"
+                : view === "usage"
+                  ? "Stacked by pitch type · hover for breakdown"
+                  : "Total pitches thrown per outing"}
+            </p>
+          </div>
+          <ViewPills value={view} onChange={setView} />
+        </div>
+        {view === "velocity" && availableTypes.length > 0 && (
+          <div className="mt-3">
+            <PitchTypePills
+              types={byType}
+              value={selectedType}
+              onChange={setSelectedType}
+            />
+          </div>
+        )}
+      </div>
+      {view === "velocity" && selectedType ? (
+        <VelocityChart appearances={appearances} pitchType={selectedType} />
+      ) : view === "usage" ? (
+        <UsageChart appearances={appearances} byType={byType} />
+      ) : view === "count" ? (
+        <PitchCountChart appearances={appearances} />
+      ) : (
+        <div className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+          No pitch type data.
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ViewPills({
+  value,
+  onChange,
+}: {
+  value: ChartView;
+  onChange: (v: ChartView) => void;
+}) {
+  return (
+    <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] p-0.5">
+      {VIEW_OPTIONS.map((v) => {
+        const active = v.key === value;
+        return (
+          <button
+            key={v.key}
+            type="button"
+            onClick={() => onChange(v.key)}
+            aria-pressed={active}
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+              active
+                ? "bg-[var(--surface)] text-[var(--text)] shadow-sm ring-1 ring-[var(--border-strong)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            {v.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function PitchTypePills({
+  types,
+  value,
+  onChange,
+}: {
+  types: Array<{ type: string; count: number }>;
+  value: string | null;
+  onChange: (t: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {types.map((t) => {
+        const active = value === t.type;
+        const c = colorFor(t.type);
+        return (
+          <button
+            key={t.type}
+            type="button"
+            onClick={() => onChange(t.type)}
+            aria-pressed={active}
+            className={`group inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+              active
+                ? "border-[var(--border-strong)] bg-[var(--surface-hover)] text-[var(--text)]"
+                : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{
+                background: `light-dark(${c.light}, ${c.dark})`,
+              }}
+            />
+            <span>{labelFor(t.type)}</span>
+            <span className="text-[10px] tabular opacity-60">{t.count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function useChartWidth(): [React.RefObject<HTMLDivElement | null>, number] {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(720);
+  useEffect(() => {
+    if (!ref.current) return;
+    const el = ref.current;
+    const ro = new ResizeObserver(() => {
+      setWidth(el.clientWidth);
+    });
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, width];
+}
+
+function VelocityChart({
+  appearances,
+  pitchType,
+}: {
+  appearances: AppearanceVelo[];
+  pitchType: string;
+}) {
+  const [containerRef, w] = useChartWidth();
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const points = useMemo(() => {
+    return appearances.map((a) => {
+      const t = a.byType.find((b) => b.type === pitchType);
+      return {
+        date: a.date,
+        opponent: a.opponent,
+        avg: t?.avgVelo ?? null,
+        max: t?.maxVelo ?? null,
+        count: t?.count ?? 0,
+      };
+    });
+  }, [appearances, pitchType]);
+
+  const valid = points.filter((p) => p.avg !== null);
+  if (valid.length === 0) {
     return (
-      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
-        No outings yet.
+      <div className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">
+        No {labelFor(pitchType)} thrown in this range.
       </div>
     );
   }
 
-  const w = 600;
-  const h = 200;
-  const pad = { top: 16, right: 12, bottom: 28, left: 32 };
-  const innerW = w - pad.left - pad.right;
+  const h = 240;
+  const pad = { top: 24, right: 16, bottom: 36, left: 36 };
+  const innerW = Math.max(80, w - pad.left - pad.right);
   const innerH = h - pad.top - pad.bottom;
 
-  const maxV = Math.max(...appearances.map((a) => a.maxVelo)) + 1;
-  const minV = Math.min(...appearances.map((a) => a.avgVelo)) - 2;
+  const allVals = valid.flatMap((p) => [p.avg!, p.max!]);
+  const maxV = Math.max(...allVals) + 1.5;
+  const minV = Math.min(...allVals) - 1.5;
   const range = Math.max(1, maxV - minV);
 
   const x = (i: number) =>
-    appearances.length === 1
-      ? innerW / 2
-      : (i / (appearances.length - 1)) * innerW;
+    points.length === 1 ? innerW / 2 : (i / (points.length - 1)) * innerW;
   const y = (v: number) => innerH - ((v - minV) / range) * innerH;
 
-  const avgPath = appearances
-    .map((a, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(a.avgVelo)}`)
-    .join(" ");
-  const maxPath = appearances
-    .map((a, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(a.maxVelo)}`)
-    .join(" ");
+  const buildPath = (key: "avg" | "max") => {
+    let d = "";
+    let started = false;
+    for (let i = 0; i < points.length; i++) {
+      const v = points[i][key];
+      if (v === null) {
+        started = false;
+        continue;
+      }
+      d += `${started ? "L" : "M"} ${x(i)} ${y(v)} `;
+      started = true;
+    }
+    return d.trim();
+  };
+
+  const avgPath = buildPath("avg");
+  const maxPath = buildPath("max");
 
   const ticks = 4;
   const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
@@ -344,26 +537,41 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
     return { v, y: y(v) };
   });
 
+  const color = colorFor(pitchType);
+
+  const hoveredPoint = hovered !== null ? points[hovered] : null;
+  const showTooltip = hoveredPoint && hoveredPoint.avg !== null;
+
+  const onMove = (e: React.MouseEvent<SVGRectElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    if (points.length === 1) {
+      setHovered(0);
+      return;
+    }
+    const step = innerW / (points.length - 1);
+    const idx = Math.max(0, Math.min(points.length - 1, Math.round(px / step)));
+    setHovered(idx);
+  };
+
   return (
-    <div className="px-4 pb-4 pt-3">
+    <div className="relative px-4 pb-4 pt-3">
       <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 bg-[var(--text-muted)]" />
-          avg
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 bg-[var(--color-sox-red)] dark:bg-red-400" />
-          max
-        </span>
+        <Legend swatch="#94a3b8" label="avg" line />
+        <Legend
+          swatch={`light-dark(${color.light}, ${color.dark})`}
+          label="max"
+          line
+        />
         <span className="ml-auto tabular">
           {minV.toFixed(0)}–{maxV.toFixed(0)} mph
         </span>
       </div>
-      <div className="mx-auto w-full max-w-[720px] overflow-x-auto">
+      <div ref={containerRef} className="relative">
         <svg
           viewBox={`0 0 ${w} ${h}`}
           preserveAspectRatio="xMidYMid meet"
-          className="block h-[220px] w-full"
+          className="block h-[240px] w-full"
         >
           <g transform={`translate(${pad.left} ${pad.top})`}>
             {yTicks.map((t, i) => (
@@ -377,7 +585,7 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
                   strokeDasharray="2 3"
                 />
                 <text
-                  x={-6}
+                  x={-8}
                   y={t.y}
                   dy="0.32em"
                   textAnchor="end"
@@ -393,124 +601,545 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
             <path
               d={maxPath}
               fill="none"
-              stroke="var(--color-sox-red)"
-              strokeWidth="2"
+              stroke={`light-dark(${color.light}, ${color.dark})`}
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="dark:stroke-red-400"
             />
             <path
               d={avgPath}
               fill="none"
-              stroke="var(--text-muted)"
+              stroke="#94a3b8"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              strokeDasharray="0"
             />
 
-            {appearances.map((a, i) => (
-              <g key={a.gamePk}>
-                <circle
-                  cx={x(i)}
-                  cy={y(a.maxVelo)}
-                  r="3"
-                  fill="var(--color-sox-red)"
-                  className="dark:fill-red-400"
-                >
-                  <title>{`${formatDate(a.date)}: max ${a.maxVelo.toFixed(1)}`}</title>
-                </circle>
-                <circle
-                  cx={x(i)}
-                  cy={y(a.avgVelo)}
-                  r="3"
-                  fill="var(--text-secondary)"
-                >
-                  <title>{`${formatDate(a.date)}: avg ${a.avgVelo.toFixed(1)}`}</title>
-                </circle>
-                {(appearances.length <= 10 || i % Math.ceil(appearances.length / 10) === 0) && (
+            {points.map((p, i) =>
+              p.avg === null ? null : (
+                <g key={i}>
+                  <circle
+                    cx={x(i)}
+                    cy={y(p.max!)}
+                    r={hovered === i ? 5 : 3.5}
+                    fill={`light-dark(${color.light}, ${color.dark})`}
+                  />
+                  <circle
+                    cx={x(i)}
+                    cy={y(p.avg!)}
+                    r={hovered === i ? 5 : 3.5}
+                    fill="#94a3b8"
+                  />
+                </g>
+              ),
+            )}
+
+            {hovered !== null && hoveredPoint?.avg !== null && (
+              <line
+                x1={x(hovered)}
+                x2={x(hovered)}
+                y1={0}
+                y2={innerH}
+                stroke="var(--border-strong)"
+                strokeDasharray="3 3"
+              />
+            )}
+
+            {(() => {
+              const labelStep = Math.max(
+                1,
+                Math.ceil(points.length / Math.max(2, Math.floor(innerW / 60))),
+              );
+              return points.map((p, i) =>
+                i % labelStep === 0 || i === points.length - 1 ? (
                   <text
+                    key={`d-${i}`}
                     x={x(i)}
-                    y={innerH + 16}
+                    y={innerH + 18}
                     textAnchor="middle"
-                    fontSize="9"
+                    fontSize="10"
                     fill="var(--text-muted)"
                     className="tabular"
                   >
-                    {formatDate(a.date)}
+                    {formatDate(p.date)}
                   </text>
-                )}
-              </g>
-            ))}
+                ) : null,
+              );
+            })()}
+
+            <rect
+              x={0}
+              y={0}
+              width={innerW}
+              height={innerH}
+              fill="transparent"
+              onMouseMove={onMove}
+              onMouseLeave={() => setHovered(null)}
+              style={{ cursor: "crosshair" }}
+            />
           </g>
         </svg>
+        {showTooltip && (
+          <Tooltip
+            x={pad.left + x(hovered!)}
+            chartWidth={w}
+            chartHeight={h}
+          >
+            <div className="text-[11px] font-semibold text-[var(--text)]">
+              {formatDate(hoveredPoint!.date)}
+              <span className="ml-1.5 font-normal text-[var(--text-muted)]">
+                vs {hoveredPoint!.opponent}
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3 text-[11px]">
+              <span className="text-[var(--text-muted)]">Max</span>
+              <span
+                className="font-bold tabular"
+                style={{
+                  color: `light-dark(${color.light}, ${color.dark})`,
+                }}
+              >
+                {hoveredPoint!.max!.toFixed(1)} mph
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-[11px]">
+              <span className="text-[var(--text-muted)]">Avg</span>
+              <span className="font-semibold tabular text-[var(--text)]">
+                {hoveredPoint!.avg!.toFixed(1)} mph
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-[var(--text-muted)]">
+              <span>{labelFor(pitchType)}</span>
+              <span className="tabular">{hoveredPoint!.count} pitches</span>
+            </div>
+          </Tooltip>
+        )}
       </div>
     </div>
   );
 }
 
-function VeloBarChart({ appearances }: { appearances: AppearanceVelo[] }) {
-  if (appearances.length === 0) {
-    return (
-      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
-        No outings yet.
-      </div>
+function UsageChart({
+  appearances,
+  byType,
+}: {
+  appearances: AppearanceVelo[];
+  byType: Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>;
+}) {
+  const [containerRef, w] = useChartWidth();
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const orderedTypes = byType.map((b) => b.type);
+  const maxTotal = Math.max(...appearances.map((a) => a.pitchCount), 1);
+
+  const h = 240;
+  const pad = { top: 24, right: 16, bottom: 36, left: 36 };
+  const innerW = Math.max(80, w - pad.left - pad.right);
+  const innerH = h - pad.top - pad.bottom;
+
+  const gap = 6;
+  const barW = Math.max(
+    8,
+    (innerW - gap * (appearances.length - 1)) / appearances.length,
+  );
+
+  const yScale = (v: number) => innerH - (v / maxTotal) * innerH;
+
+  const ticks = 4;
+  const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
+    const v = (maxTotal * i) / ticks;
+    return { v: Math.round(v), y: yScale(v) };
+  });
+
+  const onMove = (e: React.MouseEvent<SVGRectElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const step = (barW + gap);
+    const idx = Math.max(
+      0,
+      Math.min(appearances.length - 1, Math.floor(px / step)),
     );
-  }
-  const max = Math.max(...appearances.map((a) => a.maxVelo)) + 1;
-  const min = Math.min(...appearances.map((a) => a.avgVelo)) - 2;
-  const range = Math.max(1, max - min);
+    setHovered(idx);
+  };
+
+  const hoveredApp = hovered !== null ? appearances[hovered] : null;
 
   return (
-    <div className="px-4 pb-4 pt-3">
-      <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--text-secondary)]" />
-          avg
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--color-sox-red)] dark:bg-red-400" />
-          max
-        </span>
-        <span className="ml-auto tabular">
-          {appearances.length} outings · {min.toFixed(0)}–{max.toFixed(0)} mph
-        </span>
-      </div>
-      <div className="w-full overflow-x-auto">
-        <div
-          className="mx-auto grid items-end gap-2"
-          style={{
-            gridTemplateColumns: `repeat(${appearances.length}, 48px)`,
-            minHeight: 160,
-            width: "fit-content",
-          }}
-        >
-        {appearances.map((a) => {
-          const avgPct = ((a.avgVelo - min) / range) * 100;
-          const maxPct = ((a.maxVelo - min) / range) * 100;
+    <div className="relative px-4 pb-4 pt-3">
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted)]">
+        {orderedTypes.slice(0, 8).map((t) => {
+          const c = colorFor(t);
           return (
-            <div
-              key={a.gamePk}
-              className="group relative flex h-[140px] flex-col items-center justify-end"
-              title={`${formatDate(a.date)} vs ${a.opponent}: avg ${a.avgVelo.toFixed(1)}, max ${a.maxVelo.toFixed(1)} (${a.pitchCount} pitches)`}
-            >
-              <div className="relative h-full w-full">
-                <div
-                  className="absolute bottom-0 w-full rounded-t bg-[var(--color-sox-red)]/85 dark:bg-red-400/70"
-                  style={{ height: `${maxPct}%` }}
-                />
-                <div
-                  className="absolute bottom-0 w-full rounded-t bg-[var(--text-secondary)]"
-                  style={{ height: `${avgPct}%` }}
-                />
-              </div>
-              <div className="mt-1 truncate text-[9px] text-[var(--text-muted)] tabular">
-                {formatDate(a.date)}
-              </div>
-            </div>
+            <Legend
+              key={t}
+              swatch={`light-dark(${c.light}, ${c.dark})`}
+              label={labelFor(t)}
+            />
           );
         })}
-        </div>
+        <span className="ml-auto tabular">
+          {appearances.length} outings · peak {maxTotal} pitches
+        </span>
       </div>
+      <div ref={containerRef} className="relative">
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="block h-[240px] w-full"
+        >
+          <g transform={`translate(${pad.left} ${pad.top})`}>
+            {yTicks.map((t, i) => (
+              <g key={i}>
+                <line
+                  x1={0}
+                  x2={innerW}
+                  y1={t.y}
+                  y2={t.y}
+                  stroke="var(--border)"
+                  strokeDasharray="2 3"
+                />
+                <text
+                  x={-8}
+                  y={t.y}
+                  dy="0.32em"
+                  textAnchor="end"
+                  fontSize="10"
+                  fill="var(--text-muted)"
+                  className="tabular"
+                >
+                  {t.v}
+                </text>
+              </g>
+            ))}
+
+            {appearances.map((a, i) => {
+              const xPos = i * (barW + gap);
+              let yAcc = innerH;
+              const segments = orderedTypes
+                .map((type) => {
+                  const t = a.byType.find((b) => b.type === type);
+                  if (!t || t.count === 0) return null;
+                  const segH = (t.count / maxTotal) * innerH;
+                  yAcc -= segH;
+                  return { type, height: segH, y: yAcc, count: t.count };
+                })
+                .filter(Boolean) as Array<{
+                type: string;
+                height: number;
+                y: number;
+                count: number;
+              }>;
+              return (
+                <g key={a.gamePk} opacity={hovered === null || hovered === i ? 1 : 0.45}>
+                  {segments.map((s, idx) => {
+                    const c = colorFor(s.type);
+                    const isTop = idx === segments.length - 1;
+                    return (
+                      <rect
+                        key={s.type}
+                        x={xPos}
+                        y={s.y}
+                        width={barW}
+                        height={s.height}
+                        rx={isTop ? 2 : 0}
+                        ry={isTop ? 2 : 0}
+                        fill={`light-dark(${c.light}, ${c.dark})`}
+                      />
+                    );
+                  })}
+                </g>
+              );
+            })}
+
+            {(() => {
+              const labelStep = Math.max(
+                1,
+                Math.ceil(appearances.length / Math.max(2, Math.floor(innerW / 60))),
+              );
+              return appearances.map((a, i) =>
+                i % labelStep === 0 || i === appearances.length - 1 ? (
+                  <text
+                    key={`d-${i}`}
+                    x={i * (barW + gap) + barW / 2}
+                    y={innerH + 18}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="var(--text-muted)"
+                    className="tabular"
+                  >
+                    {formatDate(a.date)}
+                  </text>
+                ) : null,
+              );
+            })()}
+
+            <rect
+              x={0}
+              y={0}
+              width={innerW}
+              height={innerH}
+              fill="transparent"
+              onMouseMove={onMove}
+              onMouseLeave={() => setHovered(null)}
+              style={{ cursor: "crosshair" }}
+            />
+          </g>
+        </svg>
+        {hoveredApp && (
+          <Tooltip
+            x={pad.left + hovered! * (barW + gap) + barW / 2}
+            chartWidth={w}
+            chartHeight={h}
+          >
+            <div className="text-[11px] font-semibold text-[var(--text)]">
+              {formatDate(hoveredApp.date)}
+              <span className="ml-1.5 font-normal text-[var(--text-muted)]">
+                vs {hoveredApp.opponent}
+              </span>
+            </div>
+            <div className="mt-1 space-y-0.5">
+              {hoveredApp.byType.map((t) => {
+                const c = colorFor(t.type);
+                return (
+                  <div
+                    key={t.type}
+                    className="flex items-center justify-between gap-3 text-[11px]"
+                  >
+                    <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{
+                          background: `light-dark(${c.light}, ${c.dark})`,
+                        }}
+                      />
+                      {labelFor(t.type)}
+                    </span>
+                    <span className="font-semibold tabular text-[var(--text)]">
+                      {t.count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-1 border-t border-[var(--border)] pt-1 text-[10px] tabular text-[var(--text-muted)]">
+              <span className="font-semibold text-[var(--text)]">
+                {hoveredApp.pitchCount}
+              </span>{" "}
+              total pitches
+            </div>
+          </Tooltip>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
+  const [containerRef, w] = useChartWidth();
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const counts = appearances.map((a) => a.pitchCount);
+  const maxCount = Math.max(...counts, 1);
+
+  const h = 240;
+  const pad = { top: 24, right: 16, bottom: 36, left: 36 };
+  const innerW = Math.max(80, w - pad.left - pad.right);
+  const innerH = h - pad.top - pad.bottom;
+
+  const gap = 6;
+  const barW = Math.max(
+    8,
+    (innerW - gap * (appearances.length - 1)) / appearances.length,
+  );
+
+  const yScale = (v: number) => innerH - (v / maxCount) * innerH;
+
+  const ticks = 4;
+  const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
+    const v = (maxCount * i) / ticks;
+    return { v: Math.round(v), y: yScale(v) };
+  });
+
+  const onMove = (e: React.MouseEvent<SVGRectElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const step = barW + gap;
+    const idx = Math.max(
+      0,
+      Math.min(appearances.length - 1, Math.floor(px / step)),
+    );
+    setHovered(idx);
+  };
+
+  const hoveredApp = hovered !== null ? appearances[hovered] : null;
+  const avg = counts.reduce((s, n) => s + n, 0) / Math.max(1, counts.length);
+
+  return (
+    <div className="relative px-4 pb-4 pt-3">
+      <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+        <Legend swatch="light-dark(#bd3039, #f87171)" label="pitches" />
+        <span className="ml-auto tabular">
+          avg {avg.toFixed(0)} · peak {maxCount}
+        </span>
+      </div>
+      <div ref={containerRef} className="relative">
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="block h-[240px] w-full"
+        >
+          <g transform={`translate(${pad.left} ${pad.top})`}>
+            {yTicks.map((t, i) => (
+              <g key={i}>
+                <line
+                  x1={0}
+                  x2={innerW}
+                  y1={t.y}
+                  y2={t.y}
+                  stroke="var(--border)"
+                  strokeDasharray="2 3"
+                />
+                <text
+                  x={-8}
+                  y={t.y}
+                  dy="0.32em"
+                  textAnchor="end"
+                  fontSize="10"
+                  fill="var(--text-muted)"
+                  className="tabular"
+                >
+                  {t.v}
+                </text>
+              </g>
+            ))}
+
+            {appearances.map((a, i) => {
+              const xPos = i * (barW + gap);
+              const barH = (a.pitchCount / maxCount) * innerH;
+              const yPos = innerH - barH;
+              const isActive = hovered === null || hovered === i;
+              return (
+                <rect
+                  key={a.gamePk}
+                  x={xPos}
+                  y={yPos}
+                  width={barW}
+                  height={barH}
+                  rx={3}
+                  ry={3}
+                  fill="light-dark(#bd3039, #f87171)"
+                  opacity={isActive ? 0.9 : 0.4}
+                />
+              );
+            })}
+
+            {(() => {
+              const labelStep = Math.max(
+                1,
+                Math.ceil(appearances.length / Math.max(2, Math.floor(innerW / 60))),
+              );
+              return appearances.map((a, i) =>
+                i % labelStep === 0 || i === appearances.length - 1 ? (
+                  <text
+                    key={`d-${i}`}
+                    x={i * (barW + gap) + barW / 2}
+                    y={innerH + 18}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="var(--text-muted)"
+                    className="tabular"
+                  >
+                    {formatDate(a.date)}
+                  </text>
+                ) : null,
+              );
+            })()}
+
+            <rect
+              x={0}
+              y={0}
+              width={innerW}
+              height={innerH}
+              fill="transparent"
+              onMouseMove={onMove}
+              onMouseLeave={() => setHovered(null)}
+              style={{ cursor: "crosshair" }}
+            />
+          </g>
+        </svg>
+        {hoveredApp && (
+          <Tooltip
+            x={pad.left + hovered! * (barW + gap) + barW / 2}
+            chartWidth={w}
+            chartHeight={h}
+          >
+            <div className="text-[11px] font-semibold text-[var(--text)]">
+              {formatDate(hoveredApp.date)}
+              <span className="ml-1.5 font-normal text-[var(--text-muted)]">
+                vs {hoveredApp.opponent}
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span className="text-[11px] text-[var(--text-muted)]">
+                Total pitches
+              </span>
+              <span className="text-base font-bold tabular text-[var(--text)]">
+                {hoveredApp.pitchCount}
+              </span>
+            </div>
+          </Tooltip>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Legend({
+  swatch,
+  label,
+  line = false,
+}: {
+  swatch: string;
+  label: string;
+  line?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className={`inline-block ${line ? "h-0.5 w-4" : "h-2 w-2 rounded-sm"}`}
+        style={{ background: swatch }}
+      />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function Tooltip({
+  x,
+  chartWidth,
+  chartHeight,
+  children,
+}: {
+  x: number;
+  chartWidth: number;
+  chartHeight: number;
+  children: React.ReactNode;
+}) {
+  const pctX = (x / chartWidth) * 100;
+  const flipLeft = pctX > 65;
+  return (
+    <div
+      className="pointer-events-none absolute z-10 w-[180px] rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] p-2.5 shadow-lg ring-1 ring-black/5"
+      style={{
+        left: `${pctX}%`,
+        top: `${(24 / chartHeight) * 100}%`,
+        transform: flipLeft
+          ? "translate(calc(-100% - 12px), 0)"
+          : "translate(12px, 0)",
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -543,17 +1172,26 @@ function PitchMixTable({
       <tbody>
         {byType.map((t) => {
           const pct = total > 0 ? (t.count / total) * 100 : 0;
+          const c = colorFor(t.type);
           return (
             <tr
               key={t.type}
               className="border-b border-[var(--border)] last:border-0"
             >
               <td className="px-4 py-2.5 text-[var(--text)]">
-                <span className="inline-block min-w-[36px] rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider">
-                  {t.type}
-                </span>{" "}
-                <span className="ml-2 text-[11px] text-[var(--text-muted)]">
-                  {labelFor(t.type)}
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{
+                      background: `light-dark(${c.light}, ${c.dark})`,
+                    }}
+                  />
+                  <span className="inline-block min-w-[36px] rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider">
+                    {t.type}
+                  </span>
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    {labelFor(t.type)}
+                  </span>
                 </span>
               </td>
               <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
@@ -584,31 +1222,41 @@ function OutingsTable({ appearances }: { appearances: AppearanceVelo[] }) {
           <th className="px-4 py-2.5 text-left">Date</th>
           <th className="px-3 py-2.5 text-left">Opponent</th>
           <th className="px-3 py-2.5 text-right">Pitches</th>
-          <th className="px-3 py-2.5 text-right">Avg</th>
+          <th className="px-3 py-2.5 text-right">FB avg</th>
           <th className="px-3 py-2.5 text-right">Max</th>
         </tr>
       </thead>
       <tbody>
-        {appearances.map((a) => (
-          <tr
-            key={a.gamePk}
-            className="border-b border-[var(--border)] last:border-0"
-          >
-            <td className="px-4 py-2.5 tabular text-[var(--text-muted)]">
-              {formatDate(a.date)}
-            </td>
-            <td className="px-3 py-2.5 text-[var(--text)]">{a.opponent}</td>
-            <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
-              {a.pitchCount}
-            </td>
-            <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
-              {a.avgVelo.toFixed(1)}
-            </td>
-            <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
-              {a.maxVelo.toFixed(1)}
-            </td>
-          </tr>
-        ))}
+        {appearances.map((a) => {
+          let fbCount = 0;
+          let fbSum = 0;
+          for (const t of a.byType) {
+            if (!FASTBALL_CODES.has(t.type)) continue;
+            fbCount += t.count;
+            fbSum += t.avgVelo * t.count;
+          }
+          const fbAvg = fbCount > 0 ? fbSum / fbCount : null;
+          return (
+            <tr
+              key={a.gamePk}
+              className="border-b border-[var(--border)] last:border-0"
+            >
+              <td className="px-4 py-2.5 tabular text-[var(--text-muted)]">
+                {formatDate(a.date)}
+              </td>
+              <td className="px-3 py-2.5 text-[var(--text)]">{a.opponent}</td>
+              <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
+                {a.pitchCount}
+              </td>
+              <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
+                {fbAvg === null ? "—" : fbAvg.toFixed(1)}
+              </td>
+              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
+                {a.maxVelo.toFixed(1)}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
