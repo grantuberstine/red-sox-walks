@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const KEY_HIDDEN = "woosox.hiddenPitchers.v1";
 
@@ -32,11 +32,7 @@ export function useHiddenPitchers(): {
   showAll: () => void;
   hideAll: (allIds: number[]) => void;
 } {
-  const [hidden, setHidden] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    setHidden(loadHiddenPitchers());
-  }, []);
+  const [hidden, setHidden] = useState<Set<number>>(() => loadHiddenPitchers());
 
   const update = (next: Set<number>) => {
     setHidden(next);

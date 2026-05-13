@@ -45,26 +45,33 @@ type KSortKey =
 
 type SortDir = "asc" | "desc";
 
-const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "right" }> = [
+type ColDef<K extends string> = {
+  key: K;
+  label: string;
+  align?: "left" | "right";
+  width?: string;
+};
+
+const WALK_COLS: Array<ColDef<WalkSortKey>> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "owes", label: "Owes", align: "right" },
-  { key: "fourPitchWalks", label: "4-Pitch", align: "right" },
-  { key: "ohTwoWalks", label: "0-2", align: "right" },
-  { key: "leadoffWalks", label: "Leadoff", align: "right" },
-  { key: "twoOutWalks", label: "2-Out", align: "right" },
-  { key: "totalWalks", label: "Walks", align: "right" },
-  { key: "inningsPitched", label: "IP", align: "right" },
-  { key: "walksPerNine", label: "BB/9", align: "right" },
+  { key: "owes", label: "Owes", align: "right", width: "w-[88px]" },
+  { key: "fourPitchWalks", label: "4-Pitch", align: "right", width: "w-[72px]" },
+  { key: "ohTwoWalks", label: "0-2", align: "right", width: "w-[72px]" },
+  { key: "leadoffWalks", label: "Leadoff", align: "right", width: "w-[72px]" },
+  { key: "twoOutWalks", label: "2-Out", align: "right", width: "w-[72px]" },
+  { key: "totalWalks", label: "Walks", align: "right", width: "w-[72px]" },
+  { key: "inningsPitched", label: "IP", align: "right", width: "w-[72px]" },
+  { key: "walksPerNine", label: "BB/9", align: "right", width: "w-[72px]" },
 ];
 
-const K_COLS: Array<{ key: KSortKey; label: string; align?: "left" | "right" }> = [
+const K_COLS: Array<ColDef<KSortKey>> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "coachesOwe", label: "Coaches owe", align: "right" },
-  { key: "threePitchStrikeouts", label: "3-Pitch", align: "right" },
-  { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right" },
-  { key: "totalStrikeouts", label: "K's", align: "right" },
-  { key: "inningsPitched", label: "IP", align: "right" },
-  { key: "ksPerNine", label: "K/9", align: "right" },
+  { key: "coachesOwe", label: "Coaches owe", align: "right", width: "w-[110px]" },
+  { key: "threePitchStrikeouts", label: "3-Pitch", align: "right", width: "w-[72px]" },
+  { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right", width: "w-[88px]" },
+  { key: "totalStrikeouts", label: "K's", align: "right", width: "w-[72px]" },
+  { key: "inningsPitched", label: "IP", align: "right", width: "w-[72px]" },
+  { key: "ksPerNine", label: "K/9", align: "right", width: "w-[72px]" },
 ];
 
 const WALK_TAG_LABELS: Record<WalkType, string> = {
@@ -199,6 +206,8 @@ export function PitcherTable({
                   <th
                     key={col.key}
                     className={`px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider ${
+                      col.width ?? ""
+                    } ${
                       isMoney
                         ? "border-r border-[var(--border-strong)] " +
                           (mode === "walks"
@@ -375,37 +384,37 @@ function PitcherRowDesktop({
         </td>
         {mode === "walks" ? (
           <>
-            <td className="border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)]">
+            <td className="w-[88px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-bold tabular text-[var(--color-sox-red)]">
               {formatMoney(feesOwed(p))}
             </td>
             <NumberCell value={p.fourPitchWalks} />
             <NumberCell value={p.ohTwoWalks} />
             <NumberCell value={p.leadoffWalks} />
             <NumberCell value={p.twoOutWalks} />
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {p.totalWalks}
             </td>
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {fmtRate(walksPerNine(p))}
             </td>
           </>
         ) : (
           <>
-            <td className="border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-semibold tabular text-emerald-700 dark:text-emerald-400">
+            <td className="w-[110px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-bold tabular text-emerald-700 dark:text-emerald-400">
               {formatMoney(coachesOwe(p))}
             </td>
             <NumberCell value={p.threePitchStrikeouts} />
             <NumberCell value={p.sideStrikeouts} />
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {p.totalStrikeouts}
             </td>
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
           </>
@@ -521,11 +530,7 @@ function KDetail({
 
 function NumberCell({ value }: { value: number }) {
   return (
-    <td
-      className={`px-3 py-2.5 text-right text-sm tabular ${
-        value > 0 ? "text-[var(--text)]" : "text-[var(--text-muted)]/50"
-      }`}
-    >
+    <td className="w-[72px] px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
       {value}
     </td>
   );
@@ -533,13 +538,7 @@ function NumberCell({ value }: { value: number }) {
 
 function Pill({ label, value }: { label: string; value: number }) {
   return (
-    <div
-      className={`rounded-md px-2 py-1.5 ${
-        value > 0
-          ? "bg-[var(--surface-hover)] text-[var(--text)]"
-          : "bg-[var(--surface-hover)]/50 text-[var(--text-muted)]/60"
-      }`}
-    >
+    <div className="rounded-md bg-[var(--surface-hover)] px-2 py-1.5 text-[var(--text)]">
       <div className="text-[10px] font-medium uppercase tracking-wider opacity-70">
         {label}
       </div>
