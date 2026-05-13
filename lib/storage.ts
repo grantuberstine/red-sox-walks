@@ -27,6 +27,7 @@ const emptyState = (): SeasonState => ({
     totalGames: 0,
     totalWalks: 0,
     totalStrikeouts: 0,
+    totalOutsRecorded: 0,
   },
 });
 
@@ -38,6 +39,20 @@ async function findBlobUrl(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+function mergeWithDefaults(parsed: SeasonState): SeasonState {
+  const empty = emptyState();
+  return {
+    ...empty,
+    ...parsed,
+    walks: parsed.walks ?? [],
+    strikeouts: parsed.strikeouts ?? [],
+    games: parsed.games ?? [],
+    processedGamePks: parsed.processedGamePks ?? [],
+    pitchers: parsed.pitchers ?? {},
+    meta: { ...empty.meta, ...(parsed.meta ?? {}) },
+  };
 }
 
 export async function loadState(): Promise<SeasonState> {
@@ -65,20 +80,6 @@ export async function loadState(): Promise<SeasonState> {
   } catch {
     return emptyState();
   }
-}
-
-function mergeWithDefaults(parsed: SeasonState): SeasonState {
-  const empty = emptyState();
-  return {
-    ...empty,
-    ...parsed,
-    walks: parsed.walks ?? [],
-    strikeouts: parsed.strikeouts ?? [],
-    games: parsed.games ?? [],
-    processedGamePks: parsed.processedGamePks ?? [],
-    pitchers: parsed.pitchers ?? {},
-    meta: { ...empty.meta, ...(parsed.meta ?? {}) },
-  };
 }
 
 export async function saveState(state: SeasonState): Promise<void> {
@@ -125,6 +126,7 @@ function ensurePitcher(
       name,
       headshotUrl: headshotUrl(id),
       appearances: 0,
+      outsRecorded: 0,
       totalWalks: 0,
       fourPitchWalks: 0,
       ohTwoWalks: 0,
@@ -145,6 +147,7 @@ export function applyEventsToState(
   state: SeasonState,
   walks: WalkClassification[],
   strikeouts: StrikeoutClassification[],
+  outsByPitcher: Record<number, number>,
   game: GameSummary,
 ): SeasonState {
   const next: SeasonState = {
@@ -223,6 +226,17 @@ export function applyEventsToState(
     next.pitchers[key].sideStrikeouts += innings.size;
   }
 
+  for (const [pidStr, outs] of Object.entries(outsByPitcher)) {
+    const pid = Number(pidStr);
+    pitcherIdsThisGame.add(pid);
+    const p = ensurePitcher(
+      next.pitchers,
+      pid,
+      next.pitchers[pidStr]?.name ?? `Pitcher ${pid}`,
+    );
+    p.outsRecorded += outs;
+  }
+
   for (const pid of pitcherIdsThisGame) {
     const key = String(pid);
     next.pitchers[key] = {
@@ -244,6 +258,11 @@ export function applyEventsToState(
   );
   next.games.push(game);
   next.processedGamePks.push(game.gamePk);
+
+  const totalOutsAdded = Object.values(outsByPitcher).reduce(
+    (s, n) => s + n,
+    0,
+  );
   next.meta = {
     ...next.meta,
     lastRefreshAt: new Date().toISOString(),
@@ -251,6 +270,7 @@ export function applyEventsToState(
     totalGames: next.processedGamePks.length,
     totalWalks: next.meta.totalWalks + walks.length,
     totalStrikeouts: next.meta.totalStrikeouts + strikeouts.length,
+    totalOutsRecorded: next.meta.totalOutsRecorded + totalOutsAdded,
   };
 
   return next;

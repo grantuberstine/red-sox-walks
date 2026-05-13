@@ -1,4 +1,5 @@
 import type {
+  GameSummary,
   PitcherStats,
   SeasonState,
   StrikeoutRecord,
@@ -52,7 +53,7 @@ export function filterWalks(
   walks: WalkRecord[],
   range: RangeKey,
   state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
-  query: string = "",
+  query = "",
   category: WalkCategoryFilter = "all",
   hiddenIds: Set<number> = new Set(),
 ): WalkRecord[] {
@@ -78,7 +79,7 @@ export function filterStrikeouts(
   strikeouts: StrikeoutRecord[],
   range: RangeKey,
   state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
-  query: string = "",
+  query = "",
   category: StrikeoutCategoryFilter = "all",
   hiddenIds: Set<number> = new Set(),
 ): StrikeoutRecord[] {
@@ -100,9 +101,30 @@ export function filterStrikeouts(
   });
 }
 
+export function filterGames(
+  games: GameSummary[],
+  range: RangeKey,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
+): GameSummary[] {
+  const { start, end } = rangeBounds(range, state);
+  return games.filter((g) => {
+    if (start && g.date < start) return false;
+    if (end && g.date > end) return false;
+    return true;
+  });
+}
+
+type PitcherMetaMap = Record<
+  string,
+  Pick<
+    PitcherStats,
+    "pitcherId" | "name" | "headshotUrl" | "achievements" | "outsRecorded"
+  >
+>;
+
 export function aggregatePitchersFromWalks(
   walks: WalkRecord[],
-  meta: Record<string, Pick<PitcherStats, "pitcherId" | "name" | "headshotUrl" | "achievements">>,
+  meta: PitcherMetaMap,
 ): PitcherStats[] {
   const map = new Map<number, PitcherStats>();
   const datesByPitcher = new Map<number, Set<string>>();
@@ -116,6 +138,7 @@ export function aggregatePitchersFromWalks(
       name: base?.name ?? name,
       headshotUrl: base?.headshotUrl ?? headshotUrl(id),
       appearances: 0,
+      outsRecorded: base?.outsRecorded ?? 0,
       totalWalks: 0,
       fourPitchWalks: 0,
       ohTwoWalks: 0,
@@ -154,7 +177,7 @@ export function aggregatePitchersFromWalks(
 
 export function aggregatePitchersFromStrikeouts(
   strikeouts: StrikeoutRecord[],
-  meta: Record<string, Pick<PitcherStats, "pitcherId" | "name" | "headshotUrl" | "achievements">>,
+  meta: PitcherMetaMap,
 ): PitcherStats[] {
   const map = new Map<number, PitcherStats>();
   const datesByPitcher = new Map<number, Set<string>>();
@@ -169,6 +192,7 @@ export function aggregatePitchersFromStrikeouts(
       name: base?.name ?? name,
       headshotUrl: base?.headshotUrl ?? headshotUrl(id),
       appearances: 0,
+      outsRecorded: base?.outsRecorded ?? 0,
       totalWalks: 0,
       fourPitchWalks: 0,
       ohTwoWalks: 0,
@@ -297,4 +321,49 @@ export function computeInsights(events: EventLike[]): Insights {
     byInning: innings,
     byGame: games,
   };
+}
+
+export function walksPerNine(p: { totalWalks: number; outsRecorded: number }): number {
+  if (p.outsRecorded === 0) return 0;
+  return (p.totalWalks * 27) / p.outsRecorded;
+}
+
+export function strikeoutsPerNine(p: {
+  totalStrikeouts: number;
+  outsRecorded: number;
+}): number {
+  if (p.outsRecorded === 0) return 0;
+  return (p.totalStrikeouts * 27) / p.outsRecorded;
+}
+
+export function inningsPitched(p: { outsRecorded: number }): string {
+  const full = Math.floor(p.outsRecorded / 3);
+  const rem = p.outsRecorded % 3;
+  return `${full}.${rem}`;
+}
+
+export type GameLogRow = {
+  game: GameSummary;
+  walks: number;
+  strikeouts: number;
+};
+
+export function buildGameLog(
+  games: GameSummary[],
+  walks: WalkRecord[],
+  strikeouts: StrikeoutRecord[],
+): GameLogRow[] {
+  const wMap = new Map<number, number>();
+  const kMap = new Map<number, number>();
+  for (const w of walks) wMap.set(w.gamePk, (wMap.get(w.gamePk) ?? 0) + 1);
+  for (const s of strikeouts) kMap.set(s.gamePk, (kMap.get(s.gamePk) ?? 0) + 1);
+  return games
+    .map((g) => ({
+      game: g,
+      walks: wMap.get(g.gamePk) ?? 0,
+      strikeouts: kMap.get(g.gamePk) ?? 0,
+    }))
+    .sort((a, b) =>
+      a.game.date < b.game.date ? 1 : a.game.date > b.game.date ? -1 : 0,
+    );
 }

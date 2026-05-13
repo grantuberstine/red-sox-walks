@@ -10,6 +10,14 @@ function toGameSummary(
   strikeoutsProcessed: number,
 ): GameSummary {
   const isHome = g.homeTeamId === WOOSOX_TEAM_ID;
+  const teamScore = isHome ? g.homeScore : g.awayScore;
+  const opponentScore = isHome ? g.awayScore : g.homeScore;
+  let result: "W" | "L" | "T" | null = null;
+  if (teamScore !== null && opponentScore !== null) {
+    if (teamScore > opponentScore) result = "W";
+    else if (teamScore < opponentScore) result = "L";
+    else result = "T";
+  }
   return {
     gamePk: g.gamePk,
     date: g.date,
@@ -17,6 +25,9 @@ function toGameSummary(
     homeAway: isHome ? "home" : "away",
     walksProcessed,
     strikeoutsProcessed,
+    teamScore,
+    opponentScore,
+    result,
   };
 }
 
@@ -58,9 +69,12 @@ export async function processGames(options?: {
     }
     try {
       const feed = await fetchGameFeed(g.gamePk);
-      const { walks, strikeouts } = classifyWooSoxEvents(feed, g.date);
+      const { walks, strikeouts, outsByPitcher } = classifyWooSoxEvents(
+        feed,
+        g.date,
+      );
       const summary = toGameSummary(g, walks.length, strikeouts.length);
-      state = applyEventsToState(state, walks, strikeouts, summary);
+      state = applyEventsToState(state, walks, strikeouts, outsByPitcher, summary);
       report.processedNew += 1;
       report.totalWalksAdded += walks.length;
       report.totalStrikeoutsAdded += strikeouts.length;

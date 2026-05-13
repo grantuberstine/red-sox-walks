@@ -9,6 +9,7 @@ import type {
   WalkType,
 } from "@/lib/types";
 import { achievementById } from "@/lib/achievements";
+import { inningsPitched, strikeoutsPerNine, walksPerNine } from "@/lib/filters";
 import { PitcherAvatar } from "./components/PitcherAvatar";
 
 type Mode = "walks" | "strikeouts";
@@ -16,28 +17,30 @@ type Mode = "walks" | "strikeouts";
 type WalkSortKey =
   | "name"
   | "appearances"
+  | "inningsPitched"
   | "totalWalks"
   | "fourPitchWalks"
   | "ohTwoWalks"
   | "leadoffWalks"
   | "twoOutWalks"
-  | "walksPerApp";
+  | "walksPerNine";
 
 type KSortKey =
   | "name"
   | "appearances"
+  | "inningsPitched"
   | "totalStrikeouts"
   | "threePitchStrikeouts"
   | "sideStrikeouts"
-  | "ksPerApp";
+  | "ksPerNine";
 
 type SortDir = "asc" | "desc";
 
 const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "appearances", label: "Apps", align: "right" },
+  { key: "inningsPitched", label: "IP", align: "right" },
   { key: "totalWalks", label: "BB", align: "right" },
-  { key: "walksPerApp", label: "BB/App", align: "right" },
+  { key: "walksPerNine", label: "BB/9", align: "right" },
   { key: "fourPitchWalks", label: "4-Pitch", align: "right" },
   { key: "ohTwoWalks", label: "0-2", align: "right" },
   { key: "leadoffWalks", label: "Leadoff", align: "right" },
@@ -46,11 +49,11 @@ const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "righ
 
 const K_COLS: Array<{ key: KSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "appearances", label: "Apps", align: "right" },
+  { key: "inningsPitched", label: "IP", align: "right" },
   { key: "totalStrikeouts", label: "K", align: "right" },
-  { key: "ksPerApp", label: "K/App", align: "right" },
+  { key: "ksPerNine", label: "K/9", align: "right" },
   { key: "threePitchStrikeouts", label: "3-Pitch", align: "right" },
-  { key: "sideStrikeouts", label: "Sat-Side", align: "right" },
+  { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right" },
 ];
 
 const WALK_TAG_COLORS: Record<WalkType, string> = {
@@ -74,12 +77,6 @@ const K_TAG_LABELS: Record<StrikeoutType, string> = {
   side: "side",
 };
 
-function walkRate(p: PitcherStats) {
-  return p.appearances === 0 ? 0 : p.totalWalks / p.appearances;
-}
-function kRate(p: PitcherStats) {
-  return p.appearances === 0 ? 0 : p.totalStrikeouts / p.appearances;
-}
 function fmtRate(n: number) {
   return n === 0 ? "—" : n.toFixed(2);
 }
@@ -134,19 +131,15 @@ export function PitcherTable({
       if (sortKey === "name") {
         return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
       }
-      const av =
-        sortKey === "walksPerApp"
-          ? walkRate(a)
-          : sortKey === "ksPerApp"
-            ? kRate(a)
-            : (a[sortKey as keyof PitcherStats] as number);
-      const bv =
-        sortKey === "walksPerApp"
-          ? walkRate(b)
-          : sortKey === "ksPerApp"
-            ? kRate(b)
-            : (b[sortKey as keyof PitcherStats] as number);
-      return sortDir === "asc" ? Number(av) - Number(bv) : Number(bv) - Number(av);
+      const valOf = (p: PitcherStats): number => {
+        if (sortKey === "walksPerNine") return walksPerNine(p);
+        if (sortKey === "ksPerNine") return strikeoutsPerNine(p);
+        if (sortKey === "inningsPitched") return p.outsRecorded;
+        return Number(p[sortKey as keyof PitcherStats]);
+      };
+      const av = valOf(a);
+      const bv = valOf(b);
+      return sortDir === "asc" ? av - bv : bv - av;
     });
     return rows;
   }, [pitchers, sortKey, sortDir]);
@@ -259,12 +252,12 @@ export function PitcherTable({
                       </span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
-                      <span className="tabular">{p.appearances} apps</span>
+                      <span className="tabular">{inningsPitched(p)} IP</span>
                       <span>·</span>
                       <span className="tabular">
                         {mode === "walks"
-                          ? `${fmtRate(walkRate(p))} BB/app`
-                          : `${fmtRate(kRate(p))} K/app`}
+                          ? `${fmtRate(walksPerNine(p))} BB/9`
+                          : `${fmtRate(strikeoutsPerNine(p))} K/9`}
                       </span>
                       <span className="ml-auto text-[10px]">
                         {open ? "▲" : "▼"}
@@ -363,7 +356,7 @@ function PitcherRowDesktop({
           </div>
         </td>
         <td className="px-4 py-2.5 text-right tabular text-slate-600">
-          {p.appearances}
+          {inningsPitched(p)}
         </td>
         {mode === "walks" ? (
           <>
@@ -371,7 +364,7 @@ function PitcherRowDesktop({
               {p.totalWalks}
             </td>
             <td className="px-4 py-2.5 text-right tabular text-slate-600">
-              {fmtRate(walkRate(p))}
+              {fmtRate(walksPerNine(p))}
             </td>
             <NumberCell value={p.fourPitchWalks} color="text-amber-700" />
             <NumberCell value={p.ohTwoWalks} color="text-rose-700" />
@@ -384,7 +377,7 @@ function PitcherRowDesktop({
               {p.totalStrikeouts}
             </td>
             <td className="px-4 py-2.5 text-right tabular text-slate-600">
-              {fmtRate(kRate(p))}
+              {fmtRate(strikeoutsPerNine(p))}
             </td>
             <NumberCell value={p.threePitchStrikeouts} color="text-emerald-700" />
             <NumberCell value={p.sideStrikeouts} color="text-indigo-700" />

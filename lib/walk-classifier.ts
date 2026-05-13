@@ -31,6 +31,7 @@ function pitchCount(play: LivePlay): number {
 export type Classified = {
   walks: WalkClassification[];
   strikeouts: StrikeoutClassification[];
+  outsByPitcher: Record<number, number>;
 };
 
 export function classifyWooSoxEvents(
@@ -39,6 +40,7 @@ export function classifyWooSoxEvents(
 ): Classified {
   const walks: WalkClassification[] = [];
   const strikeouts: StrikeoutClassification[] = [];
+  const outsByPitcher: Record<number, number> = {};
 
   const seenHalfInnings = new Set<string>();
   const firstPlayInHalf = new Map<string, number>();
@@ -54,15 +56,9 @@ export function classifyWooSoxEvents(
     }
   }
 
-  type HalfStat = {
-    pitcherIds: Set<number>;
-    kByPitcher: Map<number, number[]>;
-    nonKOuts: number;
-    finalOuts: number;
-  };
-  const halfStats = new Map<string, HalfStat>();
-
-  let prevOuts = -1;
+  type PlayMeta = { play: LivePlay; outsAdded: number };
+  const playsByHalf = new Map<string, PlayMeta[]>();
+  let prevOuts = 0;
   let prevHalfKey: string | null = null;
 
   for (const play of playsSorted) {
@@ -71,45 +67,28 @@ export function classifyWooSoxEvents(
       prevOuts = 0;
       prevHalfKey = halfKey;
     }
-    const outsAtEnd = play.count.outs;
-    const outsAdded = Math.max(0, outsAtEnd - prevOuts);
+    const outsAdded = Math.max(0, play.count.outs - prevOuts);
+    if (!playsByHalf.has(halfKey)) playsByHalf.set(halfKey, []);
+    playsByHalf.get(halfKey)!.push({ play, outsAdded });
 
-    let stat = halfStats.get(halfKey);
-    if (!stat) {
-      stat = {
-        pitcherIds: new Set(),
-        kByPitcher: new Map(),
-        nonKOuts: 0,
-        finalOuts: 0,
-      };
-      halfStats.set(halfKey, stat);
-    }
-    stat.pitcherIds.add(play.matchup.pitcher.id);
-
-    const evType = play.result.eventType;
-    if (STRIKEOUT_EVENTS.has(evType ?? "")) {
-      if (!stat.kByPitcher.has(play.matchup.pitcher.id)) {
-        stat.kByPitcher.set(play.matchup.pitcher.id, []);
-      }
-      stat.kByPitcher.get(play.matchup.pitcher.id)!.push(play.about.atBatIndex);
-      if (evType === "strikeout_double_play") {
-        stat.nonKOuts += Math.max(0, outsAdded - 1);
-      }
-    } else if (outsAdded > 0) {
-      stat.nonKOuts += outsAdded;
+    const pitchingTeamId = teamPitchingInHalf(feed, play.about.halfInning);
+    if (pitchingTeamId === WOOSOX_TEAM_ID && outsAdded > 0) {
+      const pid = play.matchup.pitcher.id;
+      outsByPitcher[pid] = (outsByPitcher[pid] ?? 0) + outsAdded;
     }
 
-    stat.finalOuts = outsAtEnd;
-    prevOuts = outsAtEnd;
+    prevOuts = play.count.outs;
   }
 
   const sidePitcherByHalf = new Map<string, number>();
-  for (const [key, stat] of halfStats) {
-    for (const [pid, ks] of stat.kByPitcher) {
-      if (ks.length === 3 && stat.nonKOuts === 0) {
-        sidePitcherByHalf.set(key, pid);
-      }
-    }
+  for (const [halfKey, plays] of playsByHalf) {
+    if (plays.length !== 3) continue;
+    const pitcher = plays[0].play.matchup.pitcher.id;
+    const sameP = plays.every((p) => p.play.matchup.pitcher.id === pitcher);
+    if (!sameP) continue;
+    const allK = plays.every((p) => p.play.result.eventType === "strikeout");
+    if (!allK) continue;
+    sidePitcherByHalf.set(halfKey, pitcher);
   }
 
   for (const play of playsSorted) {
@@ -129,10 +108,7 @@ export function classifyWooSoxEvents(
         inning: play.about.inning,
         halfInning: play.about.halfInning,
         batterName: play.matchup.batter.fullName,
-        finalCount: {
-          balls: play.count.balls,
-          strikes: play.count.strikes,
-        },
+        finalCount: { balls: play.count.balls, strikes: play.count.strikes },
         pitchesInPA: pitchCount(play),
         isFourPitch: play.count.strikes === 0,
         isOhTwo: reached0_2(play.playEvents ?? []),
@@ -158,7 +134,7 @@ export function classifyWooSoxEvents(
     }
   }
 
-  return { walks, strikeouts };
+  return { walks, strikeouts, outsByPitcher };
 }
 
 export function classifyWooSoxWalks(

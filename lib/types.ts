@@ -6,6 +6,7 @@ export type PitcherStats = {
   name: string;
   headshotUrl: string;
   appearances: number;
+  outsRecorded: number;
   totalWalks: number;
   fourPitchWalks: number;
   ohTwoWalks: number;
@@ -26,6 +27,9 @@ export type GameSummary = {
   homeAway: "home" | "away";
   walksProcessed: number;
   strikeoutsProcessed: number;
+  teamScore: number | null;
+  opponentScore: number | null;
+  result: "W" | "L" | "T" | null;
 };
 
 export type WalkRecord = {
@@ -69,6 +73,7 @@ export type SeasonState = {
     totalGames: number;
     totalWalks: number;
     totalStrikeouts: number;
+    totalOutsRecorded: number;
   };
 };
 
@@ -107,4 +112,6 @@ export type ScheduleGame = {
   homeTeamName: string;
   awayTeamId: number;
   awayTeamName: string;
+  homeScore: number | null;
+  awayScore: number | null;
 };

@@ -15,21 +15,21 @@ import {
   formatRangeContext,
 } from "@/lib/filters";
 import { useHiddenPitchers } from "@/lib/preferences";
-import { TopNav, type Mode } from "./components/TopNav";
+import { AppHeader, type Section } from "./components/AppHeader";
+import { SubHeader } from "./components/SubHeader";
+import type { Mode } from "./components/TopNav";
 import { RosterDrawer } from "./components/RosterDrawer";
-import { FilterBar } from "./components/FilterBar";
 import { HeroBar } from "./components/HeroBar";
 import { InsightsRow } from "./components/InsightsRow";
-import { TrendChart } from "./components/TrendChart";
-import { InningChart } from "./components/InningChart";
 import { CategoryLeaders } from "./components/CategoryLeaders";
 import { StrikeoutLeaders } from "./components/StrikeoutLeaders";
 import { ViewToggle, type ViewMode } from "./components/ViewToggle";
-import { CategoryChips, type CategoryDef } from "./components/CategoryChips";
+import type { CategoryDef } from "./components/CategoryChips";
 import { PitcherTable } from "./PitcherTable";
 import { PitcherCards } from "./components/PitcherCards";
 import { RecentWalksFeed } from "./components/RecentWalksFeed";
 import { StrikeoutsFeed } from "./components/StrikeoutsFeed";
+import { TeamView } from "./components/TeamView";
 
 const WALK_CATEGORIES: CategoryDef[] = [
   { key: "all", label: "All", emoji: "🎯", tone: "neutral" },
@@ -41,8 +41,8 @@ const WALK_CATEGORIES: CategoryDef[] = [
 
 const K_CATEGORIES: CategoryDef[] = [
   { key: "all", label: "All", emoji: "🎯", tone: "neutral" },
-  { key: "threePitch", label: "3-Pitch", emoji: "⚡", tone: "emerald" },
-  { key: "side", label: "Sat-Side", emoji: "🪑", tone: "indigo" },
+  { key: "threePitch", label: "3-Pitch K", emoji: "⚡", tone: "emerald" },
+  { key: "side", label: "3-Up-3-Dn", emoji: "🪑", tone: "indigo" },
 ];
 
 const WALK_CATEGORY_LABELS: Record<WalkCategoryFilter, string> = {
@@ -55,8 +55,8 @@ const WALK_CATEGORY_LABELS: Record<WalkCategoryFilter, string> = {
 
 const K_CATEGORY_LABELS: Record<StrikeoutCategoryFilter, string> = {
   all: "all strikeouts",
-  threePitch: "3-pitch strikeouts",
-  side: "side strikeouts",
+  threePitch: "3-pitch K's",
+  side: "3-up-3-down K's",
 };
 
 function formatTimestamp(iso: string | null): string {
@@ -69,11 +69,8 @@ function formatTimestamp(iso: string | null): string {
   });
 }
 
-function pluralize(n: number, s: string, p: string): string {
-  return n === 1 ? `${n} ${s}` : `${n} ${p}`;
-}
-
 export function Dashboard({ state }: { state: SeasonState }) {
+  const [section, setSection] = useState<Section>("players");
   const [mode, setMode] = useState<Mode>("walks");
   const [range, setRange] = useState<RangeKey>("season");
   const [query, setQuery] = useState("");
@@ -83,6 +80,15 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const [rosterOpen, setRosterOpen] = useState(false);
 
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
+
+  const filteredWalksAllCats = useMemo(
+    () => filterWalks(state.walks, range, state, query, "all", hidden),
+    [state, range, query, hidden],
+  );
+  const filteredKAllCats = useMemo(
+    () => filterStrikeouts(state.strikeouts, range, state, query, "all", hidden),
+    [state, range, query, hidden],
+  );
 
   const filteredWalks = useMemo(
     () => filterWalks(state.walks, range, state, query, walkCat, hidden),
@@ -138,11 +144,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
         sideInnings.add(`${s.gamePk}-${s.inning}-${s.halfInning}`);
       }
     }
-    return {
-      total: filteredK.length,
-      threePitch,
-      side: sideInnings.size,
-    };
+    return { total: filteredK.length, threePitch, side: sideInnings.size };
   }, [filteredK]);
 
   const walkLeader = useMemo(
@@ -163,15 +165,48 @@ export function Dashboard({ state }: { state: SeasonState }) {
     [filteredK],
   );
 
+  const currentCategories = mode === "walks" ? WALK_CATEGORIES : K_CATEGORIES;
+  const currentCatValue = mode === "walks" ? walkCat : kCat;
+  const currentCatLabel =
+    mode === "walks"
+      ? `Showing ${WALK_CATEGORY_LABELS[walkCat]}`
+      : `Showing ${K_CATEGORY_LABELS[kCat]}`;
+
+  const isPlayers = section === "players";
+
   return (
     <>
-      <TopNav
-        mode={mode}
-        onModeChange={setMode}
+      <AppHeader
+        section={section}
+        onSectionChange={setSection}
         walkCount={state.meta.totalWalks}
         strikeoutCount={state.meta.totalStrikeouts}
         hiddenCount={hidden.size}
         onOpenRoster={() => setRosterOpen(true)}
+      />
+
+      <SubHeader
+        mode={mode}
+        onModeChange={setMode}
+        walkCount={state.meta.totalWalks}
+        strikeoutCount={state.meta.totalStrikeouts}
+        range={range}
+        onRangeChange={setRange}
+        query={query}
+        onQueryChange={setQuery}
+        rangeContext={rangeContext}
+        resultCount={mode === "walks" ? filteredWalks.length : filteredK.length}
+        categories={isPlayers ? currentCategories : undefined}
+        categoryValue={isPlayers ? currentCatValue : undefined}
+        onCategoryChange={
+          isPlayers
+            ? (v) =>
+                mode === "walks"
+                  ? setWalkCat(v as WalkCategoryFilter)
+                  : setKCat(v as StrikeoutCategoryFilter)
+            : undefined
+        }
+        categoryLabel={isPlayers ? currentCatLabel : undefined}
       />
 
       <RosterDrawer
@@ -184,99 +219,75 @@ export function Dashboard({ state }: { state: SeasonState }) {
         onHideAll={hideAll}
       />
 
-      <main className="mx-auto max-w-5xl px-4 pb-16 pt-4 sm:px-6 lg:px-8 lg:pt-6">
-        <header className="fade-in mb-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-[var(--color-sox-navy)] sm:text-2xl">
-                {mode === "walks"
-                  ? "Walk Tracker"
-                  : "Strikeout Tracker"}
-              </h1>
-              <p className="text-[11px] text-slate-500 sm:text-xs">
-                {mode === "walks"
-                  ? "Free passes by category — "
-                  : "Punchouts by category — "}
-                {state.season} season
-              </p>
-            </div>
-            <div className="text-[11px] text-slate-500 sm:text-right">
-              {pluralize(state.meta.totalGames, "game", "games")} · last refresh{" "}
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-4 sm:px-6 lg:pt-6">
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-[var(--color-sox-navy)] sm:text-xl">
+              {section === "players"
+                ? mode === "walks"
+                  ? "Player Walks"
+                  : "Player Strikeouts"
+                : mode === "walks"
+                  ? "Team Walks"
+                  : "Team Strikeouts"}
+            </h1>
+            <p className="text-[11px] text-slate-500">
+              {state.season} season · last refresh{" "}
               <span className="tabular">
                 {formatTimestamp(state.meta.lastRefreshAt)}
               </span>
-            </div>
+            </p>
           </div>
-        </header>
+        </div>
 
-        <section className="fade-in mb-3">
-          <FilterBar
-            range={range}
-            onRangeChange={setRange}
-            query={query}
-            onQueryChange={setQuery}
-            rangeContext={rangeContext}
-            resultCount={mode === "walks" ? filteredWalks.length : filteredK.length}
-          />
-        </section>
-
-        <section className="fade-in mb-5">
-          <CategoryChips
-            categories={mode === "walks" ? WALK_CATEGORIES : K_CATEGORIES}
-            value={mode === "walks" ? walkCat : kCat}
-            onChange={(v) =>
-              mode === "walks"
-                ? setWalkCat(v as WalkCategoryFilter)
-                : setKCat(v as StrikeoutCategoryFilter)
-            }
-          />
-          <div className="mt-1 text-[10px] text-slate-400">
-            Showing{" "}
-            {mode === "walks" ? WALK_CATEGORY_LABELS[walkCat] : K_CATEGORY_LABELS[kCat]}
-          </div>
-        </section>
-
-        {mode === "walks" ? (
-          <WalksContent
-            range={range}
-            totals={walkTotals}
-            leader={walkLeader}
-            insights={walkInsights}
-            pitchers={walkPitchers}
-            walks={filteredWalks}
-            view={view}
-            onViewChange={setView}
-            isFiltered={isFiltered}
-            query={query}
-          />
+        {section === "players" ? (
+          mode === "walks" ? (
+            <PlayerWalksContent
+              range={range}
+              totals={walkTotals}
+              leader={walkLeader}
+              pitchers={walkPitchers}
+              walks={filteredWalks}
+              view={view}
+              onViewChange={setView}
+              isFiltered={isFiltered}
+              query={query}
+            />
+          ) : (
+            <PlayerStrikeoutsContent
+              range={range}
+              totals={kTotals}
+              leader={kLeader}
+              pitchers={kPitchers}
+              strikeouts={filteredK}
+              view={view}
+              onViewChange={setView}
+              isFiltered={isFiltered}
+              query={query}
+            />
+          )
         ) : (
-          <StrikeoutsContent
+          <TeamView
+            state={state}
             range={range}
-            totals={kTotals}
-            leader={kLeader}
-            insights={kInsights}
-            pitchers={kPitchers}
-            strikeouts={filteredK}
-            view={view}
-            onViewChange={setView}
-            isFiltered={isFiltered}
-            query={query}
+            filteredWalks={filteredWalksAllCats}
+            filteredK={filteredKAllCats}
+            rangeLabel={RANGE_LABELS[range]}
           />
         )}
 
-        <footer className="mt-6 text-center text-[11px] text-slate-400">
-          Data: MLB Stats API · Refresh: daily via Vercel Cron · Built with Next.js
+        <footer className="mt-8 text-center text-[11px] text-slate-400">
+          Data: MLB Stats API · Daily refresh via Vercel Cron
         </footer>
       </main>
     </>
   );
 }
 
-function WalksContent(props: {
+function PlayerWalksContent(props: {
   range: RangeKey;
   totals: { total: number; fourPitch: number; ohTwo: number; leadoff: number; twoOut: number };
   leader?: { name: string; totalWalks: number };
-  insights: ReturnType<typeof computeInsights>;
   pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
   walks: ReturnType<typeof filterWalks>;
   view: ViewMode;
@@ -284,109 +295,49 @@ function WalksContent(props: {
   isFiltered: boolean;
   query: string;
 }) {
-  const {
-    range,
-    totals,
-    leader,
-    insights,
-    pitchers,
-    walks,
-    view,
-    onViewChange,
-    isFiltered,
-    query,
-  } = props;
-
+  const { range, totals, leader, pitchers, walks, view, onViewChange, isFiltered, query } = props;
+  const insights = computeInsights(walks);
   return (
-    <>
-      <section className="fade-in mb-5">
-        <HeroBar
-          accent="red"
-          eventLabel="walks"
-          rangeLabel={RANGE_LABELS[range]}
-          total={totals.total}
-          leaderName={leader?.name}
-          leaderValue={leader?.totalWalks ?? 0}
-          breakdown={[
-            { label: "4-Pitch", value: totals.fourPitch, tone: "amber" },
-            { label: "0-2", value: totals.ohTwo, tone: "rose" },
-            { label: "Leadoff", value: totals.leadoff, tone: "sky" },
-            { label: "2-Out", value: totals.twoOut, tone: "violet" },
-          ]}
-        />
-      </section>
-
-      <section className="fade-in mb-5">
-        <InsightsRow
-          mode="walks"
-          worstLabel="Most walks in a game"
-          insights={insights}
-        />
-      </section>
-
-      <section className="fade-in mb-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <ChartCard title="Walks per game">
-          <TrendChart data={insights.byGame} accent="red" />
-        </ChartCard>
-        <ChartCard title="Walks by inning">
-          <InningChart data={insights.byInning} accent="red" />
-        </ChartCard>
-      </section>
-
-      <section className="fade-in mb-5">
-        <SectionHeader title="Walk Hall of Shame" subtitle={RANGE_LABELS[range]} />
-        <CategoryLeaders pitchers={pitchers} />
-      </section>
-
-      <section className="fade-in mb-5">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <BoardHeader
-            title="Pitcher Leaderboard"
-            count={pitchers.length}
-            isFiltered={isFiltered}
-            view={view}
-            onViewChange={onViewChange}
-          />
-          {pitchers.length === 0 ? (
-            <Empty />
-          ) : view === "table" ? (
-            <PitcherTable pitchers={pitchers} allWalks={walks} mode="walks" />
-          ) : (
-            <PitcherCards
-              pitchers={pitchers}
-              allWalks={walks}
-              allStrikeouts={[]}
-              query={query}
-              mode="walks"
-            />
-          )}
-        </div>
-      </section>
-
-      <section className="fade-in mb-5">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-5 py-3">
-            <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
-              Walk Feed
-            </h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">
-              {walks.length === 0
-                ? "No walks in this filter"
-                : `${walks.length} ${walks.length === 1 ? "walk" : "walks"} · newest first`}
-            </p>
-          </div>
-          <RecentWalksFeed walks={walks} limit={30} />
-        </div>
-      </section>
-    </>
+    <div className="space-y-5">
+      <HeroBar
+        accent="red"
+        eventLabel="walks"
+        rangeLabel={RANGE_LABELS[range]}
+        total={totals.total}
+        leaderName={leader?.name}
+        leaderValue={leader?.totalWalks ?? 0}
+        breakdown={[
+          { label: "4-Pitch", value: totals.fourPitch, tone: "amber" },
+          { label: "0-2", value: totals.ohTwo, tone: "rose" },
+          { label: "Leadoff", value: totals.leadoff, tone: "sky" },
+          { label: "2-Out", value: totals.twoOut, tone: "violet" },
+        ]}
+      />
+      <InsightsRow mode="walks" worstLabel="Most walks in a game" insights={insights} />
+      <SectionHeader title="Walk Hall of Shame" subtitle={RANGE_LABELS[range]} />
+      <CategoryLeaders pitchers={pitchers} />
+      <LeaderboardSection
+        title="Pitcher Leaderboard"
+        pitchers={pitchers}
+        walks={walks}
+        strikeouts={[]}
+        view={view}
+        onViewChange={onViewChange}
+        isFiltered={isFiltered}
+        query={query}
+        mode="walks"
+      />
+      <FeedSection title="Walk Feed" emptyLabel="walks">
+        <RecentWalksFeed walks={walks} limit={30} />
+      </FeedSection>
+    </div>
   );
 }
 
-function StrikeoutsContent(props: {
+function PlayerStrikeoutsContent(props: {
   range: RangeKey;
   totals: { total: number; threePitch: number; side: number };
   leader?: { name: string; totalStrikeouts: number };
-  insights: ReturnType<typeof computeInsights>;
   pitchers: ReturnType<typeof aggregatePitchersFromStrikeouts>;
   strikeouts: ReturnType<typeof filterStrikeouts>;
   view: ViewMode;
@@ -394,115 +345,106 @@ function StrikeoutsContent(props: {
   isFiltered: boolean;
   query: string;
 }) {
-  const {
-    range,
-    totals,
-    leader,
-    insights,
-    pitchers,
-    strikeouts,
-    view,
-    onViewChange,
-    isFiltered,
-    query,
-  } = props;
-
+  const { range, totals, leader, pitchers, strikeouts, view, onViewChange, isFiltered, query } = props;
+  const insights = computeInsights(strikeouts);
   return (
-    <>
-      <section className="fade-in mb-5">
-        <HeroBar
-          accent="emerald"
-          eventLabel="strikeouts"
-          rangeLabel={RANGE_LABELS[range]}
-          total={totals.total}
-          leaderName={leader?.name}
-          leaderValue={leader?.totalStrikeouts ?? 0}
-          breakdown={[
-            { label: "3-Pitch", value: totals.threePitch, tone: "emerald" },
-            { label: "Sat-Side", value: totals.side, tone: "indigo" },
-          ]}
-        />
-      </section>
-
-      <section className="fade-in mb-5">
-        <InsightsRow
-          mode="strikeouts"
-          worstLabel="Most K's in a game"
-          insights={insights}
-        />
-      </section>
-
-      <section className="fade-in mb-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <ChartCard title="K's per game">
-          <TrendChart data={insights.byGame} accent="emerald" />
-        </ChartCard>
-        <ChartCard title="K's by inning">
-          <InningChart data={insights.byInning} accent="emerald" />
-        </ChartCard>
-      </section>
-
-      <section className="fade-in mb-5">
-        <SectionHeader title="K Hall of Fame" subtitle={RANGE_LABELS[range]} />
-        <StrikeoutLeaders pitchers={pitchers} />
-      </section>
-
-      <section className="fade-in mb-5">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <BoardHeader
-            title="Pitcher Leaderboard"
-            count={pitchers.length}
-            isFiltered={isFiltered}
-            view={view}
-            onViewChange={onViewChange}
-          />
-          {pitchers.length === 0 ? (
-            <Empty />
-          ) : view === "table" ? (
-            <PitcherTable
-              pitchers={pitchers}
-              allStrikeouts={strikeouts}
-              mode="strikeouts"
-            />
-          ) : (
-            <PitcherCards
-              pitchers={pitchers}
-              allWalks={[]}
-              allStrikeouts={strikeouts}
-              query={query}
-              mode="strikeouts"
-            />
-          )}
-        </div>
-      </section>
-
-      <section className="fade-in mb-5">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-5 py-3">
-            <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
-              Strikeout Feed
-            </h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">
-              {strikeouts.length === 0
-                ? "No strikeouts in this filter"
-                : `${strikeouts.length} ${strikeouts.length === 1 ? "K" : "K's"} · newest first`}
-            </p>
-          </div>
-          <StrikeoutsFeed strikeouts={strikeouts} limit={30} />
-        </div>
-      </section>
-    </>
+    <div className="space-y-5">
+      <HeroBar
+        accent="emerald"
+        eventLabel="strikeouts"
+        rangeLabel={RANGE_LABELS[range]}
+        total={totals.total}
+        leaderName={leader?.name}
+        leaderValue={leader?.totalStrikeouts ?? 0}
+        breakdown={[
+          { label: "3-Pitch K", value: totals.threePitch, tone: "emerald" },
+          { label: "3-Up-3-Dn", value: totals.side, tone: "indigo" },
+        ]}
+      />
+      <InsightsRow mode="strikeouts" worstLabel="Most K's in a game" insights={insights} />
+      <SectionHeader title="K Hall of Fame" subtitle={RANGE_LABELS[range]} />
+      <StrikeoutLeaders pitchers={pitchers} />
+      <LeaderboardSection
+        title="Pitcher Leaderboard"
+        pitchers={pitchers}
+        walks={[]}
+        strikeouts={strikeouts}
+        view={view}
+        onViewChange={onViewChange}
+        isFiltered={isFiltered}
+        query={query}
+        mode="strikeouts"
+      />
+      <FeedSection title="Strikeout Feed" emptyLabel="strikeouts">
+        <StrikeoutsFeed strikeouts={strikeouts} limit={30} />
+      </FeedSection>
+    </div>
   );
 }
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function LeaderboardSection({
+  title,
+  pitchers,
+  walks,
+  strikeouts,
+  view,
+  onViewChange,
+  isFiltered,
+  query,
+  mode,
+}: {
+  title: string;
+  pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
+  walks: ReturnType<typeof filterWalks>;
+  strikeouts: ReturnType<typeof filterStrikeouts>;
+  view: ViewMode;
+  onViewChange: (v: ViewMode) => void;
+  isFiltered: boolean;
+  query: string;
+  mode: Mode;
+}) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-2.5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-          {title}
-        </h3>
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
+            {title}
+          </h2>
+          <p className="mt-0.5 text-[11px] text-slate-500">
+            {pitchers.length === 0
+              ? "No matching pitchers"
+              : `${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} · tap row for detail`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isFiltered && (
+            <span className="rounded-full bg-[var(--color-sox-red)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-sox-red)]">
+              filtered
+            </span>
+          )}
+          <ViewToggle value={view} onChange={onViewChange} />
+        </div>
       </div>
-      {children}
+      {pitchers.length === 0 ? (
+        <div className="px-6 py-14 text-center text-sm text-slate-500">
+          Nothing matches the current filter.
+        </div>
+      ) : view === "table" ? (
+        <PitcherTable
+          pitchers={pitchers}
+          allWalks={walks}
+          allStrikeouts={strikeouts}
+          mode={mode}
+        />
+      ) : (
+        <PitcherCards
+          pitchers={pitchers}
+          allWalks={walks}
+          allStrikeouts={strikeouts}
+          query={query}
+          mode={mode}
+        />
+      )}
     </div>
   );
 }
@@ -515,7 +457,7 @@ function SectionHeader({
   subtitle: string;
 }) {
   return (
-    <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+    <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">
       <span>{title}</span>
       <span className="opacity-60">· {subtitle}</span>
       <span className="h-px flex-1 bg-slate-200" />
@@ -523,47 +465,24 @@ function SectionHeader({
   );
 }
 
-function BoardHeader({
+function FeedSection({
   title,
-  count,
-  isFiltered,
-  view,
-  onViewChange,
+  emptyLabel,
+  children,
 }: {
   title: string;
-  count: number;
-  isFiltered: boolean;
-  view: ViewMode;
-  onViewChange: (v: ViewMode) => void;
+  emptyLabel: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-3">
-      <div className="min-w-0 flex-1">
-        <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
-          {title}
-        </h2>
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-5 py-3">
+        <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">{title}</h2>
         <p className="mt-0.5 text-[11px] text-slate-500">
-          {count === 0
-            ? "No matching pitchers"
-            : `${count} ${count === 1 ? "pitcher" : "pitchers"} · tap row for detail`}
+          {emptyLabel} feed · newest first
         </p>
       </div>
-      <div className="flex items-center gap-2">
-        {isFiltered && (
-          <span className="rounded-full bg-[var(--color-sox-red)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-sox-red)]">
-            filtered
-          </span>
-        )}
-        <ViewToggle value={view} onChange={onViewChange} />
-      </div>
-    </div>
-  );
-}
-
-function Empty() {
-  return (
-    <div className="px-6 py-14 text-center text-sm text-slate-500">
-      Nothing matches the current filter.
+      {children}
     </div>
   );
 }

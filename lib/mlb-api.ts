@@ -43,6 +43,8 @@ export async function fetchWooSoxSchedule(
         homeTeamName: g.teams.home.team.name,
         awayTeamId: g.teams.away.team.id,
         awayTeamName: g.teams.away.team.name,
+        homeScore: g.teams.home.score ?? null,
+        awayScore: g.teams.away.score ?? null,
       });
     }
   }

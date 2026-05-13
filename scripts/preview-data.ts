@@ -16,8 +16,19 @@ async function main() {
     i += 1;
     process.stdout.write(`\r[${i}/${games.length}] gamePk ${g.gamePk}    `);
     const feed = await fetchGameFeed(g.gamePk);
-    const { walks, strikeouts } = classifyWooSoxEvents(feed, g.date);
+    const { walks, strikeouts, outsByPitcher } = classifyWooSoxEvents(
+      feed,
+      g.date,
+    );
     const isHome = g.homeTeamId === WOOSOX_TEAM_ID;
+    const teamScore = isHome ? g.homeScore : g.awayScore;
+    const opponentScore = isHome ? g.awayScore : g.homeScore;
+    let result: "W" | "L" | "T" | null = null;
+    if (teamScore !== null && opponentScore !== null) {
+      if (teamScore > opponentScore) result = "W";
+      else if (teamScore < opponentScore) result = "L";
+      else result = "T";
+    }
     const summary: GameSummary = {
       gamePk: g.gamePk,
       date: g.date,
@@ -25,8 +36,11 @@ async function main() {
       homeAway: isHome ? "home" : "away",
       walksProcessed: walks.length,
       strikeoutsProcessed: strikeouts.length,
+      teamScore,
+      opponentScore,
+      result,
     };
-    state = applyEventsToState(state, walks, strikeouts, summary);
+    state = applyEventsToState(state, walks, strikeouts, outsByPitcher, summary);
   }
   process.stdout.write("\n");
 
@@ -41,7 +55,11 @@ async function main() {
   console.log(`Pitchers: ${Object.keys(state.pitchers).length}`);
   console.log(`Games: ${state.meta.totalGames}`);
   console.log(`Total walks: ${state.meta.totalWalks}`);
-  console.log(`Total strikeouts: ${state.meta.totalStrikeouts}`);
+  console.log(`Total K: ${state.meta.totalStrikeouts}`);
+  console.log(`Total outs: ${state.meta.totalOutsRecorded}, IP: ${(state.meta.totalOutsRecorded / 3).toFixed(1)}`);
+  const wins = state.games.filter((g) => g.result === "W").length;
+  const losses = state.games.filter((g) => g.result === "L").length;
+  console.log(`Record: ${wins}-${losses}`);
 }
 
 main().catch((e) => {

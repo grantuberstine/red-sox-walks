@@ -9,6 +9,7 @@ import type {
   WalkType,
 } from "@/lib/types";
 import { achievementById } from "@/lib/achievements";
+import { inningsPitched, strikeoutsPerNine, walksPerNine } from "@/lib/filters";
 import { PitcherAvatar } from "./PitcherAvatar";
 
 type Mode = "walks" | "strikeouts";
@@ -19,19 +20,22 @@ type WalkSortKey =
   | "ohTwoWalks"
   | "leadoffWalks"
   | "twoOutWalks"
-  | "walksPerApp"
+  | "walksPerNine"
+  | "inningsPitched"
   | "name";
 
 type KSortKey =
   | "totalStrikeouts"
   | "threePitchStrikeouts"
   | "sideStrikeouts"
-  | "ksPerApp"
+  | "ksPerNine"
+  | "inningsPitched"
   | "name";
 
 const WALK_SORTS: Array<{ key: WalkSortKey; label: string }> = [
   { key: "totalWalks", label: "Total walks" },
-  { key: "walksPerApp", label: "Walks per app" },
+  { key: "walksPerNine", label: "BB / 9" },
+  { key: "inningsPitched", label: "Innings pitched" },
   { key: "fourPitchWalks", label: "4-Pitch" },
   { key: "ohTwoWalks", label: "0-2" },
   { key: "leadoffWalks", label: "Leadoff" },
@@ -41,9 +45,10 @@ const WALK_SORTS: Array<{ key: WalkSortKey; label: string }> = [
 
 const K_SORTS: Array<{ key: KSortKey; label: string }> = [
   { key: "totalStrikeouts", label: "Total K's" },
-  { key: "ksPerApp", label: "K's per app" },
+  { key: "ksPerNine", label: "K / 9" },
+  { key: "inningsPitched", label: "Innings pitched" },
   { key: "threePitchStrikeouts", label: "3-Pitch" },
-  { key: "sideStrikeouts", label: "Sat-Side" },
+  { key: "sideStrikeouts", label: "3-Up-3-Dn" },
   { key: "name", label: "Name (A–Z)" },
 ];
 
@@ -68,12 +73,6 @@ const K_TAG_LABELS: Record<StrikeoutType, string> = {
   side: "side",
 };
 
-function walkRate(p: PitcherStats) {
-  return p.appearances === 0 ? 0 : p.totalWalks / p.appearances;
-}
-function kRate(p: PitcherStats) {
-  return p.appearances === 0 ? 0 : p.totalStrikeouts / p.appearances;
-}
 function fmtRate(n: number) {
   return n === 0 ? "—" : n.toFixed(2);
 }
@@ -127,19 +126,13 @@ export function PitcherCards({
     const rows = [...pitchers];
     rows.sort((a, b) => {
       if (sortKey === "name") return a.name.localeCompare(b.name);
-      const av =
-        sortKey === "walksPerApp"
-          ? walkRate(a)
-          : sortKey === "ksPerApp"
-            ? kRate(a)
-            : (a[sortKey as keyof PitcherStats] as number);
-      const bv =
-        sortKey === "walksPerApp"
-          ? walkRate(b)
-          : sortKey === "ksPerApp"
-            ? kRate(b)
-            : (b[sortKey as keyof PitcherStats] as number);
-      return Number(bv) - Number(av);
+      const valOf = (p: PitcherStats): number => {
+        if (sortKey === "walksPerNine") return walksPerNine(p);
+        if (sortKey === "ksPerNine") return strikeoutsPerNine(p);
+        if (sortKey === "inningsPitched") return p.outsRecorded;
+        return Number(p[sortKey as keyof PitcherStats]);
+      };
+      return valOf(b) - valOf(a);
     });
     return rows;
   }, [pitchers, sortKey]);
@@ -166,7 +159,8 @@ export function PitcherCards({
           const walks = walksByPitcher.get(p.pitcherId) ?? [];
           const ks = ksByPitcher.get(p.pitcherId) ?? [];
           const primaryNum = mode === "walks" ? p.totalWalks : p.totalStrikeouts;
-          const rate = mode === "walks" ? walkRate(p) : kRate(p);
+          const rate =
+            mode === "walks" ? walksPerNine(p) : strikeoutsPerNine(p);
           return (
             <div
               key={p.pitcherId}
@@ -195,10 +189,10 @@ export function PitcherCards({
                       </span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
-                      <span className="tabular">{p.appearances} apps</span>
+                      <span className="tabular">{inningsPitched(p)} IP</span>
                       <span>·</span>
                       <span className="tabular">
-                        {fmtRate(rate)} {mode === "walks" ? "BB" : "K"}/app
+                        {fmtRate(rate)} {mode === "walks" ? "BB" : "K"}/9
                       </span>
                     </div>
                   </div>
