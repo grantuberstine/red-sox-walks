@@ -63,9 +63,9 @@ export function RosterDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-secondary)]"
+            className="-m-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full p-2 text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M6 6l12 12M18 6L6 18"
                 stroke="currentColor"
@@ -92,14 +92,14 @@ export function RosterDrawer({
               <button
                 type="button"
                 onClick={onShowAll}
-                className="rounded-md bg-[var(--surface-hover)] px-2 py-0.5 font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
               >
                 Show all
               </button>
               <button
                 type="button"
                 onClick={() => onHideAll(pitchers.map((p) => p.pitcherId))}
-                className="rounded-md bg-[var(--surface-hover)] px-2 py-0.5 font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
               >
                 Hide all
               </button>

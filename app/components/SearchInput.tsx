@@ -93,7 +93,7 @@ export function SearchInput({
         onKeyDown={onKey}
         placeholder={placeholder}
         autoComplete="off"
-        className="h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-8 pr-8 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:border-[var(--color-sox-red)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-red)]/15"
+        className="h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-8 pr-8 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:border-[var(--color-sox-red)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-red)]/15 lg:h-9"
       />
       {value && (
         <button

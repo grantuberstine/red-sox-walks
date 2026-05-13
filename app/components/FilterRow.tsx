@@ -43,7 +43,7 @@ export function TimeRangePills({
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="flex h-9 w-full min-w-[140px] cursor-pointer items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--border-strong)]"
+        className="flex h-10 w-full min-w-[140px] cursor-pointer items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--border-strong)] lg:h-9"
       >
         <span>{DROPDOWN_LABEL[range]}</span>
         <svg

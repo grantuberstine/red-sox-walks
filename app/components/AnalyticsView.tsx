@@ -1115,62 +1115,107 @@ function PitchMixTable({
   const isDark = useIsDark();
   if (byType.length === 0) {
     return (
-      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
+      <div className="px-5 py-8 text-center text-sm text-[var(--text-secondary)]">
         No pitch type data.
       </div>
     );
   }
   return (
-    <table className="min-w-full text-sm">
-      <thead>
-        <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-          <th className="px-4 py-2.5 text-left">Pitch type</th>
-          <th className="px-3 py-2.5 text-right">Count</th>
-          <th className="px-3 py-2.5 text-right">Usage</th>
-          <th className="px-3 py-2.5 text-right">Avg velo</th>
-          <th className="px-3 py-2.5 text-right">Max velo</th>
-        </tr>
-      </thead>
-      <tbody>
+    <>
+      <div className="hidden md:block">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              <th className="px-4 py-2.5 text-left">Pitch type</th>
+              <th className="px-3 py-2.5 text-right">Count</th>
+              <th className="px-3 py-2.5 text-right">Usage</th>
+              <th className="px-3 py-2.5 text-right">Avg velo</th>
+              <th className="px-3 py-2.5 text-right">Max velo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byType.map((t) => {
+              const pct = total > 0 ? (t.count / total) * 100 : 0;
+              const c = colorFor(t.type);
+              return (
+                <tr
+                  key={t.type}
+                  className="border-b border-[var(--border)] last:border-0"
+                >
+                  <td className="px-4 py-2.5 text-[var(--text)]">
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ background: isDark ? c.dark : c.light }}
+                      />
+                      <span className="inline-block min-w-[36px] rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider">
+                        {t.type}
+                      </span>
+                      <span className="text-[11px] text-[var(--text-secondary)]">
+                        {labelFor(t.type)}
+                      </span>
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
+                    {t.count}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+                    {pct.toFixed(1)}%
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
+                    {t.avgVelo.toFixed(1)}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
+                    {t.maxVelo.toFixed(1)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <ul className="divide-y divide-[var(--border)] md:hidden">
         {byType.map((t) => {
           const pct = total > 0 ? (t.count / total) * 100 : 0;
           const c = colorFor(t.type);
           return (
-            <tr
-              key={t.type}
-              className="border-b border-[var(--border)] last:border-0"
-            >
-              <td className="px-4 py-2.5 text-[var(--text)]">
-                <span className="inline-flex items-center gap-2">
+            <li key={t.type} className="px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    className="h-3 w-3 shrink-0 rounded-full"
                     style={{ background: isDark ? c.dark : c.light }}
                   />
-                  <span className="inline-block min-w-[36px] rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider">
+                  <span className="shrink-0 rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text)]">
                     {t.type}
                   </span>
-                  <span className="text-[11px] text-[var(--text-muted)]">
+                  <span className="truncate text-sm font-medium text-[var(--text)]">
                     {labelFor(t.type)}
                   </span>
+                </div>
+                <span className="shrink-0 text-[11px] tabular text-[var(--text-secondary)]">
+                  {t.count} · {pct.toFixed(1)}%
                 </span>
-              </td>
-              <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
-                {t.count}
-              </td>
-              <td className="px-3 py-2.5 text-right tabular text-[var(--text-muted)]">
-                {pct.toFixed(1)}%
-              </td>
-              <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
-                {t.avgVelo.toFixed(1)}
-              </td>
-              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
-                {t.maxVelo.toFixed(1)}
-              </td>
-            </tr>
+              </div>
+              <div className="mt-2 flex items-baseline gap-4 text-[12px]">
+                <span className="text-[var(--text-secondary)]">
+                  Avg{" "}
+                  <span className="font-semibold tabular text-[var(--text)]">
+                    {t.avgVelo.toFixed(1)}
+                  </span>
+                </span>
+                <span className="text-[var(--text-secondary)]">
+                  Max{" "}
+                  <span className="font-bold tabular text-[var(--color-sox-red)] dark:text-red-400">
+                    {t.maxVelo.toFixed(1)}
+                  </span>
+                </span>
+              </div>
+            </li>
           );
         })}
-      </tbody>
-    </table>
+      </ul>
+    </>
   );
 }
 
