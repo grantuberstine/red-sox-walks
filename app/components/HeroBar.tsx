@@ -41,19 +41,22 @@ export function HeroBar({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-2xl bg-gradient-to-br ${ACCENT_GRADIENTS[accent]} p-5 text-white shadow-md sm:p-6`}
+      className={`overflow-hidden rounded-2xl bg-gradient-to-br ${ACCENT_GRADIENTS[accent]} p-5 text-white shadow-md transition-shadow hover:shadow-lg sm:p-6`}
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/65">
             Total {eventLabel} · {rangeLabel}
           </div>
-          <div className="flex items-baseline gap-3">
-            <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
+          <div className="mt-1 flex items-baseline gap-3">
+            <div
+              className="text-6xl font-bold tabular leading-none sm:text-7xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               {total}
             </div>
             {totalSub && (
-              <div className="text-[11px] text-white/60">{totalSub}</div>
+              <div className="text-[11px] text-white/65">{totalSub}</div>
             )}
           </div>
         </div>
@@ -70,11 +73,11 @@ export function HeroBar({
       </div>
 
       {fundLine && (
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/25 bg-white/10 px-4 py-2.5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-white/85">
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 backdrop-blur-sm transition hover:bg-white/15">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/85">
             {fundLine.label}
           </span>
-          <span className="text-2xl font-bold tabular text-white">
+          <span className="text-2xl font-bold tabular text-white" style={{ letterSpacing: "-0.01em" }}>
             {fundLine.value}
           </span>
         </div>

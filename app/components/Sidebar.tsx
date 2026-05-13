@@ -170,7 +170,7 @@ export function Sidebar({
               type="button"
               onClick={() => onSectionChange(item.key)}
               aria-pressed={active}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
+              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-all duration-150 ${
                 active
                   ? "bg-[var(--color-sox-red)] text-white shadow-sm"
                   : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
@@ -246,22 +246,20 @@ export function MobileTabBar({
               onClick={() => onSectionChange(item.key)}
               aria-pressed={active}
               aria-label={item.label}
-              className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-[var(--surface-hover)] ${
+              className={`flex min-h-[58px] cursor-pointer flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-semibold transition active:bg-[var(--surface-hover)] ${
                 active
                   ? "text-[var(--color-sox-red)] dark:text-red-500"
                   : "text-[var(--text-secondary)]"
               }`}
             >
               <span
-                className={
-                  active
-                    ? "scale-110 transition-transform"
-                    : "transition-transform"
-                }
+                className={`transition-transform duration-200 ${
+                  active ? "scale-110" : ""
+                }`}
               >
                 {item.icon}
               </span>
-              <span className="leading-none">{item.short}</span>
+              <span className="whitespace-nowrap leading-none">{item.short}</span>
             </button>
           );
         })}

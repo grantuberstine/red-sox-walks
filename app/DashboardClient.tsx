@@ -14,9 +14,11 @@ const Dashboard = dynamic(
 function DashboardLoadingShell() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
-      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--color-sox-red)]" />
-        Loading…
+      <div className="flex flex-col items-center gap-3">
+        <span className="inline-block h-6 w-6 animate-spin rounded-full border-[3px] border-[var(--border-strong)] border-t-[var(--color-sox-red)]" />
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+          Loading
+        </span>
       </div>
     </div>
   );

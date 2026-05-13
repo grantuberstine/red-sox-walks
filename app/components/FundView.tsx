@@ -210,12 +210,15 @@ function FilledStat({
       : "from-emerald-800 via-emerald-700 to-emerald-800";
   return (
     <div
-      className={`overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-5 text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:p-6`}
+      className={`overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-5 text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:p-6`}
     >
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-white/75">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
         {label}
       </div>
-      <div className="mt-2 text-5xl font-bold tabular leading-none sm:text-6xl">
+      <div
+        className="mt-2 text-5xl font-bold tabular leading-none sm:text-6xl"
+        style={{ letterSpacing: "-0.02em" }}
+      >
         {value}
       </div>
       <div className="mt-3 text-[11px] text-white/75">{sub}</div>

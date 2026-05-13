@@ -246,7 +246,7 @@ function BigStat({
   highlight?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-3 transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-sm">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md">
       <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
         {label}
       </div>

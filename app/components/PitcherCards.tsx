@@ -166,7 +166,7 @@ export function PitcherCards({
           return (
             <div
               key={p.pitcherId}
-              className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md ${
+              className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md ${
                 open ? "ring-2 ring-[var(--color-sox-red)]/30" : ""
               }`}
             >

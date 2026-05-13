@@ -88,7 +88,7 @@ export function PlayersGallery({
               key={p.pitcherId}
               type="button"
               onClick={() => onSelect(p.pitcherId)}
-              className="group cursor-pointer rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-sm ring-1 ring-[var(--border)]/40 transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md"
+              className="group cursor-pointer rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-sm ring-1 ring-[var(--border)]/40 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md"
             >
               <div className="flex items-center gap-3">
                 <PitcherAvatar name={p.name} src={p.headshotUrl} size={48} />

@@ -38,7 +38,7 @@ export function StrikeoutLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
         return (
           <div
             key={cat.key}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md"
+            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md"
           >
             <div className="mb-3 border-b border-[var(--border)] pb-2">
               <h3 className="text-sm font-bold text-[var(--text)]">
