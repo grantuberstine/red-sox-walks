@@ -65,7 +65,7 @@ export function FundView({
             <TopCallout
               title="Biggest contributor to the fund"
               entry={topOwer}
-              valueLabel={`${formatMoney(topOwer.feesOwed)} owes`}
+              valueLabel={`${formatMoney(topOwer.feesOwed)} owed`}
               tone="rose"
             />
           )}

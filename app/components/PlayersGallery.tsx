@@ -2,33 +2,44 @@
 
 import { useMemo, useState } from "react";
 import type { PitcherStats } from "@/lib/types";
+import { inningsPitched } from "@/lib/filters";
 import {
-  inningsPitched,
-  strikeoutsPerNine,
-  walksPerNine,
-} from "@/lib/filters";
+  WALK_FEE_PER_CATEGORY,
+  THREE_PITCH_K_BONUS,
+  SIDE_K_BONUS,
+  formatMoney,
+} from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
 
 type SortKey =
   | "name"
-  | "outsRecorded"
+  | "owes"
+  | "coachesOwe"
   | "totalWalks"
   | "totalStrikeouts"
-  | "ksPerNine"
-  | "walksPerNine";
+  | "outsRecorded";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: "name", label: "Name (A→Z)" },
-  { key: "outsRecorded", label: "Innings pitched" },
+  { key: "owes", label: "Owes most" },
+  { key: "coachesOwe", label: "Coaches owe most" },
   { key: "totalWalks", label: "Most walks" },
   { key: "totalStrikeouts", label: "Most strikeouts" },
-  { key: "ksPerNine", label: "K/9 (best first)" },
-  { key: "walksPerNine", label: "BB/9 (worst first)" },
+  { key: "outsRecorded", label: "Innings pitched" },
+  { key: "name", label: "Name (A→Z)" },
 ];
 
-function fmt(n: number): string {
-  if (!Number.isFinite(n) || n === 0) return "—";
-  return n.toFixed(2);
+function feesOwed(p: PitcherStats): number {
+  return (
+    (p.fourPitchWalks + p.ohTwoWalks + p.leadoffWalks + p.twoOutWalks) *
+    WALK_FEE_PER_CATEGORY
+  );
+}
+
+function coachesOwe(p: PitcherStats): number {
+  return (
+    p.threePitchStrikeouts * THREE_PITCH_K_BONUS +
+    p.sideStrikeouts * SIDE_K_BONUS
+  );
 }
 
 export function PlayersGallery({
@@ -38,15 +49,15 @@ export function PlayersGallery({
   pitchers: PitcherStats[];
   onSelect: (pitcherId: number) => void;
 }) {
-  const [sortKey, setSortKey] = useState<SortKey>("totalWalks");
+  const [sortKey, setSortKey] = useState<SortKey>("owes");
 
   const sorted = useMemo(() => {
     const rows = [...pitchers];
     rows.sort((a, b) => {
       if (sortKey === "name") return a.name.localeCompare(b.name);
       const valOf = (p: PitcherStats): number => {
-        if (sortKey === "ksPerNine") return strikeoutsPerNine(p);
-        if (sortKey === "walksPerNine") return walksPerNine(p);
+        if (sortKey === "owes") return feesOwed(p);
+        if (sortKey === "coachesOwe") return coachesOwe(p);
         return p[sortKey as keyof PitcherStats] as number;
       };
       return valOf(b) - valOf(a);
@@ -65,15 +76,15 @@ export function PlayersGallery({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-[var(--text-secondary)]">
+        <h2 className="text-sm font-semibold text-[var(--text)]">
           {pitchers.length} {pitchers.length === 1 ? "pitcher" : "pitchers"}
         </h2>
-        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="flex items-center gap-2 text-xs text-[var(--text)]">
           <span className="font-semibold">Sort</span>
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]"
+            className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text)]"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.key} value={o.key}>
@@ -85,69 +96,71 @@ export function PlayersGallery({
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {sorted.map((p) => (
-          <button
-            key={p.pitcherId}
-            type="button"
-            onClick={() => onSelect(p.pitcherId)}
-            className="group cursor-pointer rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--color-sox-navy)]/30 hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <PitcherAvatar name={p.name} src={p.headshotUrl} size={52} />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-[var(--text)] group-hover:text-[var(--color-sox-red)]">
-                  {p.name}
-                </div>
-                <div className="text-[11px] text-[var(--text-muted)]">
-                  {inningsPitched(p)} IP · {p.appearances} apps
+        {sorted.map((p) => {
+          const owes = feesOwed(p);
+          const owed = coachesOwe(p);
+          return (
+            <button
+              key={p.pitcherId}
+              type="button"
+              onClick={() => onSelect(p.pitcherId)}
+              className="group cursor-pointer rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-sm ring-1 ring-[var(--border)]/40 transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md"
+            >
+              <div className="flex items-center gap-3">
+                <PitcherAvatar name={p.name} src={p.headshotUrl} size={48} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-[var(--text)] group-hover:text-[var(--color-sox-red)]">
+                    {p.name}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-muted)]">
+                    {inningsPitched(p)} IP · {p.appearances} apps ·{" "}
+                    {p.totalWalks} BB · {p.totalStrikeouts} K
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Mini label="Walks" value={p.totalWalks} rate={`${fmt(walksPerNine(p))} BB/9`} tone="rose" />
-              <Mini label="K's" value={p.totalStrikeouts} rate={`${fmt(strikeoutsPerNine(p))} K/9`} tone="emerald" />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1 text-[10px] text-[var(--text-muted)]">
-              <Pill label="4P" value={p.fourPitchWalks} on="bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" />
-              <Pill label="0-2" value={p.ohTwoWalks} on="bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300" />
-              <Pill label="LO" value={p.leadoffWalks} on="bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300" />
-              <Pill label="2O" value={p.twoOutWalks} on="bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300" />
-              <Pill label="3P-K" value={p.threePitchStrikeouts} on="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" />
-              <Pill label="3-UP" value={p.sideStrikeouts} on="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300" />
-            </div>
-            <div className="mt-3 text-right text-[10px] font-semibold text-[var(--text-muted)] group-hover:text-[var(--color-sox-red)]">
-              View profile →
-            </div>
-          </button>
-        ))}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <MoneyBlock label="Owes the fund" value={owes} tone="rose" />
+                <MoneyBlock label="Coaches owe" value={owed} tone="emerald" />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                <Pill label="4P" value={p.fourPitchWalks} tone="walk" />
+                <Pill label="0-2" value={p.ohTwoWalks} tone="walk" />
+                <Pill label="LO" value={p.leadoffWalks} tone="walk" />
+                <Pill label="2O" value={p.twoOutWalks} tone="walk" />
+                <Pill label="3P-K" value={p.threePitchStrikeouts} tone="k" />
+                <Pill label="3-UP" value={p.sideStrikeouts} tone="k" />
+              </div>
+              <div className="mt-3 text-right text-[10px] font-semibold text-[var(--text-muted)] group-hover:text-[var(--color-sox-red)]">
+                View profile →
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function Mini({
+function MoneyBlock({
   label,
   value,
-  rate,
   tone,
 }: {
   label: string;
   value: number;
-  rate: string;
   tone: "rose" | "emerald";
 }) {
-  const bg = tone === "rose" ? "bg-rose-50 dark:bg-rose-500/15" : "bg-emerald-50 dark:bg-emerald-500/15";
-  const txt = tone === "rose" ? "text-rose-800 dark:text-rose-300" : "text-emerald-800 dark:text-emerald-300";
+  const valueColor =
+    tone === "rose"
+      ? "text-[var(--color-sox-red)]"
+      : "text-emerald-700 dark:text-emerald-400";
   return (
-    <div className={`rounded-lg ${bg} p-2`}>
-      <div className={`text-[10px] font-semibold uppercase tracking-wider ${txt}`}>
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-2.5 py-2">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
         {label}
       </div>
-      <div className="mt-0.5 flex items-baseline gap-1.5">
-        <span className={`text-xl font-bold tabular leading-none ${txt}`}>
-          {value}
-        </span>
-        <span className="text-[10px] text-[var(--text-muted)] tabular">{rate}</span>
+      <div className={`mt-0.5 text-xl font-bold tabular leading-none ${valueColor}`}>
+        {formatMoney(value)}
       </div>
     </div>
   );
@@ -156,16 +169,20 @@ function Mini({
 function Pill({
   label,
   value,
-  on,
+  tone,
 }: {
   label: string;
   value: number;
-  on: string;
+  tone: "walk" | "k";
 }) {
   if (value === 0) return null;
+  const cls =
+    tone === "walk"
+      ? "bg-[var(--color-sox-red)]/10 text-[var(--color-sox-red)] dark:bg-[var(--color-sox-red)]/20 dark:text-rose-200"
+      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300";
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular ${on}`}
+      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular ${cls}`}
     >
       <span>{label}</span>
       <span>{value}</span>

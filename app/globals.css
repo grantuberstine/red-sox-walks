@@ -28,18 +28,18 @@
 }
 
 .dark {
-  --bg: #0c0c0f;
-  --bg-elevated: #16161b;
-  --surface: #16161b;
-  --surface-hover: #1f1f26;
-  --surface-subtle: #131318;
-  --text: #eaeaef;
-  --text-secondary: #c5c5cf;
-  --text-muted: #8a8a98;
-  --border: #2a2a32;
-  --border-strong: #3a3a44;
-  --row-stripe: rgba(255, 255, 255, 0.02);
-  --row-hover: rgba(240, 206, 99, 0.06);
+  --bg: #0a1020;
+  --bg-elevated: #131b2d;
+  --surface: #131b2d;
+  --surface-hover: #1b243c;
+  --surface-subtle: #0f1626;
+  --text: #eaeaf2;
+  --text-secondary: #c8cad6;
+  --text-muted: #8c91a4;
+  --border: #2b3654;
+  --border-strong: #3d4a6e;
+  --row-stripe: rgba(255, 255, 255, 0.025);
+  --row-hover: rgba(240, 206, 99, 0.08);
 }
 
 html, body {

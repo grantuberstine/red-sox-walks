@@ -3,8 +3,8 @@
 type Bin = { inning: number; count: number };
 
 const BAR_COLOR = {
-  red: "bg-[var(--color-sox-red)]/70 hover:bg-[var(--color-sox-red)]",
-  emerald: "bg-emerald-50 dark:bg-emerald-500/150/70 hover:bg-emerald-600",
+  red: "bg-[var(--color-sox-red)]",
+  emerald: "bg-emerald-600",
 } as const;
 
 export function InningChart({
@@ -19,14 +19,15 @@ export function InningChart({
   if (total === 0) {
     return (
       <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
-        No walks to bin by inning.
+        No data to bin by inning.
       </div>
     );
   }
+  const baseClass = BAR_COLOR[accent];
   return (
     <div className="px-4 pb-4 pt-2">
       <div className="mb-2 flex items-baseline justify-between text-[11px] text-[var(--text-muted)]">
-        <span>Walks by inning</span>
+        <span>By inning</span>
         <span className="tabular">
           peak inning {data.reduce((a, b) => (b.count > a.count ? b : a)).inning}
         </span>
@@ -34,11 +35,12 @@ export function InningChart({
       <div className="grid grid-cols-9 gap-1">
         {data.slice(0, 9).map((d) => {
           const h = Math.max(6, Math.round((d.count / max) * 88));
+          const opacity = d.count === max ? "opacity-100" : d.count > 0 ? "opacity-60" : "opacity-20";
           return (
             <div key={d.inning} className="flex flex-col items-center gap-1">
               <div className="flex h-24 w-full items-end">
                 <div
-                  className={`w-full rounded-t transition-all ${BAR_COLOR[accent]}`}
+                  className={`w-full rounded-t transition-all ${baseClass} ${opacity} hover:opacity-100`}
                   style={{ height: `${h}px` }}
                   title={`Inning ${d.inning}: ${d.count}`}
                 />
