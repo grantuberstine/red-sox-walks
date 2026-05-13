@@ -97,10 +97,10 @@ export function FundView({
             description="Each player pays the fund for every walk that fits one of these:"
             color="rose"
             rules={[
-              { label: "4-pitch walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
-              { label: "0-2 walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
-              { label: "Leadoff walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
-              { label: "2-out walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "4-pitch walk", detail: "Never threw a strike", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "0-2 walk", detail: "Count reached 0-2 then walked", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "Leadoff walk", detail: "First batter of an inning", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "2-out walk", detail: "First batter after the 2nd out", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
             ]}
             footnote="A walk that hits multiple categories gets charged for each."
           />
@@ -109,8 +109,8 @@ export function FundView({
             description="Coaches pay the fund for every team K achievement:"
             color="emerald"
             rules={[
-              { label: "3-pitch strikeout", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
-              { label: "3-up-3-down inning", amount: `${formatMoney(SIDE_K_BONUS)} per inning` },
+              { label: "3-pitch K", detail: "Strikeout in 3 straight strikes", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
+              { label: "3-up-3-down inning", detail: "All 3 outs by K, same pitcher, in a row", amount: `${formatMoney(SIDE_K_BONUS)} per inning` },
             ]}
             footnote="Pool grows from coaches' contributions, not paid out per pitcher."
           />
@@ -294,37 +294,48 @@ function RuleBlock({
   title: string;
   description: string;
   color: "rose" | "emerald";
-  rules: Array<{ label: string; amount: string }>;
+  rules: Array<{ label: string; detail?: string; amount: string }>;
   footnote: string;
 }) {
-  const bg =
-    color === "rose"
-      ? "border-rose-100 bg-rose-50 dark:bg-rose-500/15/40 dark:border-rose-500/20 dark:bg-rose-50 dark:bg-rose-500/150/5"
-      : "border-emerald-100 bg-emerald-50 dark:bg-emerald-500/15/40 dark:border-emerald-500/20 dark:bg-emerald-50 dark:bg-emerald-500/150/5";
+  const accentBar =
+    color === "rose" ? "bg-[var(--color-sox-red)]" : "bg-emerald-500";
   const titleColor =
     color === "rose"
-      ? "text-rose-800 dark:text-rose-300"
-      : "text-emerald-800 dark:text-emerald-300";
+      ? "text-[var(--color-sox-red)]"
+      : "text-emerald-700 dark:text-emerald-400";
 
   return (
-    <div className={`rounded-xl border p-3 ${bg}`}>
+    <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] p-4 pl-5">
+      <div className={`absolute inset-y-0 left-0 w-1 ${accentBar}`} />
       <div className={`text-xs font-bold uppercase tracking-wider ${titleColor}`}>
         {title}
       </div>
-      <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
+      <p className="mt-1 text-[11px] text-[var(--text-muted)]">
         {description}
       </p>
-      <ul className="mt-2 space-y-1.5">
+      <ul className="mt-3 space-y-2">
         {rules.map((r) => (
-          <li key={r.label} className="flex items-center justify-between text-sm">
-            <span className="text-[var(--text-secondary)]">{r.label}</span>
-            <span className="font-bold tabular text-[var(--text)]">
+          <li
+            key={r.label}
+            className="flex items-start justify-between gap-3 text-sm"
+          >
+            <div className="min-w-0">
+              <div className="font-medium text-[var(--text)]">{r.label}</div>
+              {r.detail && (
+                <div className="text-[10px] text-[var(--text-muted)]">
+                  {r.detail}
+                </div>
+              )}
+            </div>
+            <span className="shrink-0 font-semibold tabular text-[var(--text)]">
               {r.amount}
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[10px] text-[var(--text-muted)]">{footnote}</p>
+      <p className="mt-3 border-t border-[var(--border)] pt-2 text-[10px] text-[var(--text-muted)]">
+        {footnote}
+      </p>
     </div>
   );
 }

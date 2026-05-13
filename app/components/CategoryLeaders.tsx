@@ -18,7 +18,7 @@ const CATEGORIES: CategoryDef[] = [
   { key: "fourPitchWalks", title: "4-Pitch Walks", subtitle: "Never threw a strike" },
   { key: "ohTwoWalks", title: "0-2 Walks", subtitle: "Up 0-2, then walked him" },
   { key: "leadoffWalks", title: "Leadoff Walks", subtitle: "First batter of an inning" },
-  { key: "twoOutWalks", title: "2-Out Walks", subtitle: "Already had 2 outs" },
+  { key: "twoOutWalks", title: "2-Out Walks", subtitle: "First batter after the 2nd out" },
 ];
 
 const RANK_LABELS = ["1st", "2nd", "3rd"];

@@ -60,11 +60,15 @@ export function classifyWooSoxEvents(
     (a, b) => a.about.atBatIndex - b.about.atBatIndex,
   );
 
+  const firstTwoOutPlayInHalf = new Map<string, number>();
   for (const play of playsSorted) {
     const halfKey = `${play.about.inning}-${play.about.halfInning}`;
     if (!seenHalfInnings.has(halfKey)) {
       seenHalfInnings.add(halfKey);
       firstPlayInHalf.set(halfKey, play.about.atBatIndex);
+    }
+    if (!firstTwoOutPlayInHalf.has(halfKey) && outsAtStart(play) === 2) {
+      firstTwoOutPlayInHalf.set(halfKey, play.about.atBatIndex);
     }
   }
 
@@ -151,7 +155,8 @@ export function classifyWooSoxEvents(
 
     if (evType === "walk") {
       const isLeadoff = firstPlayInHalf.get(halfKey) === play.about.atBatIndex;
-      const startOuts = outsAtStart(play);
+      const isTwoOut =
+        firstTwoOutPlayInHalf.get(halfKey) === play.about.atBatIndex;
       walks.push({
         pitcherId: play.matchup.pitcher.id,
         pitcherName: play.matchup.pitcher.fullName,
@@ -164,7 +169,7 @@ export function classifyWooSoxEvents(
         isFourPitch: play.count.strikes === 0,
         isOhTwo: reached0_2(play.playEvents ?? []),
         isLeadoff,
-        isTwoOut: startOuts === 2,
+        isTwoOut,
       });
     } else if (STRIKEOUT_EVENTS.has(evType ?? "")) {
       const pitches = pitchCount(play);
