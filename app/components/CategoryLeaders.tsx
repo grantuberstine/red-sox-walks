@@ -24,7 +24,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Never threw a strike",
     emoji: "",
     tint: "from-amber-50 to-amber-100",
-    accent: "text-amber-700",
+    accent: "text-amber-700 dark:text-amber-300",
   },
   {
     key: "ohTwoWalks",
@@ -32,7 +32,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Up 0-2, then walked him",
     emoji: "",
     tint: "from-rose-50 to-rose-100",
-    accent: "text-rose-700",
+    accent: "text-rose-700 dark:text-rose-300",
   },
   {
     key: "leadoffWalks",
@@ -40,7 +40,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "First batter of an inning",
     emoji: "",
     tint: "from-sky-50 to-sky-100",
-    accent: "text-sky-700",
+    accent: "text-sky-700 dark:text-sky-300",
   },
   {
     key: "twoOutWalks",
@@ -48,7 +48,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Already had 2 outs",
     emoji: "",
     tint: "from-violet-50 to-violet-100",
-    accent: "text-violet-700",
+    accent: "text-violet-700 dark:text-violet-300",
   },
 ];
 

@@ -4,7 +4,7 @@ type Bin = { inning: number; count: number };
 
 const BAR_COLOR = {
   red: "bg-[var(--color-sox-red)]/70 hover:bg-[var(--color-sox-red)]",
-  emerald: "bg-emerald-500/70 hover:bg-emerald-600",
+  emerald: "bg-emerald-50 dark:bg-emerald-500/150/70 hover:bg-emerald-600",
 } as const;
 
 export function InningChart({

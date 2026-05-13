@@ -57,10 +57,10 @@ const K_COLS: Array<{ key: KSortKey; label: string; align?: "left" | "right" }> 
 ];
 
 const WALK_TAG_COLORS: Record<WalkType, string> = {
-  fourPitch: "bg-amber-100 text-amber-800",
-  ohTwo: "bg-rose-100 text-rose-800",
-  leadoff: "bg-sky-100 text-sky-800",
-  twoOut: "bg-violet-100 text-violet-800",
+  fourPitch: "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300",
+  ohTwo: "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300",
+  leadoff: "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300",
+  twoOut: "bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300",
 };
 const WALK_TAG_LABELS: Record<WalkType, string> = {
   fourPitch: "4P",
@@ -69,8 +69,8 @@ const WALK_TAG_LABELS: Record<WalkType, string> = {
   twoOut: "2O",
 };
 const K_TAG_COLORS: Record<StrikeoutType, string> = {
-  threePitch: "bg-emerald-100 text-emerald-800",
-  side: "bg-indigo-100 text-indigo-800",
+  threePitch: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300",
+  side: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300",
 };
 const K_TAG_LABELS: Record<StrikeoutType, string> = {
   threePitch: "3P",
@@ -274,15 +274,15 @@ export function PitcherTable({
                 <div className="px-4 pb-3">
                   {mode === "walks" ? (
                     <div className="grid grid-cols-4 gap-1.5 text-center text-[11px]">
-                      <Pill label="4P" value={p.fourPitchWalks} classes="bg-amber-50 text-amber-800" />
-                      <Pill label="0-2" value={p.ohTwoWalks} classes="bg-rose-50 text-rose-800" />
-                      <Pill label="Lead" value={p.leadoffWalks} classes="bg-sky-50 text-sky-800" />
-                      <Pill label="2-Out" value={p.twoOutWalks} classes="bg-violet-50 text-violet-800" />
+                      <Pill label="4P" value={p.fourPitchWalks} classes="bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300" />
+                      <Pill label="0-2" value={p.ohTwoWalks} classes="bg-rose-50 dark:bg-rose-500/15 text-rose-800 dark:text-rose-300" />
+                      <Pill label="Lead" value={p.leadoffWalks} classes="bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300" />
+                      <Pill label="2-Out" value={p.twoOutWalks} classes="bg-violet-50 dark:bg-violet-500/15 text-violet-800 dark:text-violet-300" />
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-1.5 text-center text-[11px]">
-                      <Pill label="3-Pitch" value={p.threePitchStrikeouts} classes="bg-emerald-50 text-emerald-800" />
-                      <Pill label="Sat-Side" value={p.sideStrikeouts} classes="bg-indigo-50 text-indigo-800" />
+                      <Pill label="3-Pitch" value={p.threePitchStrikeouts} classes="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300" />
+                      <Pill label="Sat-Side" value={p.sideStrikeouts} classes="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-300" />
                     </div>
                   )}
                 </div>
@@ -365,10 +365,10 @@ function PitcherRowDesktop({
             <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(walksPerNine(p))}
             </td>
-            <NumberCell value={p.fourPitchWalks} color="text-amber-700" />
-            <NumberCell value={p.ohTwoWalks} color="text-rose-700" />
-            <NumberCell value={p.leadoffWalks} color="text-sky-700" />
-            <NumberCell value={p.twoOutWalks} color="text-violet-700" />
+            <NumberCell value={p.fourPitchWalks} color="text-amber-700 dark:text-amber-300" />
+            <NumberCell value={p.ohTwoWalks} color="text-rose-700 dark:text-rose-300" />
+            <NumberCell value={p.leadoffWalks} color="text-sky-700 dark:text-sky-300" />
+            <NumberCell value={p.twoOutWalks} color="text-violet-700 dark:text-violet-300" />
           </>
         ) : (
           <>
@@ -378,8 +378,8 @@ function PitcherRowDesktop({
             <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
-            <NumberCell value={p.threePitchStrikeouts} color="text-emerald-700" />
-            <NumberCell value={p.sideStrikeouts} color="text-indigo-700" />
+            <NumberCell value={p.threePitchStrikeouts} color="text-emerald-700 dark:text-emerald-300" />
+            <NumberCell value={p.sideStrikeouts} color="text-indigo-700 dark:text-indigo-300" />
           </>
         )}
       </tr>

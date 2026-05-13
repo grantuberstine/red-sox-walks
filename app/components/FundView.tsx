@@ -150,12 +150,12 @@ export function FundView({
                 <th className="px-3 py-2.5 text-right">0-2</th>
                 <th className="px-3 py-2.5 text-right">LO</th>
                 <th className="px-3 py-2.5 text-right">2O</th>
-                <th className="px-3 py-2.5 text-right text-rose-700">
+                <th className="px-3 py-2.5 text-right text-rose-700 dark:text-rose-300">
                   Player owes
                 </th>
                 <th className="px-3 py-2.5 text-right">3P-K</th>
                 <th className="px-3 py-2.5 text-right">3UP</th>
-                <th className="px-3 py-2.5 text-right text-emerald-700">
+                <th className="px-3 py-2.5 text-right text-emerald-700 dark:text-emerald-300">
                   Coaches owe
                 </th>
               </tr>
@@ -180,15 +180,15 @@ export function FundView({
                       </span>
                     </div>
                   </td>
-                  <NumCell value={e.walkBuckets.fourPitch} tint="text-amber-700" />
-                  <NumCell value={e.walkBuckets.ohTwo} tint="text-rose-700" />
-                  <NumCell value={e.walkBuckets.leadoff} tint="text-sky-700" />
-                  <NumCell value={e.walkBuckets.twoOut} tint="text-violet-700" />
+                  <NumCell value={e.walkBuckets.fourPitch} tint="text-amber-700 dark:text-amber-300" />
+                  <NumCell value={e.walkBuckets.ohTwo} tint="text-rose-700 dark:text-rose-300" />
+                  <NumCell value={e.walkBuckets.leadoff} tint="text-sky-700 dark:text-sky-300" />
+                  <NumCell value={e.walkBuckets.twoOut} tint="text-violet-700 dark:text-violet-300" />
                   <MoneyCell value={e.feesOwed} tint="rose" />
-                  <NumCell value={e.threePitchKs} tint="text-emerald-700" />
+                  <NumCell value={e.threePitchKs} tint="text-emerald-700 dark:text-emerald-300" />
                   <NumCell
                     value={e.threeUpThreeDownInnings}
-                    tint="text-indigo-700"
+                    tint="text-indigo-700 dark:text-indigo-300"
                   />
                   <MoneyCell value={e.bonusEarned} tint="emerald" />
                 </tr>
@@ -211,7 +211,7 @@ export function FundView({
                     {e.name}
                   </div>
                   <div className="mt-1 grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="rounded-md bg-rose-50 px-2 py-1 dark:bg-rose-500/10">
+                    <div className="rounded-md bg-rose-50 dark:bg-rose-500/15 px-2 py-1 dark:bg-rose-50 dark:bg-rose-500/150/10">
                       <div className="text-[9px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-300">
                         Player owes
                       </div>
@@ -219,7 +219,7 @@ export function FundView({
                         {formatMoney(e.feesOwed)}
                       </div>
                     </div>
-                    <div className="rounded-md bg-emerald-50 px-2 py-1 dark:bg-emerald-500/10">
+                    <div className="rounded-md bg-emerald-50 dark:bg-emerald-500/15 px-2 py-1 dark:bg-emerald-50 dark:bg-emerald-500/150/10">
                       <div className="text-[9px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
                         Coaches owe
                       </div>
@@ -231,12 +231,12 @@ export function FundView({
                 </div>
               </div>
               <div className="mt-2 grid grid-cols-6 gap-1 text-center text-[10px]">
-                <SmallCell label="4P" value={e.walkBuckets.fourPitch} on="bg-amber-50 text-amber-800" />
-                <SmallCell label="0-2" value={e.walkBuckets.ohTwo} on="bg-rose-50 text-rose-800" />
-                <SmallCell label="LO" value={e.walkBuckets.leadoff} on="bg-sky-50 text-sky-800" />
-                <SmallCell label="2O" value={e.walkBuckets.twoOut} on="bg-violet-50 text-violet-800" />
-                <SmallCell label="3P-K" value={e.threePitchKs} on="bg-emerald-50 text-emerald-800" />
-                <SmallCell label="3UP" value={e.threeUpThreeDownInnings} on="bg-indigo-50 text-indigo-800" />
+                <SmallCell label="4P" value={e.walkBuckets.fourPitch} on="bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300" />
+                <SmallCell label="0-2" value={e.walkBuckets.ohTwo} on="bg-rose-50 dark:bg-rose-500/15 text-rose-800 dark:text-rose-300" />
+                <SmallCell label="LO" value={e.walkBuckets.leadoff} on="bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300" />
+                <SmallCell label="2O" value={e.walkBuckets.twoOut} on="bg-violet-50 dark:bg-violet-500/15 text-violet-800 dark:text-violet-300" />
+                <SmallCell label="3P-K" value={e.threePitchKs} on="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300" />
+                <SmallCell label="3UP" value={e.threeUpThreeDownInnings} on="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-300" />
               </div>
             </li>
           ))}
@@ -322,8 +322,8 @@ function RuleBlock({
 }) {
   const bg =
     color === "rose"
-      ? "border-rose-100 bg-rose-50/40 dark:border-rose-500/20 dark:bg-rose-500/5"
-      : "border-emerald-100 bg-emerald-50/40 dark:border-emerald-500/20 dark:bg-emerald-500/5";
+      ? "border-rose-100 bg-rose-50 dark:bg-rose-500/15/40 dark:border-rose-500/20 dark:bg-rose-50 dark:bg-rose-500/150/5"
+      : "border-emerald-100 bg-emerald-50 dark:bg-emerald-500/15/40 dark:border-emerald-500/20 dark:bg-emerald-50 dark:bg-emerald-500/150/5";
   const titleColor =
     color === "rose"
       ? "text-rose-800 dark:text-rose-300"

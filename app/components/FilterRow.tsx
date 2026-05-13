@@ -2,8 +2,6 @@
 
 import { RANGE_LABELS, RangeKey } from "@/lib/filters";
 import { SearchInput, type SearchSuggestion } from "./SearchInput";
-import type { CategoryDef } from "./CategoryChips";
-import { CategoryChips } from "./CategoryChips";
 
 const ORDER: RangeKey[] = ["today", "week", "month", "season"];
 const SHORT: Record<RangeKey, string> = {
@@ -12,6 +10,47 @@ const SHORT: Record<RangeKey, string> = {
   month: "30D",
   season: "Season",
 };
+
+export function TimeRangePills({
+  range,
+  onRangeChange,
+  compact = false,
+}: {
+  range: RangeKey;
+  onRangeChange: (r: RangeKey) => void;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Time range"
+      className={`inline-flex overflow-hidden rounded-lg bg-[var(--surface-hover)] p-0.5 ${
+        compact ? "" : "grid grid-cols-4 sm:inline-flex"
+      }`}
+    >
+      {ORDER.map((k) => {
+        const active = k === range;
+        return (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onRangeChange(k)}
+            className={`min-h-[34px] cursor-pointer rounded-md px-2.5 text-xs font-semibold transition sm:px-3 sm:text-sm ${
+              active
+                ? "bg-[var(--color-sox-navy)] text-white shadow-sm dark:bg-[var(--color-sox-red)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text)]"
+            }`}
+            title={RANGE_LABELS[k]}
+          >
+            {SHORT[k]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function FilterRow({
   range,
@@ -22,9 +61,6 @@ export function FilterRow({
   resultCount,
   resultUnit = "result",
   suggestions = [],
-  categories,
-  categoryValue,
-  onCategoryChange,
 }: {
   range: RangeKey;
   onRangeChange: (r: RangeKey) => void;
@@ -34,42 +70,13 @@ export function FilterRow({
   resultCount: number;
   resultUnit?: string;
   suggestions?: SearchSuggestion[];
-  categories?: CategoryDef[];
-  categoryValue?: string;
-  onCategoryChange?: (v: string) => void;
 }) {
   return (
     <div className="border-b border-[var(--border)] bg-[var(--surface)]">
-      <div className="mx-auto w-full space-y-2.5 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-          <div
-            role="tablist"
-            aria-label="Time range"
-            className="grid grid-cols-4 overflow-hidden rounded-lg bg-[var(--surface-hover)] p-0.5 md:inline-flex md:w-auto"
-          >
-            {ORDER.map((k) => {
-              const active = k === range;
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => onRangeChange(k)}
-                  className={`min-h-[36px] cursor-pointer rounded-md px-3 text-sm font-semibold transition ${
-                    active
-                      ? "bg-[var(--color-sox-navy)] text-white shadow-sm"
-                      : "text-[var(--text-secondary)] hover:text-[var(--text)]"
-                  }`}
-                  title={RANGE_LABELS[k]}
-                >
-                  {SHORT[k]}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="w-full md:w-72 md:ml-auto">
+      <div className="mx-auto w-full space-y-2 px-4 py-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
+          <TimeRangePills range={range} onRangeChange={onRangeChange} />
+          <div className="ml-auto w-full sm:w-72">
             <SearchInput
               value={query}
               onChange={onQueryChange}
@@ -77,18 +84,6 @@ export function FilterRow({
             />
           </div>
         </div>
-
-        {categories && categoryValue !== undefined && onCategoryChange && (
-          <div className="-mx-1 overflow-x-auto px-1">
-            <div className="flex flex-nowrap gap-1.5 pb-0.5 md:flex-wrap">
-              <CategoryChips
-                categories={categories}
-                value={categoryValue}
-                onChange={onCategoryChange}
-              />
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center justify-between text-[11px] text-[var(--text-muted)]">
           <span className="truncate">{rangeContext}</span>

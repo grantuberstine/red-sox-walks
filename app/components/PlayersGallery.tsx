@@ -108,12 +108,12 @@ export function PlayersGallery({
               <Mini label="K's" value={p.totalStrikeouts} rate={`${fmt(strikeoutsPerNine(p))} K/9`} tone="emerald" />
             </div>
             <div className="mt-3 flex flex-wrap gap-1 text-[10px] text-[var(--text-muted)]">
-              <Pill label="4P" value={p.fourPitchWalks} on="bg-amber-50 text-amber-700" />
-              <Pill label="0-2" value={p.ohTwoWalks} on="bg-rose-50 text-rose-700" />
-              <Pill label="LO" value={p.leadoffWalks} on="bg-sky-50 text-sky-700" />
-              <Pill label="2O" value={p.twoOutWalks} on="bg-violet-50 text-violet-700" />
-              <Pill label="3P-K" value={p.threePitchStrikeouts} on="bg-emerald-50 text-emerald-700" />
-              <Pill label="3-UP" value={p.sideStrikeouts} on="bg-indigo-50 text-indigo-700" />
+              <Pill label="4P" value={p.fourPitchWalks} on="bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" />
+              <Pill label="0-2" value={p.ohTwoWalks} on="bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300" />
+              <Pill label="LO" value={p.leadoffWalks} on="bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300" />
+              <Pill label="2O" value={p.twoOutWalks} on="bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300" />
+              <Pill label="3P-K" value={p.threePitchStrikeouts} on="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" />
+              <Pill label="3-UP" value={p.sideStrikeouts} on="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300" />
             </div>
             <div className="mt-3 text-right text-[10px] font-semibold text-[var(--text-muted)] group-hover:text-[var(--color-sox-red)]">
               View profile →
@@ -136,8 +136,8 @@ function Mini({
   rate: string;
   tone: "rose" | "emerald";
 }) {
-  const bg = tone === "rose" ? "bg-rose-50" : "bg-emerald-50";
-  const txt = tone === "rose" ? "text-rose-800" : "text-emerald-800";
+  const bg = tone === "rose" ? "bg-rose-50 dark:bg-rose-500/15" : "bg-emerald-50 dark:bg-emerald-500/15";
+  const txt = tone === "rose" ? "text-rose-800 dark:text-rose-300" : "text-emerald-800 dark:text-emerald-300";
   return (
     <div className={`rounded-lg ${bg} p-2`}>
       <div className={`text-[10px] font-semibold uppercase tracking-wider ${txt}`}>

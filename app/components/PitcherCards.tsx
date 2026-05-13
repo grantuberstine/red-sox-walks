@@ -53,10 +53,10 @@ const K_SORTS: Array<{ key: KSortKey; label: string }> = [
 ];
 
 const WALK_TAG_COLORS: Record<WalkType, string> = {
-  fourPitch: "bg-amber-100 text-amber-800",
-  ohTwo: "bg-rose-100 text-rose-800",
-  leadoff: "bg-sky-100 text-sky-800",
-  twoOut: "bg-violet-100 text-violet-800",
+  fourPitch: "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300",
+  ohTwo: "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300",
+  leadoff: "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300",
+  twoOut: "bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300",
 };
 const WALK_TAG_LABELS: Record<WalkType, string> = {
   fourPitch: "4P",
@@ -65,8 +65,8 @@ const WALK_TAG_LABELS: Record<WalkType, string> = {
   twoOut: "2O",
 };
 const K_TAG_COLORS: Record<StrikeoutType, string> = {
-  threePitch: "bg-emerald-100 text-emerald-800",
-  side: "bg-indigo-100 text-indigo-800",
+  threePitch: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300",
+  side: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300",
 };
 const K_TAG_LABELS: Record<StrikeoutType, string> = {
   threePitch: "3P",
@@ -310,12 +310,12 @@ export function PitcherCards({
 }
 
 const CELL_TONES = {
-  amber: { on: "bg-amber-50 text-amber-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  rose: { on: "bg-rose-50 text-rose-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  sky: { on: "bg-sky-50 text-sky-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  violet: { on: "bg-violet-50 text-violet-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  emerald: { on: "bg-emerald-50 text-emerald-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  indigo: { on: "bg-indigo-50 text-indigo-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  amber: { on: "bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  rose: { on: "bg-rose-50 dark:bg-rose-500/15 text-rose-800 dark:text-rose-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  sky: { on: "bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  violet: { on: "bg-violet-50 dark:bg-violet-500/15 text-violet-800 dark:text-violet-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  emerald: { on: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  indigo: { on: "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
 } as const;
 
 function Cell({

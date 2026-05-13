@@ -24,7 +24,7 @@ const ACCENT_CLASSES = {
   },
   emerald: {
     high: "bg-emerald-600",
-    mid: "bg-emerald-500/70",
+    mid: "bg-emerald-50 dark:bg-emerald-500/150/70",
     low: "bg-emerald-700/40",
   },
 } as const;

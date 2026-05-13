@@ -22,7 +22,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Strikeout in 3 straight strikes",
     emoji: "",
     tint: "from-emerald-50 to-emerald-100",
-    accent: "text-emerald-700",
+    accent: "text-emerald-700 dark:text-emerald-300",
   },
   {
     key: "sideStrikeouts",
@@ -30,7 +30,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Struck out side in order",
     emoji: "",
     tint: "from-indigo-50 to-indigo-100",
-    accent: "text-indigo-700",
+    accent: "text-indigo-700 dark:text-indigo-300",
   },
 ];
 

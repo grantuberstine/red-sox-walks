@@ -1,9 +1,6 @@
 import type { ToneKey } from "./CategoryChips";
 
-const HERO_TONES: Record<
-  ToneKey,
-  string
-> = {
+const HERO_TONES: Record<ToneKey, string> = {
   neutral: "from-white/10 to-white/0 text-white",
   amber: "from-amber-400/20 to-amber-300/5 text-amber-100",
   rose: "from-rose-400/20 to-rose-300/5 text-rose-100",
@@ -18,18 +15,29 @@ const ACCENT_GRADIENTS = {
   emerald: "from-emerald-900 via-emerald-800 to-emerald-700",
 } as const;
 
+export type Breakdown = {
+  label: string;
+  value: number | string;
+  tone: ToneKey;
+  highlight?: boolean;
+};
+
 export function HeroBar({
   accent,
   eventLabel,
   rangeLabel,
   total,
+  totalSub,
   breakdown,
+  fundLine,
 }: {
   accent: keyof typeof ACCENT_GRADIENTS;
   eventLabel: string;
   rangeLabel: string;
   total: number;
-  breakdown: Array<{ label: string; value: number; tone: ToneKey }>;
+  totalSub?: string;
+  breakdown: Breakdown[];
+  fundLine?: { label: string; value: string };
 }) {
   return (
     <div
@@ -40,22 +48,37 @@ export function HeroBar({
           <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
             Total {eventLabel} · {rangeLabel}
           </div>
-          <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
-            {total}
+          <div className="flex items-baseline gap-3">
+            <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
+              {total}
+            </div>
+            {totalSub && (
+              <div className="text-[11px] text-white/60">{totalSub}</div>
+            )}
           </div>
         </div>
         <div
-          className={`grid w-full gap-1.5 sm:w-auto sm:gap-2 ${
-            breakdown.length >= 4
-              ? "grid-cols-2 sm:grid-cols-4"
-              : "grid-cols-2"
-          }`}
+          className={`grid w-full gap-1.5 sm:w-auto sm:gap-2`}
+          style={{
+            gridTemplateColumns: `repeat(${breakdown.length}, minmax(0, 1fr))`,
+          }}
         >
           {breakdown.map((b) => (
-            <HeroStat key={b.label} tone={b.tone} label={b.label} value={b.value} />
+            <HeroStat key={b.label} tone={b.tone} label={b.label} value={b.value} highlight={b.highlight} />
           ))}
         </div>
       </div>
+
+      {fundLine && (
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-[var(--color-woo-gold)]/30 bg-[var(--color-woo-gold)]/10 px-4 py-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-woo-gold)]">
+            {fundLine.label}
+          </span>
+          <span className="text-2xl font-bold tabular text-[var(--color-woo-gold)]">
+            {fundLine.value}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -64,14 +87,16 @@ function HeroStat({
   tone,
   label,
   value,
+  highlight,
 }: {
   tone: ToneKey;
   label: string;
-  value: number;
+  value: number | string;
+  highlight?: boolean;
 }) {
   return (
     <div
-      className={`rounded-xl bg-gradient-to-br ${HERO_TONES[tone]} px-2.5 py-2 sm:px-3 sm:py-2.5 ring-1 ring-inset ring-white/10`}
+      className={`rounded-xl bg-gradient-to-br ${HERO_TONES[tone]} px-2.5 py-2 sm:px-3 sm:py-2.5 ring-1 ring-inset ${highlight ? "ring-[var(--color-woo-gold)]/40" : "ring-white/10"}`}
     >
       <div className="text-[9px] font-semibold uppercase tracking-widest opacity-80 sm:text-[10px]">
         {label}

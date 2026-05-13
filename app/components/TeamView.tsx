@@ -283,9 +283,9 @@ function GameLogItem({
       <div
         className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${
           r === "W"
-            ? "bg-emerald-100 text-emerald-800"
+            ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
             : r === "L"
-              ? "bg-rose-100 text-rose-800"
+              ? "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300"
               : "bg-[var(--surface-hover)] text-[var(--text-muted)]"
         }`}
       >
@@ -298,10 +298,10 @@ function GameLogItem({
         <div className="text-[11px] tabular text-[var(--text-muted)]">{score}</div>
       </div>
       <div className="flex shrink-0 items-center gap-2 text-[11px]">
-        <span className="rounded-md bg-rose-50 px-1.5 py-0.5 font-semibold text-rose-700">
+        <span className="rounded-md bg-rose-50 dark:bg-rose-500/15 px-1.5 py-0.5 font-semibold text-rose-700 dark:text-rose-300">
           {row.walks} BB
         </span>
-        <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">
+        <span className="rounded-md bg-emerald-50 dark:bg-emerald-500/15 px-1.5 py-0.5 font-semibold text-emerald-700 dark:text-emerald-300">
           {row.strikeouts} K
         </span>
       </div>

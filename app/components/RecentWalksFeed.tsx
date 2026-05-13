@@ -5,19 +5,19 @@ import { headshotUrl } from "@/lib/achievements";
 const TAG_META: Record<WalkType, { label: string; className: string }> = {
   fourPitch: {
     label: "4-pitch",
-    className: "bg-amber-100 text-amber-800 ring-amber-200",
+    className: "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 ring-amber-200 dark:ring-amber-500/30",
   },
   ohTwo: {
     label: "0-2",
-    className: "bg-rose-100 text-rose-800 ring-rose-200",
+    className: "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 ring-rose-200 dark:ring-rose-500/30",
   },
   leadoff: {
     label: "leadoff",
-    className: "bg-sky-100 text-sky-800 ring-sky-200",
+    className: "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 ring-sky-200 dark:ring-sky-500/30",
   },
   twoOut: {
     label: "2-out",
-    className: "bg-violet-100 text-violet-800 ring-violet-200",
+    className: "bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300 ring-violet-200 dark:ring-violet-500/30",
   },
 };
 

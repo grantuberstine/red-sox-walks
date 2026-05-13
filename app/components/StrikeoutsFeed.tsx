@@ -5,11 +5,11 @@ import { headshotUrl } from "@/lib/achievements";
 const TAG_META: Record<StrikeoutType, { label: string; className: string }> = {
   threePitch: {
     label: "3-pitch",
-    className: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+    className: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-500/30",
   },
   side: {
     label: "side",
-    className: "bg-indigo-100 text-indigo-800 ring-indigo-200",
+    className: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 ring-indigo-200 dark:ring-indigo-500/30",
   },
 };
 

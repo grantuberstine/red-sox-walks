@@ -5,28 +5,31 @@ import type { SeasonState } from "@/lib/types";
 import {
   RANGE_LABELS,
   RangeKey,
-  StrikeoutCategoryFilter,
-  WalkCategoryFilter,
   aggregatePitchersFromStrikeouts,
   aggregatePitchersFromWalks,
   filterStrikeouts,
   filterWalks,
   formatRangeContext,
 } from "@/lib/filters";
-import { computeFundReport } from "@/lib/fund";
+import {
+  computeFundReport,
+  formatMoney,
+  WALK_FEE_PER_CATEGORY,
+  THREE_PITCH_K_BONUS,
+  SIDE_K_BONUS,
+} from "@/lib/fund";
 import { useHiddenPitchers } from "@/lib/preferences";
 import { useTheme } from "@/lib/theme";
-import { ThemeToggle } from "./components/ThemeToggle";
 import { Sidebar, MobileTabBar, type Section } from "./components/Sidebar";
 import { WooSoxLogo } from "./components/WooSoxLogo";
-import { FilterRow } from "./components/FilterRow";
-import type { SearchSuggestion } from "./components/SearchInput";
+import { TimeRangePills } from "./components/FilterRow";
+import { SearchInput, type SearchSuggestion } from "./components/SearchInput";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { RosterDrawer } from "./components/RosterDrawer";
 import { HeroBar } from "./components/HeroBar";
 import { CategoryLeaders } from "./components/CategoryLeaders";
 import { StrikeoutLeaders } from "./components/StrikeoutLeaders";
 import { ViewToggle, type ViewMode } from "./components/ViewToggle";
-import type { CategoryDef } from "./components/CategoryChips";
 import { PitcherTable } from "./PitcherTable";
 import { PitcherCards } from "./components/PitcherCards";
 import { RecentWalksFeed } from "./components/RecentWalksFeed";
@@ -35,20 +38,6 @@ import { TeamView } from "./components/TeamView";
 import { FundView } from "./components/FundView";
 import { PlayersGallery } from "./components/PlayersGallery";
 import { PlayerProfile } from "./components/PlayerProfile";
-
-const WALK_CATEGORIES: CategoryDef[] = [
-  { key: "all", label: "All", emoji: "", tone: "neutral" },
-  { key: "fourPitch", label: "4-Pitch", emoji: "", tone: "amber" },
-  { key: "ohTwo", label: "0-2", emoji: "", tone: "rose" },
-  { key: "leadoff", label: "Leadoff", emoji: "", tone: "sky" },
-  { key: "twoOut", label: "2-Out", emoji: "", tone: "violet" },
-];
-
-const K_CATEGORIES: CategoryDef[] = [
-  { key: "all", label: "All", emoji: "", tone: "neutral" },
-  { key: "threePitch", label: "3-Pitch", emoji: "", tone: "emerald" },
-  { key: "side", label: "3-Up-3-Dn", emoji: "", tone: "indigo" },
-];
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "never";
@@ -64,8 +53,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const [section, setSection] = useState<Section>("walks");
   const [range, setRange] = useState<RangeKey>("season");
   const [query, setQuery] = useState("");
-  const [walkCat, setWalkCat] = useState<WalkCategoryFilter>("all");
-  const [kCat, setKCat] = useState<StrikeoutCategoryFilter>("all");
   const [view, setView] = useState<ViewMode>("table");
   const [rosterOpen, setRosterOpen] = useState(false);
   const [profileId, setProfileId] = useState<number | null>(null);
@@ -73,22 +60,13 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
   const { theme, toggle: toggleTheme } = useTheme();
 
-  const filteredWalksAllCats = useMemo(
+  const filteredWalks = useMemo(
     () => filterWalks(state.walks, range, state, query, "all", hidden),
     [state, range, query, hidden],
   );
-  const filteredKAllCats = useMemo(
+  const filteredK = useMemo(
     () => filterStrikeouts(state.strikeouts, range, state, query, "all", hidden),
     [state, range, query, hidden],
-  );
-
-  const filteredWalks = useMemo(
-    () => filterWalks(state.walks, range, state, query, walkCat, hidden),
-    [state, range, query, walkCat, hidden],
-  );
-  const filteredK = useMemo(
-    () => filterStrikeouts(state.strikeouts, range, state, query, kCat, hidden),
-    [state, range, query, kCat, hidden],
   );
 
   const walkPitchers = useMemo(
@@ -135,8 +113,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
   );
 
   const fundReport = useMemo(
-    () => computeFundReport(filteredWalksAllCats, filteredKAllCats, state.pitchers),
-    [filteredWalksAllCats, filteredKAllCats, state.pitchers],
+    () => computeFundReport(filteredWalks, filteredK, state.pitchers),
+    [filteredWalks, filteredK, state.pitchers],
   );
 
   const searchSuggestions: SearchSuggestion[] = useMemo(
@@ -168,6 +146,9 @@ export function Dashboard({ state }: { state: SeasonState }) {
       ),
     [walkPitchers],
   );
+
+  const walkFeeCount =
+    walkTotals.fourPitch + walkTotals.ohTwo + walkTotals.leadoff + walkTotals.twoOut;
 
   const kTotals = useMemo(() => {
     const sideInnings = new Set<string>();
@@ -206,22 +187,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
     if (s !== "players") setProfileId(null);
   };
 
-  const showFilters = section !== "players" || profileId === null;
-
-  const filterCategories =
-    section === "walks"
-      ? WALK_CATEGORIES
-      : section === "strikeouts"
-        ? K_CATEGORIES
-        : undefined;
-  const filterCategoryValue =
-    section === "walks" ? walkCat : section === "strikeouts" ? kCat : undefined;
-  const onFilterCategoryChange = (v: string) => {
-    if (section === "walks") setWalkCat(v as WalkCategoryFilter);
-    if (section === "strikeouts") setKCat(v as StrikeoutCategoryFilter);
-  };
-
-  const filterResultCount = (() => {
+  const resultCount = (() => {
     switch (section) {
       case "walks":
         return filteredWalks.length;
@@ -230,18 +196,18 @@ export function Dashboard({ state }: { state: SeasonState }) {
       case "players":
         return allPitchersFiltered.length;
       case "team":
-        return filteredWalksAllCats.length + filteredKAllCats.length;
+        return filteredWalks.length + filteredK.length;
       case "fund":
         return fundReport.entries.length;
     }
   })();
 
-  const filterResultUnit = (() => {
+  const resultUnit = (() => {
     switch (section) {
       case "walks":
         return "walk";
       case "strikeouts":
-        return "strikeout";
+        return "K";
       case "players":
         return "pitcher";
       case "team":
@@ -250,6 +216,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
         return "pitcher";
     }
   })();
+
+  const showFilters = section !== "players" || profileId === null;
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)] lg:flex-row">
@@ -274,65 +242,89 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)]/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8"
+          className="sticky top-0 z-20 flex flex-col gap-2 border-b border-[var(--border)] bg-[var(--surface)]/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:flex-row lg:items-center lg:gap-3 lg:px-8"
           style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
-            <WooSoxLogo size={28} />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="lg:hidden">
+              <WooSoxLogo size={28} />
+            </span>
             <div className="min-w-0">
-              <div className="truncate text-sm font-bold leading-tight text-[var(--text)]">
+              <h1 className="truncate text-base font-bold leading-tight text-[var(--text)] sm:text-lg">
                 {sectionLabel[section]}
-              </div>
-              <div className="truncate text-[10px] leading-tight text-[var(--text-muted)]">
-                {totalsLine}
-              </div>
+              </h1>
+              <p className="truncate text-[10px] leading-tight text-[var(--text-muted)] sm:text-[11px]">
+                {state.season} season · refreshed{" "}
+                <span className="tabular">
+                  {formatTimestamp(state.meta.lastRefreshAt)}
+                </span>
+              </p>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5 lg:hidden">
+              <ThemeToggle theme={theme} onToggle={toggleTheme} compact />
+              <button
+                type="button"
+                onClick={() => setRosterOpen(true)}
+                aria-label="Roster"
+                className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+                  <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                {hidden.size > 0 && (
+                  <span className="absolute -top-1 -right-1 rounded-full bg-[var(--color-sox-red)] px-1 text-[9px] font-bold text-white">
+                    {hidden.size}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
-          <div className="hidden min-w-0 lg:block">
-            <h1 className="truncate text-base font-bold text-[var(--text)]">
-              {sectionLabel[section]}
-            </h1>
-            <p className="truncate text-[11px] text-[var(--text-muted)]">
-              {state.season} season · last refresh{" "}
-              <span className="tabular">
-                {formatTimestamp(state.meta.lastRefreshAt)}
-              </span>
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setRosterOpen(true)}
-            aria-label="Manage roster"
-            className="relative inline-flex min-h-[36px] cursor-pointer items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:hidden"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-              <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            {hidden.size > 0 && (
-              <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
-                {hidden.size}
-              </span>
-            )}
-          </button>
+
+          {showFilters && (
+            <div className="flex flex-wrap items-center gap-2 lg:ml-auto lg:flex-nowrap">
+              <TimeRangePills range={range} onRangeChange={setRange} />
+              <div className="ml-auto w-full sm:w-64 lg:w-72">
+                <SearchInput
+                  value={query}
+                  onChange={setQuery}
+                  suggestions={searchSuggestions}
+                />
+              </div>
+              <div className="hidden items-center gap-1.5 lg:flex">
+                <ThemeToggle theme={theme} onToggle={toggleTheme} compact />
+                <button
+                  type="button"
+                  onClick={() => setRosterOpen(true)}
+                  aria-label="Roster"
+                  className="relative inline-flex h-9 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+                    <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  <span>Roster</span>
+                  {hidden.size > 0 && (
+                    <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
+                      {hidden.size}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </header>
 
         {showFilters && (
-          <FilterRow
-            range={range}
-            onRangeChange={setRange}
-            query={query}
-            onQueryChange={setQuery}
-            rangeContext={rangeContext}
-            resultCount={filterResultCount}
-            resultUnit={filterResultUnit}
-            suggestions={searchSuggestions}
-            categories={filterCategories}
-            categoryValue={filterCategoryValue}
-            onCategoryChange={
-              filterCategories ? onFilterCategoryChange : undefined
-            }
-          />
+          <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-[10px] text-[var(--text-muted)] sm:px-6 lg:px-8">
+            <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
+              <span className="truncate">{rangeContext}</span>
+              <span className="shrink-0 tabular">
+                {resultCount.toLocaleString()}{" "}
+                {resultCount === 1 ? resultUnit : `${resultUnit}s`}
+              </span>
+            </div>
+          </div>
         )}
 
         <main className="min-w-0 flex-1 px-4 pb-20 pt-4 sm:px-6 lg:pb-8 lg:pt-6 lg:px-8">
@@ -341,6 +333,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
               <WalksView
                 range={range}
                 totals={walkTotals}
+                feeCount={walkFeeCount}
+                feeTotal={walkFeeCount * WALK_FEE_PER_CATEGORY}
                 pitchers={walkPitchers}
                 walks={filteredWalks}
                 view={view}
@@ -354,6 +348,10 @@ export function Dashboard({ state }: { state: SeasonState }) {
               <StrikeoutsView
                 range={range}
                 totals={kTotals}
+                bonusTotal={
+                  kTotals.threePitch * THREE_PITCH_K_BONUS +
+                  kTotals.side * SIDE_K_BONUS
+                }
                 pitchers={kPitchers}
                 strikeouts={filteredK}
                 view={view}
@@ -367,8 +365,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
               (profilePitcher ? (
                 <PlayerProfile
                   pitcher={profilePitcher}
-                  walks={filteredWalksAllCats}
-                  strikeouts={filteredKAllCats}
+                  walks={filteredWalks}
+                  strikeouts={filteredK}
                   onBack={() => setProfileId(null)}
                   rangeLabel={RANGE_LABELS[range]}
                 />
@@ -383,8 +381,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
               <TeamView
                 state={state}
                 range={range}
-                filteredWalks={filteredWalksAllCats}
-                filteredK={filteredKAllCats}
+                filteredWalks={filteredWalks}
+                filteredK={filteredK}
                 rangeLabel={RANGE_LABELS[range]}
               />
             )}
@@ -411,6 +409,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
 function WalksView({
   range,
   totals,
+  feeCount,
+  feeTotal,
   pitchers,
   walks,
   view,
@@ -420,6 +420,8 @@ function WalksView({
 }: {
   range: RangeKey;
   totals: { total: number; fourPitch: number; ohTwo: number; leadoff: number; twoOut: number };
+  feeCount: number;
+  feeTotal: number;
   pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
   walks: ReturnType<typeof filterWalks>;
   view: ViewMode;
@@ -431,21 +433,32 @@ function WalksView({
     <div className="space-y-5">
       <HeroBar
         accent="red"
-        eventLabel="walks issued"
+        eventLabel="walks"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
+        totalSub={
+          totals.total > 0
+            ? `${feeCount} fee triggers across 4 categories`
+            : undefined
+        }
         breakdown={[
           { label: "4-Pitch", value: totals.fourPitch, tone: "amber" },
           { label: "0-2", value: totals.ohTwo, tone: "rose" },
           { label: "Leadoff", value: totals.leadoff, tone: "sky" },
           { label: "2-Out", value: totals.twoOut, tone: "violet" },
         ]}
+        fundLine={
+          feeTotal > 0
+            ? { label: "Total owed to fund", value: formatMoney(feeTotal) }
+            : undefined
+        }
       />
-      <SectionHeader title="Top of each category" subtitle={RANGE_LABELS[range]} />
-      <CategoryLeaders pitchers={pitchers} />
+      <Collapsible title="Walk Hall of Shame" subtitle={RANGE_LABELS[range]} defaultOpen>
+        <CategoryLeaders pitchers={pitchers} />
+      </Collapsible>
       <LeaderboardSection
         title="Walks Leaderboard"
-        hint={`"Walks" = total free passes issued by that pitcher`}
+        hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — click a row to see their profile`}
         pitchers={pitchers}
         walks={walks}
         strikeouts={[]}
@@ -455,12 +468,12 @@ function WalksView({
         mode="walks"
         onSelect={onSelect}
       />
-      <FeedSection
+      <Collapsible
         title="Walk Feed"
         subtitle={`${walks.length} ${walks.length === 1 ? "walk" : "walks"} · newest first`}
       >
         <RecentWalksFeed walks={walks} limit={30} />
-      </FeedSection>
+      </Collapsible>
     </div>
   );
 }
@@ -468,6 +481,7 @@ function WalksView({
 function StrikeoutsView({
   range,
   totals,
+  bonusTotal,
   pitchers,
   strikeouts,
   view,
@@ -477,6 +491,7 @@ function StrikeoutsView({
 }: {
   range: RangeKey;
   totals: { total: number; threePitch: number; side: number };
+  bonusTotal: number;
   pitchers: ReturnType<typeof aggregatePitchersFromStrikeouts>;
   strikeouts: ReturnType<typeof filterStrikeouts>;
   view: ViewMode;
@@ -484,23 +499,35 @@ function StrikeoutsView({
   query: string;
   onSelect: (id: number) => void;
 }) {
+  const bonusEligible = totals.threePitch + totals.side;
   return (
     <div className="space-y-5">
       <HeroBar
         accent="emerald"
-        eventLabel="strikeouts recorded"
+        eventLabel="strikeouts"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
+        totalSub={
+          totals.total > 0
+            ? `${bonusEligible} qualify for a coach bonus`
+            : undefined
+        }
         breakdown={[
           { label: "3-Pitch K", value: totals.threePitch, tone: "emerald" },
           { label: "3-Up-3-Dn", value: totals.side, tone: "indigo" },
         ]}
+        fundLine={
+          bonusTotal > 0
+            ? { label: "Total coaches owe", value: formatMoney(bonusTotal) }
+            : undefined
+        }
       />
-      <SectionHeader title="Top of each category" subtitle={RANGE_LABELS[range]} />
-      <StrikeoutLeaders pitchers={pitchers} />
+      <Collapsible title="K Hall of Fame" subtitle={RANGE_LABELS[range]} defaultOpen>
+        <StrikeoutLeaders pitchers={pitchers} />
+      </Collapsible>
       <LeaderboardSection
         title="Strikeouts Leaderboard"
-        hint={`"Strikeouts" = total K's recorded by that pitcher`}
+        hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — click a row to see their profile`}
         pitchers={pitchers}
         walks={[]}
         strikeouts={strikeouts}
@@ -510,12 +537,12 @@ function StrikeoutsView({
         mode="strikeouts"
         onSelect={onSelect}
       />
-      <FeedSection
+      <Collapsible
         title="Strikeout Feed"
         subtitle={`${strikeouts.length} ${strikeouts.length === 1 ? "K" : "K's"} · newest first`}
       >
         <StrikeoutsFeed strikeouts={strikeouts} limit={30} />
-      </FeedSection>
+      </Collapsible>
     </div>
   );
 }
@@ -547,13 +574,9 @@ function LeaderboardSection({
     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
       <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] px-5 py-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold text-[var(--text)]">
-            {title}
-          </h2>
+          <h2 className="text-sm font-bold text-[var(--text)]">{title}</h2>
           <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            {pitchers.length === 0
-              ? "No matching pitchers"
-              : `${hint} · click a row for the full profile`}
+            {pitchers.length === 0 ? "No matching pitchers" : hint}
           </p>
         </div>
         <ViewToggle value={view} onChange={onViewChange} />
@@ -583,38 +606,47 @@ function LeaderboardSection({
   );
 }
 
-function SectionHeader({
+function Collapsible({
   title,
   subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-      <span>{title}</span>
-      <span className="opacity-60">· {subtitle}</span>
-      <span className="h-px flex-1 bg-slate-200" />
-    </h2>
-  );
-}
-
-function FeedSection({
-  title,
-  subtitle,
+  defaultOpen = false,
   children,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
+  defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-      <div className="border-b border-[var(--border)] px-5 py-3">
-        <h2 className="text-sm font-bold text-[var(--text)]">{title}</h2>
-        <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{subtitle}</p>
-      </div>
-      {children}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full cursor-pointer items-center justify-between gap-3 px-5 py-3 text-left transition hover:bg-[var(--surface-hover)]"
+        aria-expanded={open}
+      >
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-[var(--text)]">{title}</h2>
+          {subtitle && (
+            <p className="mt-0.5 truncate text-[11px] text-[var(--text-muted)]">
+              {subtitle}
+            </p>
+          )}
+        </div>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          className={`shrink-0 text-[var(--text-muted)] transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="border-t border-[var(--border)]">{children}</div>
+      )}
     </div>
   );
 }
