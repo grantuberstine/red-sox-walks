@@ -226,37 +226,39 @@ export function MobileTabBar({
 }) {
   return (
     <nav
-      className="sticky bottom-0 z-30 grid grid-cols-6 border-t border-[var(--border)] bg-[var(--surface)] shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
+      className="sticky bottom-0 z-30 border-t border-[var(--border)] bg-[var(--surface)] shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {NAV.map((item) => {
-        const active = item.key === section;
-        return (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => onSectionChange(item.key)}
-            aria-pressed={active}
-            aria-label={item.label}
-            className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-[var(--surface-hover)] ${
-              active
-                ? "text-[var(--color-sox-red)] dark:text-rose-300"
-                : "text-[var(--text-muted)]"
-            }`}
-          >
-            <span
-              className={
+      <div className="grid grid-cols-6 border-b border-[var(--border)]">
+        {NAV.map((item) => {
+          const active = item.key === section;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onSectionChange(item.key)}
+              aria-pressed={active}
+              aria-label={item.label}
+              className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-[var(--surface-hover)] ${
                 active
-                  ? "scale-110 transition-transform"
-                  : "transition-transform"
-              }
+                  ? "text-[var(--color-sox-red)] dark:text-red-500"
+                  : "text-[var(--text-secondary)]"
+              }`}
             >
-              {item.icon}
-            </span>
-            <span className="leading-none">{item.short}</span>
-          </button>
-        );
-      })}
+              <span
+                className={
+                  active
+                    ? "scale-110 transition-transform"
+                    : "transition-transform"
+                }
+              >
+                {item.icon}
+              </span>
+              <span className="leading-none">{item.short}</span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }

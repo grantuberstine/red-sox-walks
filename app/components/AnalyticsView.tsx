@@ -246,8 +246,8 @@ function BigStat({
   highlight?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-3">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-3 transition hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-sm">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
         {label}
       </div>
       <div className="mt-1 flex items-baseline gap-1.5">
@@ -261,7 +261,7 @@ function BigStat({
           {value}
         </span>
         {suffix && (
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
             {suffix}
           </span>
         )}
@@ -318,27 +318,29 @@ function PitcherChartCard({
           </div>
           <ViewPills value={view} onChange={setView} />
         </div>
-        {view === "velocity" && availableTypes.length > 0 && (
-          <div className="mt-3">
+        <div className="mt-3 min-h-[30px]">
+          {view === "velocity" && availableTypes.length > 0 ? (
             <PitchTypePills
               types={byType}
               value={selectedType}
               onChange={setSelectedType}
             />
+          ) : null}
+        </div>
+      </div>
+      <div className="min-h-[340px]">
+        {view === "velocity" && selectedType ? (
+          <VelocityChart appearances={appearances} pitchType={selectedType} />
+        ) : view === "usage" ? (
+          <UsageChart appearances={appearances} byType={byType} />
+        ) : view === "count" ? (
+          <PitchCountChart appearances={appearances} />
+        ) : (
+          <div className="px-5 py-10 text-center text-sm text-[var(--text-secondary)]">
+            No pitch type data.
           </div>
         )}
       </div>
-      {view === "velocity" && selectedType ? (
-        <VelocityChart appearances={appearances} pitchType={selectedType} />
-      ) : view === "usage" ? (
-        <UsageChart appearances={appearances} byType={byType} />
-      ) : view === "count" ? (
-        <PitchCountChart appearances={appearances} />
-      ) : (
-        <div className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">
-          No pitch type data.
-        </div>
-      )}
     </section>
   );
 }
@@ -726,18 +728,20 @@ function UsageChart({
 
   return (
     <div className="relative px-4 pb-4 pt-3">
-      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted)]">
-        {orderedTypes.slice(0, 8).map((t) => {
-          const c = colorFor(t);
-          return (
-            <Legend
-              key={t}
-              swatch={isDark ? c.dark : c.light}
-              label={labelFor(t)}
-            />
-          );
-        })}
-        <span className="ml-auto tabular">
+      <div className="mb-2 flex items-center gap-3 overflow-x-auto text-[11px] text-[var(--text-secondary)]">
+        <div className="flex shrink-0 items-center gap-3">
+          {orderedTypes.slice(0, 8).map((t) => {
+            const c = colorFor(t);
+            return (
+              <Legend
+                key={t}
+                swatch={isDark ? c.dark : c.light}
+                label={labelFor(t)}
+              />
+            );
+          })}
+        </div>
+        <span className="ml-auto shrink-0 tabular">
           {appearances.length} outings · peak {maxTotal} pitches
         </span>
       </div>
