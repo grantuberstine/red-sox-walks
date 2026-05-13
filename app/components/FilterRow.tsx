@@ -37,9 +37,9 @@ export function TimeRangePills({
             role="tab"
             aria-selected={active}
             onClick={() => onRangeChange(k)}
-            className={`min-h-[34px] cursor-pointer rounded-md px-2.5 text-xs font-semibold transition sm:px-3 sm:text-sm ${
+            className={`min-h-[34px] cursor-pointer rounded-md px-2.5 text-sm font-semibold transition sm:px-3 ${
               active
-                ? "bg-[var(--color-sox-navy)] text-white shadow-sm dark:bg-[var(--color-sox-red)]"
+                ? "bg-[var(--color-sox-red)] text-white shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-[var(--text)]"
             }`}
             title={RANGE_LABELS[k]}

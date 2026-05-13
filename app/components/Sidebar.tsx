@@ -133,13 +133,15 @@ export function Sidebar({
   const isDark = theme === "dark";
   return (
     <aside className="hidden h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)] lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0 xl:w-[240px]">
-      <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-4 py-4">
+      <div className="flex h-[73px] items-center gap-2.5 border-b border-[var(--border)] px-4">
         <WooSoxLogo size={36} />
         <div className="min-w-0">
           <div className="truncate text-sm font-bold leading-tight text-[var(--text)]">
             WooSox
           </div>
-          <div className="text-[10px] leading-tight text-[var(--text-muted)]">Tracker</div>
+          <div className="text-[11px] leading-tight text-[var(--text-muted)]">
+            Tracker
+          </div>
         </div>
       </div>
 
@@ -154,11 +156,11 @@ export function Sidebar({
               aria-pressed={active}
               className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
                 active
-                  ? "bg-[var(--color-sox-navy)] text-white shadow-sm dark:bg-[var(--color-sox-red)]"
+                  ? "bg-[var(--color-sox-red)] text-white shadow-sm"
                   : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               }`}
             >
-              <span className={active ? "text-[var(--color-woo-gold)]" : ""}>
+              <span className={active ? "text-white" : ""}>
                 {item.icon}
               </span>
               <span className="min-w-0 flex-1">

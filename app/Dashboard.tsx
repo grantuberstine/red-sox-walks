@@ -240,25 +240,46 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 flex flex-col gap-2 border-b border-[var(--border)] bg-[var(--surface)]/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:flex-row lg:items-center lg:gap-3 lg:px-8"
-          style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
+          className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="lg:hidden">
-              <WooSoxLogo size={28} />
-            </span>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-bold leading-tight text-[var(--text)] sm:text-lg">
-                {sectionLabel[section]}
-              </h1>
-              <p className="truncate text-[10px] leading-tight text-[var(--text-muted)] sm:text-[11px]">
-                {state.season} season · refreshed{" "}
-                <span className="tabular">
-                  {formatTimestamp(state.meta.lastRefreshAt)}
-                </span>
-              </p>
+          <div className="flex h-[73px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <span className="lg:hidden">
+                <WooSoxLogo size={28} />
+              </span>
+              <div className="min-w-0">
+                <h1 className="truncate text-lg font-bold leading-tight text-[var(--text)] sm:text-xl">
+                  {sectionLabel[section]}
+                </h1>
+                <p className="truncate text-[11px] leading-tight text-[var(--text-muted)]">
+                  {state.season} season ·{" "}
+                  <span className="tabular">
+                    {resultCount.toLocaleString()}{" "}
+                    {resultCount === 1 ? resultUnit : `${resultUnit}s`}
+                  </span>{" "}
+                  · refreshed{" "}
+                  <span className="tabular">
+                    {formatTimestamp(state.meta.lastRefreshAt)}
+                  </span>
+                </p>
+              </div>
             </div>
-            <div className="ml-auto flex items-center gap-1.5 lg:hidden">
+
+            {showFilters && (
+              <div className="hidden items-center gap-2 lg:flex">
+                <TimeRangePills range={range} onRangeChange={setRange} />
+                <div className="w-72">
+                  <SearchInput
+                    value={query}
+                    onChange={setQuery}
+                    suggestions={searchSuggestions}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1.5 lg:hidden">
               <ThemeToggle theme={theme} onToggle={toggleTheme} compact />
               <button
                 type="button"
@@ -266,9 +287,9 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 aria-label="Roster"
                 className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-                  <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <path d="M7 9h10M7 13h10M7 17h6" />
                 </svg>
                 {hidden.size > 0 && (
                   <span className="absolute -top-1 -right-1 rounded-full bg-[var(--color-sox-red)] px-1 text-[9px] font-bold text-white">
@@ -280,50 +301,18 @@ export function Dashboard({ state }: { state: SeasonState }) {
           </div>
 
           {showFilters && (
-            <div className="flex flex-wrap items-center gap-2 lg:ml-auto lg:flex-nowrap">
+            <div className="flex items-center gap-2 border-t border-[var(--border)] px-4 py-2 lg:hidden">
               <TimeRangePills range={range} onRangeChange={setRange} />
-              <div className="ml-auto w-full sm:w-64 lg:w-72">
+              <div className="ml-auto w-full max-w-[220px]">
                 <SearchInput
                   value={query}
                   onChange={setQuery}
                   suggestions={searchSuggestions}
                 />
               </div>
-              <div className="hidden items-center gap-1.5 lg:flex">
-                <ThemeToggle theme={theme} onToggle={toggleTheme} compact />
-                <button
-                  type="button"
-                  onClick={() => setRosterOpen(true)}
-                  aria-label="Roster"
-                  className="relative inline-flex h-9 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-                    <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                  <span>Roster</span>
-                  {hidden.size > 0 && (
-                    <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
-                      {hidden.size}
-                    </span>
-                  )}
-                </button>
-              </div>
             </div>
           )}
         </header>
-
-        {showFilters && (
-          <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-[10px] text-[var(--text-muted)] sm:px-6 lg:px-8">
-            <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
-              <span className="truncate">{rangeContext}</span>
-              <span className="shrink-0 tabular">
-                {resultCount.toLocaleString()}{" "}
-                {resultCount === 1 ? resultUnit : `${resultUnit}s`}
-              </span>
-            </div>
-          </div>
-        )}
 
         <main className="min-w-0 flex-1 px-4 pb-20 pt-4 sm:px-6 lg:pb-8 lg:pt-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1400px]">
@@ -392,7 +381,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
               />
             )}
 
-            <footer className="mt-8 text-center text-[11px] text-[var(--text-muted)]">
+            <footer className="mt-10 border-t border-[var(--border)] pt-4 text-center text-[11px] text-[var(--text-muted)]">
               Data: MLB Stats API · Daily refresh via Vercel Cron
             </footer>
           </div>
@@ -440,10 +429,10 @@ function WalksView({
             : undefined
         }
         breakdown={[
-          { label: "4-Pitch", value: totals.fourPitch, tone: "amber" },
-          { label: "0-2", value: totals.ohTwo, tone: "rose" },
-          { label: "Leadoff", value: totals.leadoff, tone: "sky" },
-          { label: "2-Out", value: totals.twoOut, tone: "violet" },
+          { label: "4-Pitch", value: totals.fourPitch, tone: "neutral" },
+          { label: "0-2", value: totals.ohTwo, tone: "neutral" },
+          { label: "Leadoff", value: totals.leadoff, tone: "neutral" },
+          { label: "2-Out", value: totals.twoOut, tone: "neutral" },
         ]}
         fundLine={
           feeTotal > 0
@@ -511,8 +500,8 @@ function StrikeoutsView({
             : undefined
         }
         breakdown={[
-          { label: "3-Pitch K", value: totals.threePitch, tone: "emerald" },
-          { label: "3-Up-3-Dn", value: totals.side, tone: "indigo" },
+          { label: "3-Pitch K", value: totals.threePitch, tone: "neutral" },
+          { label: "3-Up-3-Dn", value: totals.side, tone: "neutral" },
         ]}
         fundLine={
           bonusTotal > 0

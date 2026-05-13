@@ -118,16 +118,14 @@ export function RosterDrawer({
               return (
                 <li
                   key={p.pitcherId}
-                  className={`flex items-center gap-3 px-5 py-2.5 transition ${
-                    isHidden ? "opacity-50" : ""
-                  }`}
+                  className="flex items-center gap-3 px-5 py-2.5 transition"
                 >
                   <PitcherAvatar
                     name={p.name}
                     src={p.headshotUrl}
                     size={40}
                   />
-                  <div className="min-w-0 flex-1">
+                  <div className={`min-w-0 flex-1 ${isHidden ? "opacity-50" : ""}`}>
                     <div className="truncate text-sm font-medium text-[var(--text)]">
                       {p.name}
                     </div>
@@ -135,17 +133,28 @@ export function RosterDrawer({
                       {p.totalWalks} BB · {p.totalStrikeouts} K
                     </div>
                   </div>
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-wider ${
+                      isHidden
+                        ? "text-[var(--text-muted)]"
+                        : "text-emerald-700 dark:text-emerald-300"
+                    }`}
+                  >
+                    {isHidden ? "Hidden" : "Active"}
+                  </span>
                   <button
                     type="button"
                     onClick={() => onToggle(p.pitcherId)}
                     aria-pressed={!isHidden}
-                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
-                      isHidden ? "bg-slate-200" : "bg-emerald-50 dark:bg-emerald-500/150"
+                    className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full ring-1 ring-inset ring-black/5 transition ${
+                      isHidden
+                        ? "bg-slate-300 dark:bg-slate-700"
+                        : "bg-emerald-500"
                     }`}
                   >
                     <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-[var(--surface)] shadow transition ${
-                        isHidden ? "translate-x-0.5" : "translate-x-[22px]"
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition ${
+                        isHidden ? "translate-x-1" : "translate-x-[26px]"
                       }`}
                     />
                   </button>

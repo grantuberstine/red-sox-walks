@@ -365,10 +365,10 @@ function PitcherRowDesktop({
             <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(walksPerNine(p))}
             </td>
-            <NumberCell value={p.fourPitchWalks} color="text-amber-700 dark:text-amber-300" />
-            <NumberCell value={p.ohTwoWalks} color="text-rose-700 dark:text-rose-300" />
-            <NumberCell value={p.leadoffWalks} color="text-sky-700 dark:text-sky-300" />
-            <NumberCell value={p.twoOutWalks} color="text-violet-700 dark:text-violet-300" />
+            <NumberCell value={p.fourPitchWalks} color="text-[var(--text)]" />
+            <NumberCell value={p.ohTwoWalks} color="text-[var(--text)]" />
+            <NumberCell value={p.leadoffWalks} color="text-[var(--text)]" />
+            <NumberCell value={p.twoOutWalks} color="text-[var(--text)]" />
           </>
         ) : (
           <>
@@ -378,8 +378,8 @@ function PitcherRowDesktop({
             <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
-            <NumberCell value={p.threePitchStrikeouts} color="text-emerald-700 dark:text-emerald-300" />
-            <NumberCell value={p.sideStrikeouts} color="text-indigo-700 dark:text-indigo-300" />
+            <NumberCell value={p.threePitchStrikeouts} color="text-[var(--text)]" />
+            <NumberCell value={p.sideStrikeouts} color="text-[var(--text)]" />
           </>
         )}
       </tr>
