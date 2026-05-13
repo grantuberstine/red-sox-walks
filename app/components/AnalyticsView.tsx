@@ -8,13 +8,12 @@ import type {
 } from "@/lib/types";
 import { PitcherAvatar } from "./PitcherAvatar";
 
-type ChartView = "velocity" | "usage" | "count" | "outings";
+type ChartView = "velocity" | "usage" | "count";
 
 const VIEW_OPTIONS: Array<{ key: ChartView; label: string }> = [
   { key: "velocity", label: "Velocity" },
   { key: "usage", label: "Pitch usage" },
   { key: "count", label: "Pitch count" },
-  { key: "outings", label: "Outings" },
 ];
 
 // MLB Stats API / Statcast / Baseball Savant pitch codes.
@@ -228,13 +227,24 @@ export function AnalyticsView({
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <div className="border-b border-[var(--border)] px-5 py-3">
           <h3 className="text-sm font-bold text-[var(--text)]">Pitch mix</h3>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+          <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
             Usage and velocity per pitch type
           </p>
         </div>
         <PitchMixTable byType={career.byType} total={career.totalPitches} />
       </section>
 
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h3 className="text-sm font-bold text-[var(--text)]">Outings</h3>
+          <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+            {appearances.length}{" "}
+            {appearances.length === 1 ? "appearance" : "appearances"} ·
+            newest first · best max velo highlighted
+          </p>
+        </div>
+        <OutingsGrid appearances={appearances} byType={career.byType} />
+      </section>
     </div>
   );
 }
@@ -311,18 +321,14 @@ function PitcherChartCard({
                 ? `Velocity — ${selectedType ? labelFor(selectedType) : ""}`
                 : view === "usage"
                   ? "Pitch usage by outing"
-                  : view === "count"
-                    ? "Pitch count by outing"
-                    : "Outings"}
+                  : "Pitch count by outing"}
             </h3>
             <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
               {view === "velocity"
                 ? "Avg + max per outing for the selected pitch type · hover for detail"
                 : view === "usage"
                   ? "Stacked by pitch type · hover for breakdown"
-                  : view === "count"
-                    ? "Total pitches thrown per outing"
-                    : "Every outing at a glance · best max velo highlighted"}
+                  : "Total pitches thrown per outing"}
             </p>
           </div>
           <ViewPills value={view} onChange={setView} />
@@ -344,8 +350,6 @@ function PitcherChartCard({
           <UsageChart appearances={appearances} byType={byType} />
         ) : view === "count" ? (
           <PitchCountChart appearances={appearances} />
-        ) : view === "outings" ? (
-          <OutingsGrid appearances={appearances} byType={byType} />
         ) : (
           <div className="px-5 py-10 text-center text-sm text-[var(--text-secondary)]">
             No pitch type data.
