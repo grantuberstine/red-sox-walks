@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SeasonState } from "@/lib/types";
 import {
   RANGE_LABELS,
@@ -40,19 +40,73 @@ import { PlayerProfile } from "./components/PlayerProfile";
 import { AnalyticsView } from "./components/AnalyticsView";
 import { PitcherPicker } from "./components/PitcherPicker";
 
+const VALID_SECTIONS: Section[] = [
+  "walks",
+  "strikeouts",
+  "players",
+  "team",
+  "analytics",
+  "fund",
+];
+const VALID_RANGES: RangeKey[] = ["season", "month", "week", "today"];
+
+function readInitialUrl(): {
+  section: Section;
+  range: RangeKey;
+  profileId: number | null;
+  analyticsPitcherId: number | null;
+} {
+  if (typeof window === "undefined") {
+    return {
+      section: "walks",
+      range: "season",
+      profileId: null,
+      analyticsPitcherId: null,
+    };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const s = params.get("section");
+  const r = params.get("range");
+  const p = Number(params.get("pitcher"));
+  const ap = Number(params.get("analyticsPitcher"));
+  return {
+    section: VALID_SECTIONS.includes(s as Section) ? (s as Section) : "walks",
+    range: VALID_RANGES.includes(r as RangeKey) ? (r as RangeKey) : "season",
+    profileId: Number.isFinite(p) && p > 0 ? p : null,
+    analyticsPitcherId: Number.isFinite(ap) && ap > 0 ? ap : null,
+  };
+}
+
 export function Dashboard({ state }: { state: SeasonState }) {
-  const [section, setSection] = useState<Section>("walks");
-  const [range, setRange] = useState<RangeKey>("season");
+  const initial = readInitialUrl();
+  const [section, setSection] = useState<Section>(initial.section);
+  const [range, setRange] = useState<RangeKey>(initial.range);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("table");
   const [rosterOpen, setRosterOpen] = useState(false);
-  const [profileId, setProfileId] = useState<number | null>(null);
+  const [profileId, setProfileId] = useState<number | null>(initial.profileId);
   const [analyticsPitcherId, setAnalyticsPitcherId] = useState<number | null>(
-    null,
+    initial.analyticsPitcherId,
   );
 
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
   const { theme, toggle: toggleTheme } = useTheme();
+
+  // Sync state → URL (replaceState so we don't fill browser history on every click)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams();
+    if (section !== "walks") params.set("section", section);
+    if (range !== "season") params.set("range", range);
+    if (profileId !== null) params.set("pitcher", String(profileId));
+    if (analyticsPitcherId !== null)
+      params.set("analyticsPitcher", String(analyticsPitcherId));
+    const qs = params.toString();
+    const newUrl = qs ? `?${qs}` : window.location.pathname;
+    if (window.location.search !== (qs ? `?${qs}` : "")) {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [section, range, profileId, analyticsPitcherId]);
 
   const filteredWalks = useMemo(
     () => filterWalks(state.walks, range, state, query, "all", hidden),
@@ -364,6 +418,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
               ) : (
                 <PlayersGallery
                   pitchers={allPitchersFiltered}
+                  velocityByPitcher={state.velocity}
                   onSelect={openProfile}
                 />
               ))}

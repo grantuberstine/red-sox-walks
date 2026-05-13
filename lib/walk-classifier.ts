@@ -145,6 +145,7 @@ export function classifyWooSoxEvents(
       earnedRuns: line?.earnedRuns ?? 0,
       homeRuns: line?.homeRuns ?? 0,
       hitByPitch: line?.hitByPitch ?? 0,
+      hits: line?.hits ?? 0,
     };
   }
 

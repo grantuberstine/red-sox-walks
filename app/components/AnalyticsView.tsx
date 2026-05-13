@@ -1276,8 +1276,11 @@ function OutingsGrid({
 
             <div className="mt-3 grid grid-cols-4 gap-1.5">
               <MiniStat label="IP" value={formatIp(a.outs)} />
+              <MiniStat label="H" value={a.hits ?? 0} />
               <MiniStat label="BB" value={a.walks ?? 0} />
               <MiniStat label="K" value={a.strikeouts ?? 0} />
+            </div>
+            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
               <MiniStat
                 label="ERA"
                 value={
@@ -1286,8 +1289,14 @@ function OutingsGrid({
                     : "—"
                 }
               />
-            </div>
-            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+              <MiniStat
+                label="WHIP"
+                value={
+                  a.outs > 0
+                    ? (((a.walks ?? 0) + (a.hits ?? 0)) / (a.outs / 3)).toFixed(2)
+                    : "—"
+                }
+              />
               <MiniStat
                 label="K/9"
                 value={
@@ -1304,11 +1313,6 @@ function OutingsGrid({
                     : "—"
                 }
               />
-              <MiniStat
-                label="FIP"
-                value={a.outs > 0 ? computeFip(a).toFixed(2) : "—"}
-              />
-              <MiniStat label="HR" value={a.homeRuns ?? 0} />
             </div>
 
             {a.byType.length > 0 && (

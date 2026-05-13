@@ -81,6 +81,7 @@ export type AppearanceVelo = {
   earnedRuns: number;
   homeRuns: number;
   hitByPitch: number;
+  hits: number;
 };
 
 export type SeasonState = {

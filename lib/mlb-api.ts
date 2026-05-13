@@ -58,6 +58,7 @@ export type BoxscorePitching = {
   earnedRuns: number;
   homeRuns: number;
   hitByPitch: number;
+  hits: number;
 };
 
 export type LiveFeed = {
@@ -158,6 +159,7 @@ export async function fetchGameFeed(gamePk: number): Promise<LiveFeed> {
             earnedRuns: (pit.earnedRuns as number) ?? 0,
             homeRuns: (pit.homeRuns as number) ?? 0,
             hitByPitch: (pit.hitByPitch as number) ?? 0,
+            hits: (pit.hits as number) ?? 0,
           };
         }
       }

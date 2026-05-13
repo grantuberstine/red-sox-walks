@@ -1,10 +1,46 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { PitcherStats } from "@/lib/types";
+import type { AppearanceVelo, PitcherStats } from "@/lib/types";
 import { inningsPitched } from "@/lib/filters";
 import { WALK_FEE_PER_CATEGORY, formatMoney } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
+
+const FIP_CONSTANT = 3.1;
+
+type Rates = { era: number | null; whip: number | null; fip: number | null };
+
+function ratesFor(appearances: AppearanceVelo[]): Rates {
+  const t = appearances.reduce(
+    (acc, a) => ({
+      outs: acc.outs + (a.outs ?? 0),
+      walks: acc.walks + (a.walks ?? 0),
+      strikeouts: acc.strikeouts + (a.strikeouts ?? 0),
+      earnedRuns: acc.earnedRuns + (a.earnedRuns ?? 0),
+      homeRuns: acc.homeRuns + (a.homeRuns ?? 0),
+      hitByPitch: acc.hitByPitch + (a.hitByPitch ?? 0),
+      hits: acc.hits + (a.hits ?? 0),
+    }),
+    {
+      outs: 0,
+      walks: 0,
+      strikeouts: 0,
+      earnedRuns: 0,
+      homeRuns: 0,
+      hitByPitch: 0,
+      hits: 0,
+    },
+  );
+  if (t.outs === 0) return { era: null, whip: null, fip: null };
+  const ip = t.outs / 3;
+  return {
+    era: (t.earnedRuns * 27) / t.outs,
+    whip: (t.walks + t.hits) / ip,
+    fip:
+      (13 * t.homeRuns + 3 * (t.walks + t.hitByPitch) - 2 * t.strikeouts) / ip +
+      FIP_CONSTANT,
+  };
+}
 
 type SortKey =
   | "name"
@@ -30,9 +66,11 @@ function feesOwed(p: PitcherStats): number {
 
 export function PlayersGallery({
   pitchers,
+  velocityByPitcher,
   onSelect,
 }: {
   pitchers: PitcherStats[];
+  velocityByPitcher: Record<string, AppearanceVelo[]>;
   onSelect: (pitcherId: number) => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("owes");
@@ -83,6 +121,7 @@ export function PlayersGallery({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {sorted.map((p) => {
           const owes = feesOwed(p);
+          const rates = ratesFor(velocityByPitcher[String(p.pitcherId)] ?? []);
           return (
             <button
               key={p.pitcherId}
@@ -96,13 +135,29 @@ export function PlayersGallery({
                   <div className="truncate text-sm font-semibold text-[var(--text)] group-hover:text-[var(--color-sox-red)]">
                     {p.name}
                   </div>
-                  <div className="text-[11px] text-[var(--text-muted)]">
-                    {inningsPitched(p)} IP · {p.appearances} apps ·{" "}
-                    {p.totalWalks} BB · {p.totalStrikeouts} K
+                  <div className="text-[11px] text-[var(--text-secondary)]">
+                    {inningsPitched(p)} IP · {p.totalWalks} BB ·{" "}
+                    {p.totalStrikeouts} K
                   </div>
                 </div>
               </div>
-              <div className="mt-4">
+
+              <div className="mt-3 grid grid-cols-3 gap-1.5">
+                <MiniRate
+                  label="ERA"
+                  value={rates.era !== null ? rates.era.toFixed(2) : "—"}
+                />
+                <MiniRate
+                  label="WHIP"
+                  value={rates.whip !== null ? rates.whip.toFixed(2) : "—"}
+                />
+                <MiniRate
+                  label="FIP"
+                  value={rates.fip !== null ? rates.fip.toFixed(2) : "—"}
+                />
+              </div>
+
+              <div className="mt-3">
                 <MoneyBlock label="Owes the Fund" value={owes} />
               </div>
               <div className="mt-3 flex flex-wrap gap-1">
@@ -113,12 +168,25 @@ export function PlayersGallery({
                 <Pill label="3P-K" value={p.threePitchStrikeouts} tone="k" />
                 <Pill label="3-UP" value={p.sideStrikeouts} tone="k" />
               </div>
-              <div className="mt-3 text-right text-[10px] font-semibold text-[var(--text-muted)] group-hover:text-[var(--color-sox-red)]">
+              <div className="mt-3 text-right text-[10px] font-semibold text-[var(--text-secondary)] group-hover:text-[var(--color-sox-red)]">
                 View profile →
               </div>
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function MiniRate({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md bg-[var(--surface-hover)] px-2 py-1.5 text-center">
+      <div className="text-[9px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+        {label}
+      </div>
+      <div className="mt-0.5 text-sm font-bold tabular leading-none text-[var(--text)]">
+        {value}
       </div>
     </div>
   );

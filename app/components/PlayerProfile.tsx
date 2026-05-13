@@ -101,8 +101,17 @@ export function PlayerProfile({
         earnedRuns: acc.earnedRuns + (a.earnedRuns ?? 0),
         homeRuns: acc.homeRuns + (a.homeRuns ?? 0),
         hitByPitch: acc.hitByPitch + (a.hitByPitch ?? 0),
+        hits: acc.hits + (a.hits ?? 0),
       }),
-      { outs: 0, walks: 0, strikeouts: 0, earnedRuns: 0, homeRuns: 0, hitByPitch: 0 },
+      {
+        outs: 0,
+        walks: 0,
+        strikeouts: 0,
+        earnedRuns: 0,
+        homeRuns: 0,
+        hitByPitch: 0,
+        hits: 0,
+      },
     );
     const ipDecimal = t.outs / 3;
     const era = t.outs > 0 ? (t.earnedRuns * 27) / t.outs : null;
@@ -112,7 +121,8 @@ export function PlayerProfile({
             ipDecimal +
           FIP_CONSTANT
         : null;
-    return { ...t, era, fip };
+    const whip = t.outs > 0 ? (t.walks + t.hits) / ipDecimal : null;
+    return { ...t, era, fip, whip };
   }, [appearances]);
 
   return (
@@ -158,7 +168,7 @@ export function PlayerProfile({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
+        <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
           <StatCard
             label="IP"
             value={
@@ -167,13 +177,17 @@ export function PlayerProfile({
                 : inningsPitched(pitcher)
             }
           />
-          <StatCard label="Apps" value={pitcher.appearances} />
           <StatCard label="K" value={pitcher.totalStrikeouts} />
           <StatCard label="BB" value={pitcher.totalWalks} />
+          <StatCard label="H" value={seasonLine.hits} />
           <StatCard label="HR" value={seasonLine.homeRuns} />
           <StatCard
             label="ERA"
             value={seasonLine.era !== null ? seasonLine.era.toFixed(2) : "—"}
+          />
+          <StatCard
+            label="WHIP"
+            value={seasonLine.whip !== null ? seasonLine.whip.toFixed(2) : "—"}
           />
           <StatCard
             label="FIP"
