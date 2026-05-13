@@ -8,78 +8,97 @@ import type {
   WalkRecord,
   WalkType,
 } from "@/lib/types";
-import { achievementById } from "@/lib/achievements";
-import { inningsPitched, strikeoutsPerNine, walksPerNine } from "@/lib/filters";
+import {
+  inningsPitched,
+  strikeoutsPerNine,
+  walksPerNine,
+} from "@/lib/filters";
+import {
+  WALK_FEE_PER_CATEGORY,
+  THREE_PITCH_K_BONUS,
+  SIDE_K_BONUS,
+  formatMoney,
+} from "@/lib/fund";
 import { PitcherAvatar } from "./components/PitcherAvatar";
 
 type Mode = "walks" | "strikeouts";
 
 type WalkSortKey =
   | "name"
-  | "appearances"
-  | "inningsPitched"
+  | "owes"
   | "totalWalks"
   | "fourPitchWalks"
   | "ohTwoWalks"
   | "leadoffWalks"
   | "twoOutWalks"
-  | "walksPerNine";
+  | "walksPerNine"
+  | "inningsPitched";
 
 type KSortKey =
   | "name"
-  | "appearances"
-  | "inningsPitched"
+  | "coachesOwe"
   | "totalStrikeouts"
   | "threePitchStrikeouts"
   | "sideStrikeouts"
-  | "ksPerNine";
+  | "ksPerNine"
+  | "inningsPitched";
 
 type SortDir = "asc" | "desc";
 
 const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "inningsPitched", label: "IP", align: "right" },
-  { key: "totalWalks", label: "Walks", align: "right" },
-  { key: "walksPerNine", label: "BB/9", align: "right" },
+  { key: "owes", label: "Owes", align: "right" },
   { key: "fourPitchWalks", label: "4-Pitch", align: "right" },
   { key: "ohTwoWalks", label: "0-2", align: "right" },
   { key: "leadoffWalks", label: "Leadoff", align: "right" },
   { key: "twoOutWalks", label: "2-Out", align: "right" },
+  { key: "totalWalks", label: "Walks", align: "right" },
+  { key: "inningsPitched", label: "IP", align: "right" },
+  { key: "walksPerNine", label: "BB/9", align: "right" },
 ];
 
 const K_COLS: Array<{ key: KSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "inningsPitched", label: "IP", align: "right" },
-  { key: "totalStrikeouts", label: "Strikeouts", align: "right" },
-  { key: "ksPerNine", label: "K/9", align: "right" },
+  { key: "coachesOwe", label: "Coaches owe", align: "right" },
   { key: "threePitchStrikeouts", label: "3-Pitch", align: "right" },
   { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right" },
+  { key: "totalStrikeouts", label: "K's", align: "right" },
+  { key: "inningsPitched", label: "IP", align: "right" },
+  { key: "ksPerNine", label: "K/9", align: "right" },
 ];
 
-const WALK_TAG_COLORS: Record<WalkType, string> = {
-  fourPitch: "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300",
-  ohTwo: "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300",
-  leadoff: "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300",
-  twoOut: "bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300",
-};
 const WALK_TAG_LABELS: Record<WalkType, string> = {
   fourPitch: "4P",
   ohTwo: "0-2",
   leadoff: "LO",
   twoOut: "2O",
 };
-const K_TAG_COLORS: Record<StrikeoutType, string> = {
-  threePitch: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300",
-  side: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300",
-};
 const K_TAG_LABELS: Record<StrikeoutType, string> = {
   threePitch: "3P",
-  side: "side",
+  side: "3-Up",
 };
+
+const PILL_WALK = "bg-[var(--color-sox-red)]/10 text-[var(--color-sox-red)] dark:bg-[var(--color-sox-red)]/20 dark:text-rose-200";
+const PILL_K = "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300";
+
+function feesOwed(p: PitcherStats): number {
+  return (
+    (p.fourPitchWalks + p.ohTwoWalks + p.leadoffWalks + p.twoOutWalks) *
+    WALK_FEE_PER_CATEGORY
+  );
+}
+
+function coachesOwe(p: PitcherStats): number {
+  return (
+    p.threePitchStrikeouts * THREE_PITCH_K_BONUS +
+    p.sideStrikeouts * SIDE_K_BONUS
+  );
+}
 
 function fmtRate(n: number) {
   return n === 0 ? "—" : n.toFixed(2);
 }
+
 function formatDate(iso: string) {
   const d = new Date(iso + "T12:00:00Z");
   return d.toLocaleDateString("en-US", {
@@ -104,7 +123,7 @@ export function PitcherTable({
 }) {
   const cols = mode === "walks" ? WALK_COLS : K_COLS;
   const defaultSort: WalkSortKey | KSortKey =
-    mode === "walks" ? "totalWalks" : "totalStrikeouts";
+    mode === "walks" ? "owes" : "coachesOwe";
   const [sortKey, setSortKey] = useState<WalkSortKey | KSortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -131,9 +150,13 @@ export function PitcherTable({
     const rows = [...pitchers];
     rows.sort((a, b) => {
       if (sortKey === "name") {
-        return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+        return sortDir === "asc"
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
       }
       const valOf = (p: PitcherStats): number => {
+        if (sortKey === "owes") return feesOwed(p);
+        if (sortKey === "coachesOwe") return coachesOwe(p);
         if (sortKey === "walksPerNine") return walksPerNine(p);
         if (sortKey === "ksPerNine") return strikeoutsPerNine(p);
         if (sortKey === "inningsPitched") return p.outsRecorded;
@@ -171,24 +194,27 @@ export function PitcherTable({
             <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)]">
               {cols.map((col) => {
                 const active = sortKey === col.key;
+                const isMoney = col.key === "owes" || col.key === "coachesOwe";
                 return (
                   <th
                     key={col.key}
-                    className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] ${
-                      col.align === "right" ? "text-right" : "text-left"
-                    }`}
+                    className={`px-3 py-2.5 text-xs font-semibold uppercase tracking-wider ${
+                      isMoney
+                        ? mode === "walks"
+                          ? "text-[var(--color-sox-red)]"
+                          : "text-emerald-700 dark:text-emerald-300"
+                        : "text-[var(--text-muted)]"
+                    } ${col.align === "right" ? "text-right" : "text-left"}`}
                   >
                     <button
                       type="button"
                       onClick={() => onSort(col.key)}
-                      className={`inline-flex items-center gap-1 transition ${
-                        active
-                          ? "text-[var(--text)]"
-                          : "hover:text-[var(--text)]"
+                      className={`inline-flex cursor-pointer items-center gap-1 transition ${
+                        active ? "text-[var(--text)]" : "hover:text-[var(--text)]"
                       }`}
                     >
                       <span>{col.label}</span>
-                      <span className="text-[10px] text-[var(--text-muted)]">
+                      <span className="text-[10px] opacity-50">
                         {active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
                       </span>
                     </button>
@@ -219,12 +245,12 @@ export function PitcherTable({
       </div>
 
       <div className="md:hidden">
-        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
           <span>Sort by</span>
           <select
             value={sortKey}
             onChange={(e) => onSort(e.target.value as WalkSortKey | KSortKey)}
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium normal-case tracking-normal text-[var(--text-secondary)]"
+            className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium normal-case tracking-normal text-[var(--text-secondary)]"
           >
             {cols.map((c) => (
               <option key={c.key} value={c.key}>
@@ -236,28 +262,34 @@ export function PitcherTable({
         <ul className="divide-y divide-[var(--border)]">
           {sorted.map((p) => {
             const open = expanded === p.pitcherId;
+            const owed = mode === "walks" ? feesOwed(p) : coachesOwe(p);
+            const moneyColor =
+              mode === "walks"
+                ? "text-[var(--color-sox-red)]"
+                : "text-emerald-700 dark:text-emerald-300";
             return (
               <li key={p.pitcherId}>
                 <button
                   type="button"
                   onClick={() => toggleExpand(p.pitcherId)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[var(--surface-subtle)]"
+                  className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left active:bg-[var(--surface-hover)]"
                 >
-                  <PitcherAvatar
-                    name={p.name}
-                    src={p.headshotUrl}
-                    size={44}
-                  />
+                  <PitcherAvatar name={p.name} src={p.headshotUrl} size={44} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="truncate font-semibold text-[var(--text)]">
                         {p.name}
                       </span>
-                      <span className="text-xl font-bold tabular text-[var(--text)]">
-                        {mode === "walks" ? p.totalWalks : p.totalStrikeouts}
+                      <span className={`text-xl font-bold tabular ${moneyColor}`}>
+                        {formatMoney(owed)}
                       </span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+                      <span className="tabular">
+                        {mode === "walks" ? p.totalWalks : p.totalStrikeouts}{" "}
+                        {mode === "walks" ? "walks" : "K's"}
+                      </span>
+                      <span>·</span>
                       <span className="tabular">{inningsPitched(p)} IP</span>
                       <span>·</span>
                       <span className="tabular">
@@ -265,29 +297,27 @@ export function PitcherTable({
                           ? `${fmtRate(walksPerNine(p))} BB/9`
                           : `${fmtRate(strikeoutsPerNine(p))} K/9`}
                       </span>
-                      <span className="ml-auto text-[10px]">
-                        {open ? "▲" : "▼"}
-                      </span>
+                      <span className="ml-auto text-[10px]">{open ? "▲" : "▼"}</span>
                     </div>
                   </div>
                 </button>
                 <div className="px-4 pb-3">
                   {mode === "walks" ? (
                     <div className="grid grid-cols-4 gap-1.5 text-center text-[11px]">
-                      <Pill label="4P" value={p.fourPitchWalks} classes="bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300" />
-                      <Pill label="0-2" value={p.ohTwoWalks} classes="bg-rose-50 dark:bg-rose-500/15 text-rose-800 dark:text-rose-300" />
-                      <Pill label="Lead" value={p.leadoffWalks} classes="bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300" />
-                      <Pill label="2-Out" value={p.twoOutWalks} classes="bg-violet-50 dark:bg-violet-500/15 text-violet-800 dark:text-violet-300" />
+                      <Pill label="4P" value={p.fourPitchWalks} />
+                      <Pill label="0-2" value={p.ohTwoWalks} />
+                      <Pill label="LO" value={p.leadoffWalks} />
+                      <Pill label="2O" value={p.twoOutWalks} />
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-1.5 text-center text-[11px]">
-                      <Pill label="3-Pitch" value={p.threePitchStrikeouts} classes="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300" />
-                      <Pill label="Sat-Side" value={p.sideStrikeouts} classes="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-300" />
+                      <Pill label="3-Pitch" value={p.threePitchStrikeouts} />
+                      <Pill label="3-Up-3-Dn" value={p.sideStrikeouts} />
                     </div>
                   )}
                 </div>
                 {open && (
-                  <div className="border-t border-[var(--border)] bg-[var(--surface-subtle)]/50 px-4 py-3">
+                  <div className="border-t border-[var(--border)] bg-[var(--surface-hover)] px-4 py-3">
                     {mode === "walks" ? (
                       <WalkDetail p={p} walks={walksByPitcher.get(p.pitcherId) ?? []} />
                     ) : (
@@ -323,68 +353,64 @@ function PitcherRowDesktop({
   onToggle: () => void;
   colCount: number;
 }) {
+  const owed = mode === "walks" ? feesOwed(p) : coachesOwe(p);
+  const moneyColor =
+    mode === "walks"
+      ? "text-[var(--color-sox-red)]"
+      : "text-emerald-700 dark:text-emerald-300";
   return (
     <>
       <tr
         onClick={onToggle}
-        className={`cursor-pointer border-b border-[var(--border)] last:border-0 transition hover:bg-[var(--color-sox-navy)]/5 ${
+        className={`cursor-pointer border-b border-[var(--border)] last:border-0 transition hover:bg-[var(--surface-hover)] ${
           idx % 2 === 1 ? "bg-[var(--row-stripe)]" : ""
-        } ${open ? "bg-[var(--surface-subtle)]" : ""}`}
+        } ${open ? "bg-[var(--surface-hover)]" : ""}`}
       >
-        <td className="px-4 py-2.5">
+        <td className="px-3 py-2.5">
           <div className="flex items-center gap-3">
             <PitcherAvatar name={p.name} src={p.headshotUrl} size={32} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="truncate font-medium text-[var(--text)]">
-                  {p.name}
-                </span>
-                <span className="text-[9px] text-[var(--text-muted)]">{open ? "▲" : "▼"}</span>
-              </div>
-              {p.achievements.length > 0 && (
-                <div className="mt-0.5 truncate text-[10px] text-[var(--text-muted)]">
-                  {p.achievements
-                    .slice(0, 3)
-                    .map((id) => achievementById(id)?.label)
-                    .filter(Boolean)
-                    .join(" · ")}
-                  {p.achievements.length > 3 && ` +${p.achievements.length - 3}`}
-                </div>
-              )}
-            </div>
+            <span className="truncate font-medium text-[var(--text)]">
+              {p.name}
+            </span>
           </div>
         </td>
-        <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
-          {inningsPitched(p)}
+        <td className={`px-3 py-2.5 text-right text-base font-bold tabular ${moneyColor}`}>
+          {formatMoney(owed)}
         </td>
         {mode === "walks" ? (
           <>
-            <td className="px-4 py-2.5 text-right text-base font-bold tabular text-[var(--text)]">
+            <NumberCell value={p.fourPitchWalks} />
+            <NumberCell value={p.ohTwoWalks} />
+            <NumberCell value={p.leadoffWalks} />
+            <NumberCell value={p.twoOutWalks} />
+            <td className="px-3 py-2.5 text-right tabular font-semibold text-[var(--text)]">
               {p.totalWalks}
             </td>
-            <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
+            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+              {inningsPitched(p)}
+            </td>
+            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(walksPerNine(p))}
             </td>
-            <NumberCell value={p.fourPitchWalks} color="text-[var(--text)]" />
-            <NumberCell value={p.ohTwoWalks} color="text-[var(--text)]" />
-            <NumberCell value={p.leadoffWalks} color="text-[var(--text)]" />
-            <NumberCell value={p.twoOutWalks} color="text-[var(--text)]" />
           </>
         ) : (
           <>
-            <td className="px-4 py-2.5 text-right text-base font-bold tabular text-[var(--text)]">
+            <NumberCell value={p.threePitchStrikeouts} />
+            <NumberCell value={p.sideStrikeouts} />
+            <td className="px-3 py-2.5 text-right tabular font-semibold text-[var(--text)]">
               {p.totalStrikeouts}
             </td>
-            <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
+            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
+              {inningsPitched(p)}
+            </td>
+            <td className="px-3 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
-            <NumberCell value={p.threePitchStrikeouts} color="text-[var(--text)]" />
-            <NumberCell value={p.sideStrikeouts} color="text-[var(--text)]" />
           </>
         )}
       </tr>
       {open && (
-        <tr className="bg-[var(--surface-subtle)]">
+        <tr className="bg-[var(--surface-hover)]">
           <td colSpan={colCount} className="px-4 py-4">
             {mode === "walks" ? (
               <WalkDetail p={p} walks={walks} />
@@ -407,41 +433,38 @@ function WalkDetail({ p, walks }: { p: PitcherStats; walks: WalkRecord[] }) {
     );
   }
   return (
-    <div className="space-y-2">
-      <AchievementBadges achievements={p.achievements} />
-      <ul className="divide-y divide-[var(--border)] rounded-lg bg-[var(--surface)] text-xs ring-1 ring-slate-200">
-        {walks.slice(0, 25).map((w, i) => (
-          <li key={i} className="flex items-center gap-3 px-3 py-2">
-            <div className="min-w-[64px] shrink-0 text-[11px] font-medium text-[var(--text-secondary)]">
-              {formatDate(w.date)}
-            </div>
-            <div className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
-              vs <span className="font-medium">{w.batterName}</span>{" "}
-              <span className="text-[var(--text-muted)]">
-                ({w.opponent} · {w.halfInning === "top" ? "T" : "B"}
-                {w.inning} · {w.finalCount.balls}-{w.finalCount.strikes},{" "}
-                {w.pitchesInPA}p)
+    <ul className="divide-y divide-[var(--border)] rounded-lg bg-[var(--surface)] text-xs ring-1 ring-[var(--border)]">
+      {walks.slice(0, 25).map((w, i) => (
+        <li key={i} className="flex items-center gap-3 px-3 py-2">
+          <div className="min-w-[64px] shrink-0 text-[11px] font-medium tabular text-[var(--text-muted)]">
+            {formatDate(w.date)}
+          </div>
+          <div className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
+            vs <span className="font-medium">{w.batterName}</span>{" "}
+            <span className="text-[var(--text-muted)]">
+              ({w.opponent} · {w.halfInning === "top" ? "T" : "B"}
+              {w.inning} · {w.finalCount.balls}-{w.finalCount.strikes},{" "}
+              {w.pitchesInPA}p)
+            </span>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-1">
+            {w.tags.map((t) => (
+              <span
+                key={t}
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${PILL_WALK}`}
+              >
+                {WALK_TAG_LABELS[t]}
               </span>
-            </div>
-            <div className="flex shrink-0 flex-wrap gap-1">
-              {w.tags.map((t) => (
-                <span
-                  key={t}
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${WALK_TAG_COLORS[t]}`}
-                >
-                  {WALK_TAG_LABELS[t]}
-                </span>
-              ))}
-            </div>
-          </li>
-        ))}
-        {walks.length > 25 && (
-          <li className="px-3 py-2 text-center text-[11px] text-[var(--text-muted)]">
-            + {walks.length - 25} more
-          </li>
-        )}
-      </ul>
-    </div>
+            ))}
+          </div>
+        </li>
+      ))}
+      {walks.length > 25 && (
+        <li className="px-3 py-2 text-center text-[11px] text-[var(--text-muted)]">
+          + {walks.length - 25} more
+        </li>
+      )}
+    </ul>
   );
 }
 
@@ -460,69 +483,45 @@ function KDetail({
     );
   }
   return (
-    <div className="space-y-2">
-      <AchievementBadges achievements={p.achievements} />
-      <ul className="divide-y divide-[var(--border)] rounded-lg bg-[var(--surface)] text-xs ring-1 ring-slate-200">
-        {strikeouts.slice(0, 25).map((s, i) => (
-          <li key={i} className="flex items-center gap-3 px-3 py-2">
-            <div className="min-w-[64px] shrink-0 text-[11px] font-medium text-[var(--text-secondary)]">
-              {formatDate(s.date)}
-            </div>
-            <div className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
-              <span className="font-medium">{s.batterName}</span>{" "}
-              <span className="text-[var(--text-muted)]">
-                ({s.opponent} · {s.halfInning === "top" ? "T" : "B"}
-                {s.inning} · {s.pitchesInPA}p)
+    <ul className="divide-y divide-[var(--border)] rounded-lg bg-[var(--surface)] text-xs ring-1 ring-[var(--border)]">
+      {strikeouts.slice(0, 25).map((s, i) => (
+        <li key={i} className="flex items-center gap-3 px-3 py-2">
+          <div className="min-w-[64px] shrink-0 text-[11px] font-medium tabular text-[var(--text-muted)]">
+            {formatDate(s.date)}
+          </div>
+          <div className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
+            <span className="font-medium">{s.batterName}</span>{" "}
+            <span className="text-[var(--text-muted)]">
+              ({s.opponent} · {s.halfInning === "top" ? "T" : "B"}
+              {s.inning} · {s.pitchesInPA}p)
+            </span>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-1">
+            {s.tags.map((t) => (
+              <span
+                key={t}
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${PILL_K}`}
+              >
+                {K_TAG_LABELS[t]}
               </span>
-            </div>
-            <div className="flex shrink-0 flex-wrap gap-1">
-              {s.tags.map((t) => (
-                <span
-                  key={t}
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${K_TAG_COLORS[t]}`}
-                >
-                  {K_TAG_LABELS[t]}
-                </span>
-              ))}
-            </div>
-          </li>
-        ))}
-        {strikeouts.length > 25 && (
-          <li className="px-3 py-2 text-center text-[11px] text-[var(--text-muted)]">
-            + {strikeouts.length - 25} more
-          </li>
-        )}
-      </ul>
-    </div>
+            ))}
+          </div>
+        </li>
+      ))}
+      {strikeouts.length > 25 && (
+        <li className="px-3 py-2 text-center text-[11px] text-[var(--text-muted)]">
+          + {strikeouts.length - 25} more
+        </li>
+      )}
+    </ul>
   );
 }
 
-function AchievementBadges({ achievements }: { achievements: string[] }) {
-  if (achievements.length === 0) return null;
-  return (
-    <div className="flex flex-wrap gap-1">
-      {achievements.map((id) => {
-        const a = achievementById(id);
-        if (!a) return null;
-        return (
-          <span
-            key={id}
-            className="inline-flex items-center gap-1 rounded-full bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)] ring-1 ring-inset ring-slate-200"
-          >
-            <span>{a.emoji}</span>
-            <span>{a.label}</span>
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-function NumberCell({ value, color }: { value: number; color: string }) {
+function NumberCell({ value }: { value: number }) {
   return (
     <td
-      className={`px-4 py-2.5 text-right tabular ${
-        value > 0 ? `font-semibold ${color}` : "text-[var(--text-muted)]/60"
+      className={`px-3 py-2.5 text-right tabular ${
+        value > 0 ? "text-[var(--text)]" : "text-[var(--text-muted)]/60"
       }`}
     >
       {value}
@@ -530,13 +529,21 @@ function NumberCell({ value, color }: { value: number; color: string }) {
   );
 }
 
-function Pill({ label, value, classes }: { label: string; value: number; classes: string }) {
+function Pill({ label, value }: { label: string; value: number }) {
   return (
-    <div className={`rounded-md px-2 py-1.5 ${value > 0 ? classes : "bg-[var(--surface-hover)] text-[var(--text-muted)]/60"}`}>
-      <div className="text-[10px] font-medium uppercase tracking-wider opacity-80">
+    <div
+      className={`rounded-md px-2 py-1.5 ${
+        value > 0
+          ? "bg-[var(--surface-hover)] text-[var(--text)]"
+          : "bg-[var(--surface-hover)]/50 text-[var(--text-muted)]/60"
+      }`}
+    >
+      <div className="text-[10px] font-medium uppercase tracking-wider opacity-70">
         {label}
       </div>
-      <div className="mt-0.5 text-base font-bold tabular leading-none">{value}</div>
+      <div className="mt-0.5 text-base font-bold tabular leading-none">
+        {value}
+      </div>
     </div>
   );
 }

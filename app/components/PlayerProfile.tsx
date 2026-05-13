@@ -116,8 +116,12 @@ export function PlayerProfile({
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Stat label="Walks" value={pitcher.totalWalks} sub={`${fmt(walksPerNine(pitcher))} BB/9`} />
-          <Stat label="Strikeouts" value={pitcher.totalStrikeouts} sub={`${fmt(strikeoutsPerNine(pitcher))} K/9`} />
+          <Stat
+            label="Walks"
+            value={pitcher.totalWalks}
+            sub={`${fmt(walksPerNine(pitcher))} BB/9`}
+            tone="rose"
+          />
           <Stat
             label="Owes the fund"
             value={formatMoney(fees)}
@@ -125,7 +129,13 @@ export function PlayerProfile({
             tone="rose"
           />
           <Stat
-            label="Coaches owe player"
+            label="Strikeouts"
+            value={pitcher.totalStrikeouts}
+            sub={`${fmt(strikeoutsPerNine(pitcher))} K/9`}
+            tone="emerald"
+          />
+          <Stat
+            label="Coaches owe"
             value={formatMoney(bonus)}
             sub="From K's"
             tone="emerald"

@@ -440,9 +440,7 @@ function WalksView({
             : undefined
         }
       />
-      <Collapsible title="Walk Hall of Shame" subtitle={RANGE_LABELS[range]} defaultOpen>
-        <CategoryLeaders pitchers={pitchers} />
-      </Collapsible>
+      <CategoryLeaders pitchers={pitchers} />
       <LeaderboardSection
         title="Walks Leaderboard"
         hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — click a row to see their profile`}
@@ -509,9 +507,7 @@ function StrikeoutsView({
             : undefined
         }
       />
-      <Collapsible title="K Hall of Fame" subtitle={RANGE_LABELS[range]} defaultOpen>
-        <StrikeoutLeaders pitchers={pitchers} />
-      </Collapsible>
+      <StrikeoutLeaders pitchers={pitchers} />
       <LeaderboardSection
         title="Strikeouts Leaderboard"
         hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — click a row to see their profile`}
