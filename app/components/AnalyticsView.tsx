@@ -36,20 +36,20 @@ const PITCH_TYPE_LABELS: Record<string, string> = {
 const FASTBALL_CODES = new Set(["FF", "FT", "SI", "FC"]);
 
 const PITCH_COLORS: Record<string, { light: string; dark: string }> = {
-  FF: { light: "#bd3039", dark: "#f87171" },
-  FT: { light: "#e11d48", dark: "#fb7185" },
-  SI: { light: "#059669", dark: "#34d399" },
-  FC: { light: "#0d9488", dark: "#2dd4bf" },
-  SL: { light: "#2563eb", dark: "#60a5fa" },
-  ST: { light: "#0284c7", dark: "#38bdf8" },
-  CU: { light: "#0891b2", dark: "#22d3ee" },
-  KC: { light: "#4338ca", dark: "#818cf8" },
-  CH: { light: "#16a34a", dark: "#4ade80" },
-  FS: { light: "#0f766e", dark: "#5eead4" },
-  SV: { light: "#475569", dark: "#94a3b8" },
-  KN: { light: "#3f3f46", dark: "#a1a1aa" },
-  EP: { light: "#44403c", dark: "#a8a29e" },
-  PO: { light: "#525252", dark: "#a3a3a3" },
+  FF: { light: "#bd3039", dark: "#f87171" },   // 4-Seam — Sox red
+  FT: { light: "#be123c", dark: "#fb7185" },   // 2-Seam — rose
+  SI: { light: "#059669", dark: "#34d399" },   // Sinker — emerald
+  FC: { light: "#0d9488", dark: "#2dd4bf" },   // Cutter — teal
+  SL: { light: "#2563eb", dark: "#60a5fa" },   // Slider — blue
+  ST: { light: "#0891b2", dark: "#22d3ee" },   // Sweeper — cyan
+  CU: { light: "#1e40af", dark: "#93c5fd" },   // Curveball — navy
+  KC: { light: "#0369a1", dark: "#7dd3fc" },   // Knuckle Curve — sky
+  CH: { light: "#ea580c", dark: "#fb923c" },   // Changeup — orange (very distinct from greens)
+  FS: { light: "#15803d", dark: "#86efac" },   // Splitter — dark green
+  SV: { light: "#475569", dark: "#94a3b8" },   // Slurve — slate
+  KN: { light: "#3f3f46", dark: "#a1a1aa" },   // Knuckleball — zinc
+  EP: { light: "#44403c", dark: "#a8a29e" },   // Eephus — stone
+  PO: { light: "#525252", dark: "#a3a3a3" },   // Pitchout — gray
 };
 
 const DEFAULT_PITCH_COLOR = { light: "#475569", dark: "#94a3b8" };
