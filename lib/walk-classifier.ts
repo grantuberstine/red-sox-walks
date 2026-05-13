@@ -198,10 +198,3 @@ export function classifyWooSoxEvents(
 
   return { walks, strikeouts, outsByPitcher, veloByPitcher };
 }
-
-export function classifyWooSoxWalks(
-  feed: LiveFeed,
-  gameDate: string,
-): WalkClassification[] {
-  return classifyWooSoxEvents(feed, gameDate).walks;
-}

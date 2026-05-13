@@ -371,12 +371,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
               <AnalyticsView state={state} pitcher={analyticsPitcher} />
             )}
 
-            {section === "fund" && (
-              <FundView
-                report={fundReport}
-                rangeLabel={RANGE_LABELS[range]}
-              />
-            )}
+            {section === "fund" && <FundView report={fundReport} />}
 
             <footer className="mt-10 border-t border-[var(--border)] pt-4 text-center text-[11px] text-[var(--text-muted)]">
               Data: MLB Stats API · Daily refresh via Vercel Cron

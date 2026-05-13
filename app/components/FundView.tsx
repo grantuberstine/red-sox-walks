@@ -18,13 +18,7 @@ const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: "name", label: "Name (A→Z)" },
 ];
 
-export function FundView({
-  report,
-  rangeLabel,
-}: {
-  report: FundReport;
-  rangeLabel: string;
-}) {
+export function FundView({ report }: { report: FundReport }) {
   const [sortKey, setSortKey] = useState<SortKey>("feesOwed");
   const sorted = useMemo(() => {
     const rows = [...report.entries];

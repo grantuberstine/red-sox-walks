@@ -1,5 +1,5 @@
 import { fetchGameFeed, fetchWooSoxSchedule } from "../lib/mlb-api";
-import { classifyWooSoxWalks } from "../lib/walk-classifier";
+import { classifyWooSoxEvents } from "../lib/walk-classifier";
 
 async function main() {
   const arg = process.argv[2];
@@ -7,7 +7,7 @@ async function main() {
   if (arg && /^\d+$/.test(arg)) {
     const gamePk = parseInt(arg, 10);
     const feed = await fetchGameFeed(gamePk);
-    const walks = classifyWooSoxWalks(feed, "probe");
+    const { walks } = classifyWooSoxEvents(feed, "probe");
     console.log(`Game ${gamePk}: ${walks.length} WooSox walks issued`);
     for (const w of walks) {
       console.log(
@@ -28,7 +28,7 @@ async function main() {
 
   for (const g of games) {
     const feed = await fetchGameFeed(g.gamePk);
-    const walks = classifyWooSoxWalks(feed, g.date);
+    const { walks } = classifyWooSoxEvents(feed, g.date);
     for (const w of walks) {
       const k = String(w.pitcherId);
       if (!totals[k]) totals[k] = { name: w.pitcherName, total: 0, fp: 0, oh2: 0, lo: 0, to: 0 };
