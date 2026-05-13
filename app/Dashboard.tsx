@@ -197,6 +197,14 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const changeSection = (s: Section) => {
     setSection(s);
     if (s !== "players") setProfileId(null);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }
+  };
+
+  const goHome = () => {
+    changeSection("walks");
+    setProfileId(null);
   };
 
   const showFilters =
@@ -211,6 +219,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
         section={section}
         onSectionChange={changeSection}
         onOpenRoster={() => setRosterOpen(true)}
+        onGoHome={goHome}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -232,9 +241,14 @@ export function Dashboard({ state }: { state: SeasonState }) {
         >
           <div className="flex h-[73px] items-center gap-3 px-4 sm:px-6 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-              <span className="lg:hidden">
+              <button
+                type="button"
+                onClick={goHome}
+                aria-label="Go to Walks"
+                className="lg:hidden -m-1 cursor-pointer rounded-md p-1 transition hover:opacity-80"
+              >
                 <WooSoxLogo size={28} />
-              </span>
+              </button>
               <div className="min-w-0">
                 <h1 className="truncate text-lg font-bold leading-tight text-[var(--text)] sm:text-xl">
                   {sectionLabel[section]}
@@ -372,10 +386,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
             )}
 
             {section === "fund" && <FundView report={fundReport} />}
-
-            <footer className="mt-10 border-t border-[var(--border)] pt-4 text-center text-[11px] text-[var(--text-muted)]">
-              Data: MLB Stats API · Daily refresh via Vercel Cron
-            </footer>
           </div>
         </main>
 

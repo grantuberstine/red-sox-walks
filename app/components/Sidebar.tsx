@@ -130,29 +130,36 @@ export function Sidebar({
   section,
   onSectionChange,
   onOpenRoster,
+  onGoHome,
   theme,
   onToggleTheme,
 }: {
   section: Section;
   onSectionChange: (s: Section) => void;
   onOpenRoster: () => void;
+  onGoHome: () => void;
   theme: Theme;
   onToggleTheme: () => void;
 }) {
   const isDark = theme === "dark";
   return (
     <aside className="hidden h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)] lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0 xl:w-[240px]">
-      <div className="flex h-[73px] items-center gap-2.5 border-b border-[var(--border)] px-4">
+      <button
+        type="button"
+        onClick={onGoHome}
+        aria-label="Go to Walks"
+        className="flex h-[73px] cursor-pointer items-center gap-2.5 border-b border-[var(--border)] px-4 text-left transition hover:bg-[var(--surface-hover)]"
+      >
         <WooSoxLogo size={36} />
         <div className="min-w-0">
           <div className="truncate text-sm font-bold leading-tight text-[var(--text)]">
             WooSox
           </div>
-          <div className="text-[11px] leading-tight text-[var(--text-muted)]">
+          <div className="text-[11px] leading-tight text-[var(--text-secondary)]">
             Tracker
           </div>
         </div>
-      </div>
+      </button>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
         {NAV.map((item) => {
