@@ -167,8 +167,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
     return state.pitchers[String(profileId)] ?? null;
   }, [profileId, state.pitchers]);
 
-  const totalsLine = `${state.meta.totalGames}g · ${state.meta.totalWalks} BB · ${state.meta.totalStrikeouts} K`;
-
   const sectionLabel: Record<Section, string> = {
     walks: "Walks",
     strikeouts: "Strikeouts",
@@ -226,8 +224,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
         onSectionChange={changeSection}
         onOpenRoster={() => setRosterOpen(true)}
         hiddenCount={hidden.size}
-        totalsLine={totalsLine}
-        themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <RosterDrawer

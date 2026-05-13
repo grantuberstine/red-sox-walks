@@ -3,7 +3,7 @@
 import { RANGE_LABELS, RangeKey } from "@/lib/filters";
 import { SearchInput, type SearchSuggestion } from "./SearchInput";
 
-const ORDER: RangeKey[] = ["today", "week", "month", "season"];
+const ORDER: RangeKey[] = ["season", "month", "week", "today"];
 const SHORT: Record<RangeKey, string> = {
   today: "Today",
   week: "7D",

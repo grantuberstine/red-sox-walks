@@ -211,20 +211,13 @@ export function PitcherCards({
                   </div>
                 )}
                 {p.achievements.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-0.5">
-                    {p.achievements.slice(0, 10).map((id) => {
-                      const a = achievementById(id);
-                      if (!a) return null;
-                      return (
-                        <span
-                          key={id}
-                          title={`${a.label}: ${a.description}`}
-                          className="text-[12px] leading-none"
-                        >
-                          {a.emoji}
-                        </span>
-                      );
-                    })}
+                  <div className="mt-2 truncate text-[10px] text-[var(--text-muted)]">
+                    {p.achievements
+                      .slice(0, 3)
+                      .map((id) => achievementById(id)?.label)
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {p.achievements.length > 3 && ` +${p.achievements.length - 3}`}
                   </div>
                 )}
               </button>
