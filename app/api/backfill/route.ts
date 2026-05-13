@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth";
 import { processGames } from "@/lib/process";
+import { saveState, emptyState } from "@/lib/storage";
 import { SEASON_END, SEASON_START } from "@/lib/constants";
 
 export const runtime = "nodejs";
@@ -14,10 +15,21 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const startDate = url.searchParams.get("startDate") ?? SEASON_START;
   const endDate = url.searchParams.get("endDate") ?? SEASON_END;
+  const reset = url.searchParams.get("reset") === "1";
 
   try {
+    if (reset) {
+      await saveState(emptyState());
+    }
     const { report } = await processGames({ startDate, endDate });
-    return NextResponse.json({ ok: true, mode: "backfill", startDate, endDate, report });
+    return NextResponse.json({
+      ok: true,
+      mode: "backfill",
+      reset,
+      startDate,
+      endDate,
+      report,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
