@@ -19,7 +19,7 @@ export type CategoryDef = {
 const TONES: Record<ToneKey, { on: string; off: string }> = {
   neutral: {
     on: "bg-[var(--color-sox-navy)] text-white",
-    off: "bg-white text-slate-600 hover:text-[var(--color-sox-navy)]",
+    off: "bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text)]",
   },
   amber: {
     on: "bg-amber-500 text-white",
@@ -67,7 +67,7 @@ export function CategoryChips<K extends string>({
             type="button"
             onClick={() => onChange(c.key as K)}
             aria-pressed={active}
-            className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold transition ${
+            className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-semibold transition ${
               active ? tone.on : tone.off
             } ${active ? "shadow-sm" : ""}`}
           >

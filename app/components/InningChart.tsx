@@ -18,14 +18,14 @@ export function InningChart({
   const total = data.reduce((s, d) => s + d.count, 0);
   if (total === 0) {
     return (
-      <div className="px-5 py-8 text-center text-sm text-slate-500">
+      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
         No walks to bin by inning.
       </div>
     );
   }
   return (
     <div className="px-4 pb-4 pt-2">
-      <div className="mb-2 flex items-baseline justify-between text-[11px] text-slate-500">
+      <div className="mb-2 flex items-baseline justify-between text-[11px] text-[var(--text-muted)]">
         <span>Walks by inning</span>
         <span className="tabular">
           peak inning {data.reduce((a, b) => (b.count > a.count ? b : a)).inning}
@@ -44,10 +44,10 @@ export function InningChart({
                 />
               </div>
               <div className="flex flex-col items-center">
-                <div className="text-[10px] font-semibold tabular text-[var(--color-sox-navy)]">
+                <div className="text-[10px] font-semibold tabular text-[var(--text)]">
                   {d.count}
                 </div>
-                <div className="text-[10px] text-slate-500 tabular">
+                <div className="text-[10px] text-[var(--text-muted)] tabular">
                   {d.inning}
                 </div>
               </div>
@@ -56,7 +56,7 @@ export function InningChart({
         })}
       </div>
       {data.some((d) => d.inning > 9) && (
-        <div className="mt-2 text-[10px] text-slate-400">
+        <div className="mt-2 text-[10px] text-[var(--text-muted)]">
           Extra innings:{" "}
           {data
             .filter((d) => d.inning > 9 && d.count > 0)

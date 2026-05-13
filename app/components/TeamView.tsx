@@ -192,23 +192,23 @@ export function TeamView({
         </ChartCard>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-3">
-          <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h2 className="text-sm font-bold text-[var(--text)]">
             Game Log
           </h2>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
             {gameLog.length === 0
               ? "No games in this range"
               : `${gameLog.length} games · newest first`}
           </p>
         </div>
         {gameLog.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-slate-500">
+          <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
             No games to show.
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-[var(--border)]">
             {gameLog.map((row) => (
               <GameLogItem key={row.game.gamePk} row={row} />
             ))}
@@ -251,13 +251,13 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-2.5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className="border-b border-[var(--border)] px-4 py-2.5">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-[10px] text-slate-500">{subtitle}</p>
+          <p className="text-[10px] text-[var(--text-muted)]">{subtitle}</p>
         )}
       </div>
       {children}
@@ -277,7 +277,7 @@ function GameLogItem({
       : "—";
   return (
     <li className="flex items-center gap-3 px-4 py-2.5">
-      <div className="min-w-[60px] shrink-0 text-[11px] font-medium tabular text-slate-600">
+      <div className="min-w-[60px] shrink-0 text-[11px] font-medium tabular text-[var(--text-secondary)]">
         {formatDate(row.game.date)}
       </div>
       <div
@@ -286,16 +286,16 @@ function GameLogItem({
             ? "bg-emerald-100 text-emerald-800"
             : r === "L"
               ? "bg-rose-100 text-rose-800"
-              : "bg-slate-100 text-slate-500"
+              : "bg-[var(--surface-hover)] text-[var(--text-muted)]"
         }`}
       >
         {r ?? "?"}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-[var(--color-sox-navy)]">
+        <div className="truncate text-sm font-medium text-[var(--text)]">
           {row.game.homeAway === "home" ? "vs" : "@"} {row.game.opponent}
         </div>
-        <div className="text-[11px] tabular text-slate-500">{score}</div>
+        <div className="text-[11px] tabular text-[var(--text-muted)]">{score}</div>
       </div>
       <div className="flex shrink-0 items-center gap-2 text-[11px]">
         <span className="rounded-md bg-rose-50 px-1.5 py-0.5 font-semibold text-rose-700">

@@ -10,14 +10,14 @@ export function ViewToggle({
   onChange: (v: ViewMode) => void;
 }) {
   return (
-    <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[11px]">
+    <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] p-0.5 text-[11px]">
       <button
         type="button"
         onClick={() => onChange("table")}
         className={`flex min-h-[32px] cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition ${
           value === "table"
-            ? "bg-white text-[var(--color-sox-navy)] shadow-sm"
-            : "text-slate-500 hover:text-[var(--color-sox-navy)]"
+            ? "bg-[var(--surface)] text-[var(--text)] shadow-sm"
+            : "text-[var(--text-muted)] hover:text-[var(--text)]"
         }`}
         aria-pressed={value === "table"}
       >
@@ -36,8 +36,8 @@ export function ViewToggle({
         onClick={() => onChange("cards")}
         className={`flex min-h-[32px] cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition ${
           value === "cards"
-            ? "bg-white text-[var(--color-sox-navy)] shadow-sm"
-            : "text-slate-500 hover:text-[var(--color-sox-navy)]"
+            ? "bg-[var(--surface)] text-[var(--text)] shadow-sm"
+            : "text-[var(--text-muted)] hover:text-[var(--text)]"
         }`}
         aria-pressed={value === "cards"}
       >

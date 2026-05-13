@@ -49,13 +49,13 @@ export function RosterDrawer({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-2xl sm:rounded-l-2xl">
-        <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-[var(--surface)] shadow-2xl sm:rounded-l-2xl">
+        <header className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <div>
-            <h2 className="text-base font-bold text-[var(--color-sox-navy)]">
+            <h2 className="text-base font-bold text-[var(--text)]">
               Manage Roster
             </h2>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[var(--text-muted)]">
               Hide pitchers who are no longer on the team
             </p>
           </div>
@@ -63,7 +63,7 @@ export function RosterDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-full p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-secondary)]"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path
@@ -76,15 +76,15 @@ export function RosterDrawer({
           </button>
         </header>
 
-        <div className="border-b border-slate-200 px-5 py-3">
+        <div className="border-b border-[var(--border)] px-5 py-3">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search pitchers…"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-[var(--color-sox-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-navy)]/10"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm placeholder:text-[var(--text-muted)] focus:border-[var(--color-sox-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-navy)]/10"
           />
-          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="mt-2 flex items-center justify-between text-[11px] text-[var(--text-muted)]">
             <span>
               {pitchers.length - hidden.size} active · {hidden.size} hidden
             </span>
@@ -92,14 +92,14 @@ export function RosterDrawer({
               <button
                 type="button"
                 onClick={onShowAll}
-                className="rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700 hover:bg-slate-200"
+                className="rounded-md bg-[var(--surface-hover)] px-2 py-0.5 font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               >
                 Show all
               </button>
               <button
                 type="button"
                 onClick={() => onHideAll(pitchers.map((p) => p.pitcherId))}
-                className="rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700 hover:bg-slate-200"
+                className="rounded-md bg-[var(--surface-hover)] px-2 py-0.5 font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               >
                 Hide all
               </button>
@@ -107,9 +107,9 @@ export function RosterDrawer({
           </div>
         </div>
 
-        <ul className="flex-1 divide-y divide-slate-100 overflow-y-auto">
+        <ul className="flex-1 divide-y divide-[var(--border)] overflow-y-auto">
           {filtered.length === 0 ? (
-            <li className="px-5 py-8 text-center text-sm text-slate-500">
+            <li className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
               No pitchers match.
             </li>
           ) : (
@@ -128,10 +128,10 @@ export function RosterDrawer({
                     size={40}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-[var(--color-sox-navy)]">
+                    <div className="truncate text-sm font-medium text-[var(--text)]">
                       {p.name}
                     </div>
-                    <div className="text-[11px] tabular text-slate-500">
+                    <div className="text-[11px] tabular text-[var(--text-muted)]">
                       {p.totalWalks} BB · {p.totalStrikeouts} K
                     </div>
                   </div>
@@ -144,7 +144,7 @@ export function RosterDrawer({
                     }`}
                   >
                     <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                      className={`inline-block h-5 w-5 transform rounded-full bg-[var(--surface)] shadow transition ${
                         isHidden ? "translate-x-0.5" : "translate-x-[22px]"
                       }`}
                     />
@@ -155,7 +155,7 @@ export function RosterDrawer({
           )}
         </ul>
 
-        <footer className="border-t border-slate-200 px-5 py-3 text-[11px] text-slate-500">
+        <footer className="border-t border-[var(--border)] px-5 py-3 text-[11px] text-[var(--text-muted)]">
           Preferences saved on this device.
         </footer>
       </div>

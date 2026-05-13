@@ -168,13 +168,13 @@ export function PitcherTable({
       <div className="hidden md:block">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/60">
+            <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)]">
               {cols.map((col) => {
                 const active = sortKey === col.key;
                 return (
                   <th
                     key={col.key}
-                    className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-600 ${
+                    className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] ${
                       col.align === "right" ? "text-right" : "text-left"
                     }`}
                   >
@@ -183,12 +183,12 @@ export function PitcherTable({
                       onClick={() => onSort(col.key)}
                       className={`inline-flex items-center gap-1 transition ${
                         active
-                          ? "text-[var(--color-sox-navy)]"
-                          : "hover:text-[var(--color-sox-navy)]"
+                          ? "text-[var(--text)]"
+                          : "hover:text-[var(--text)]"
                       }`}
                     >
                       <span>{col.label}</span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-[var(--text-muted)]">
                         {active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
                       </span>
                     </button>
@@ -219,12 +219,12 @@ export function PitcherTable({
       </div>
 
       <div className="md:hidden">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/60 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
           <span>Sort by</span>
           <select
             value={sortKey}
             onChange={(e) => onSort(e.target.value as WalkSortKey | KSortKey)}
-            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium normal-case tracking-normal text-slate-700"
+            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium normal-case tracking-normal text-[var(--text-secondary)]"
           >
             {cols.map((c) => (
               <option key={c.key} value={c.key}>
@@ -233,7 +233,7 @@ export function PitcherTable({
             ))}
           </select>
         </div>
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-[var(--border)]">
           {sorted.map((p) => {
             const open = expanded === p.pitcherId;
             return (
@@ -250,14 +250,14 @@ export function PitcherTable({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="truncate font-semibold text-[var(--color-sox-navy)]">
+                      <span className="truncate font-semibold text-[var(--text)]">
                         {p.name}
                       </span>
-                      <span className="text-xl font-bold tabular text-[var(--color-sox-navy)]">
+                      <span className="text-xl font-bold tabular text-[var(--text)]">
                         {mode === "walks" ? p.totalWalks : p.totalStrikeouts}
                       </span>
                     </div>
-                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
+                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
                       <span className="tabular">{inningsPitched(p)} IP</span>
                       <span>·</span>
                       <span className="tabular">
@@ -287,7 +287,7 @@ export function PitcherTable({
                   )}
                 </div>
                 {open && (
-                  <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-3">
+                  <div className="border-t border-[var(--border)] bg-slate-50/50 px-4 py-3">
                     {mode === "walks" ? (
                       <WalkDetail p={p} walks={walksByPitcher.get(p.pitcherId) ?? []} />
                     ) : (
@@ -327,7 +327,7 @@ function PitcherRowDesktop({
     <>
       <tr
         onClick={onToggle}
-        className={`cursor-pointer border-b border-slate-100 last:border-0 transition hover:bg-[var(--color-sox-navy)]/5 ${
+        className={`cursor-pointer border-b border-[var(--border)] last:border-0 transition hover:bg-[var(--color-sox-navy)]/5 ${
           idx % 2 === 1 ? "bg-slate-50/30" : ""
         } ${open ? "bg-slate-50" : ""}`}
       >
@@ -336,13 +336,13 @@ function PitcherRowDesktop({
             <PitcherAvatar name={p.name} src={p.headshotUrl} size={32} />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="truncate font-medium text-[var(--color-sox-navy)]">
+                <span className="truncate font-medium text-[var(--text)]">
                   {p.name}
                 </span>
-                <span className="text-[9px] text-slate-400">{open ? "▲" : "▼"}</span>
+                <span className="text-[9px] text-[var(--text-muted)]">{open ? "▲" : "▼"}</span>
               </div>
               {p.achievements.length > 0 && (
-                <div className="mt-0.5 truncate text-[10px] text-slate-400">
+                <div className="mt-0.5 truncate text-[10px] text-[var(--text-muted)]">
                   {p.achievements
                     .slice(0, 3)
                     .map((id) => achievementById(id)?.label)
@@ -354,15 +354,15 @@ function PitcherRowDesktop({
             </div>
           </div>
         </td>
-        <td className="px-4 py-2.5 text-right tabular text-slate-600">
+        <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
           {inningsPitched(p)}
         </td>
         {mode === "walks" ? (
           <>
-            <td className="px-4 py-2.5 text-right text-base font-bold tabular text-[var(--color-sox-navy)]">
+            <td className="px-4 py-2.5 text-right text-base font-bold tabular text-[var(--text)]">
               {p.totalWalks}
             </td>
-            <td className="px-4 py-2.5 text-right tabular text-slate-600">
+            <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(walksPerNine(p))}
             </td>
             <NumberCell value={p.fourPitchWalks} color="text-amber-700" />
@@ -372,10 +372,10 @@ function PitcherRowDesktop({
           </>
         ) : (
           <>
-            <td className="px-4 py-2.5 text-right text-base font-bold tabular text-[var(--color-sox-navy)]">
+            <td className="px-4 py-2.5 text-right text-base font-bold tabular text-[var(--text)]">
               {p.totalStrikeouts}
             </td>
-            <td className="px-4 py-2.5 text-right tabular text-slate-600">
+            <td className="px-4 py-2.5 text-right tabular text-[var(--text-secondary)]">
               {fmtRate(strikeoutsPerNine(p))}
             </td>
             <NumberCell value={p.threePitchStrikeouts} color="text-emerald-700" />
@@ -401,7 +401,7 @@ function PitcherRowDesktop({
 function WalkDetail({ p, walks }: { p: PitcherStats; walks: WalkRecord[] }) {
   if (walks.length === 0) {
     return (
-      <div className="text-center text-xs text-slate-500">
+      <div className="text-center text-xs text-[var(--text-muted)]">
         No walks for {p.name} in current filter.
       </div>
     );
@@ -409,15 +409,15 @@ function WalkDetail({ p, walks }: { p: PitcherStats; walks: WalkRecord[] }) {
   return (
     <div className="space-y-2">
       <AchievementBadges achievements={p.achievements} />
-      <ul className="divide-y divide-slate-200 rounded-lg bg-white text-xs ring-1 ring-slate-200">
+      <ul className="divide-y divide-[var(--border)] rounded-lg bg-[var(--surface)] text-xs ring-1 ring-slate-200">
         {walks.slice(0, 25).map((w, i) => (
           <li key={i} className="flex items-center gap-3 px-3 py-2">
-            <div className="min-w-[64px] shrink-0 text-[11px] font-medium text-slate-600">
+            <div className="min-w-[64px] shrink-0 text-[11px] font-medium text-[var(--text-secondary)]">
               {formatDate(w.date)}
             </div>
-            <div className="min-w-0 flex-1 truncate text-slate-700">
+            <div className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
               vs <span className="font-medium">{w.batterName}</span>{" "}
-              <span className="text-slate-400">
+              <span className="text-[var(--text-muted)]">
                 ({w.opponent} · {w.halfInning === "top" ? "T" : "B"}
                 {w.inning} · {w.finalCount.balls}-{w.finalCount.strikes},{" "}
                 {w.pitchesInPA}p)
@@ -436,7 +436,7 @@ function WalkDetail({ p, walks }: { p: PitcherStats; walks: WalkRecord[] }) {
           </li>
         ))}
         {walks.length > 25 && (
-          <li className="px-3 py-2 text-center text-[11px] text-slate-400">
+          <li className="px-3 py-2 text-center text-[11px] text-[var(--text-muted)]">
             + {walks.length - 25} more
           </li>
         )}
@@ -454,7 +454,7 @@ function KDetail({
 }) {
   if (strikeouts.length === 0) {
     return (
-      <div className="text-center text-xs text-slate-500">
+      <div className="text-center text-xs text-[var(--text-muted)]">
         No strikeouts for {p.name} in current filter.
       </div>
     );
@@ -462,15 +462,15 @@ function KDetail({
   return (
     <div className="space-y-2">
       <AchievementBadges achievements={p.achievements} />
-      <ul className="divide-y divide-slate-200 rounded-lg bg-white text-xs ring-1 ring-slate-200">
+      <ul className="divide-y divide-[var(--border)] rounded-lg bg-[var(--surface)] text-xs ring-1 ring-slate-200">
         {strikeouts.slice(0, 25).map((s, i) => (
           <li key={i} className="flex items-center gap-3 px-3 py-2">
-            <div className="min-w-[64px] shrink-0 text-[11px] font-medium text-slate-600">
+            <div className="min-w-[64px] shrink-0 text-[11px] font-medium text-[var(--text-secondary)]">
               {formatDate(s.date)}
             </div>
-            <div className="min-w-0 flex-1 truncate text-slate-700">
+            <div className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
               <span className="font-medium">{s.batterName}</span>{" "}
-              <span className="text-slate-400">
+              <span className="text-[var(--text-muted)]">
                 ({s.opponent} · {s.halfInning === "top" ? "T" : "B"}
                 {s.inning} · {s.pitchesInPA}p)
               </span>
@@ -488,7 +488,7 @@ function KDetail({
           </li>
         ))}
         {strikeouts.length > 25 && (
-          <li className="px-3 py-2 text-center text-[11px] text-slate-400">
+          <li className="px-3 py-2 text-center text-[11px] text-[var(--text-muted)]">
             + {strikeouts.length - 25} more
           </li>
         )}
@@ -507,7 +507,7 @@ function AchievementBadges({ achievements }: { achievements: string[] }) {
         return (
           <span
             key={id}
-            className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] text-slate-700 ring-1 ring-inset ring-slate-200"
+            className="inline-flex items-center gap-1 rounded-full bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)] ring-1 ring-inset ring-slate-200"
           >
             <span>{a.emoji}</span>
             <span>{a.label}</span>
@@ -532,7 +532,7 @@ function NumberCell({ value, color }: { value: number; color: string }) {
 
 function Pill({ label, value, classes }: { label: string; value: number; classes: string }) {
   return (
-    <div className={`rounded-md px-2 py-1.5 ${value > 0 ? classes : "bg-slate-50 text-slate-300"}`}>
+    <div className={`rounded-md px-2 py-1.5 ${value > 0 ? classes : "bg-[var(--surface-hover)] text-slate-300"}`}>
       <div className="text-[10px] font-medium uppercase tracking-wider opacity-80">
         {label}
       </div>

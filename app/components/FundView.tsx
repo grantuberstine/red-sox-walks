@@ -88,9 +88,9 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-[var(--color-line)] px-5 py-3">
-          <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">The Rules</h2>
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h2 className="text-sm font-bold text-[var(--text)]">The Rules</h2>
         </div>
         <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
           <RuleBlock
@@ -112,16 +112,16 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
             ]}
           />
         </div>
-        <div className="border-t border-slate-100 px-5 py-2 text-[10px] text-slate-500">
+        <div className="border-t border-[var(--border)] px-5 py-2 text-[10px] text-[var(--text-muted)]">
           A walk that hits multiple categories gets charged for each one. Coaches pay players net of fees.
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-line)] px-5 py-3">
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] px-5 py-3">
           <div>
-            <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">Ledger</h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">
+            <h2 className="text-sm font-bold text-[var(--text)]">Ledger</h2>
+            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
               {sorted.length === 0
                 ? "Nobody on the books yet"
                 : `${sorted.length} pitchers · ${rangeLabel.toLowerCase()}`}
@@ -130,7 +130,7 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.key} value={o.key}>
@@ -142,7 +142,7 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
         <div className="hidden md:block">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/60 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
                 <th className="px-4 py-2.5 text-left">Pitcher</th>
                 <th className="px-3 py-2.5 text-right">4P</th>
                 <th className="px-3 py-2.5 text-right">0-2</th>
@@ -159,14 +159,14 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
               {sorted.map((e, idx) => (
                 <tr
                   key={e.pitcherId}
-                  className={`border-b border-slate-100 last:border-0 ${
+                  className={`border-b border-[var(--border)] last:border-0 ${
                     idx % 2 === 1 ? "bg-slate-50/30" : ""
                   }`}
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <PitcherAvatar name={e.name} src={e.headshotUrl} size={32} />
-                      <span className="font-medium text-[var(--color-sox-navy)]">
+                      <span className="font-medium text-[var(--text)]">
                         {e.name}
                       </span>
                     </div>
@@ -185,7 +185,7 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
                         ? "text-emerald-700"
                         : e.net < 0
                           ? "text-rose-700"
-                          : "text-slate-400"
+                          : "text-[var(--text-muted)]"
                     }`}
                   >
                     {formatMoney(e.net)}
@@ -196,14 +196,14 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
           </table>
         </div>
 
-        <ul className="divide-y divide-slate-100 md:hidden">
+        <ul className="divide-y divide-[var(--border)] md:hidden">
           {sorted.map((e) => (
             <li key={e.pitcherId} className="px-4 py-3">
               <div className="flex items-center gap-3">
                 <PitcherAvatar name={e.name} src={e.headshotUrl} size={44} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate font-semibold text-[var(--color-sox-navy)]">
+                    <span className="truncate font-semibold text-[var(--text)]">
                       {e.name}
                     </span>
                     <span
@@ -212,7 +212,7 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
                           ? "text-emerald-700"
                           : e.net < 0
                             ? "text-rose-700"
-                            : "text-slate-400"
+                            : "text-[var(--text-muted)]"
                       }`}
                     >
                       {formatMoney(e.net)}
@@ -335,8 +335,8 @@ function RuleBlock({
       <ul className="space-y-1.5">
         {rules.map((r) => (
           <li key={r.label} className="flex items-center justify-between text-sm">
-            <span className="text-slate-700">{r.label}</span>
-            <span className="font-bold tabular text-slate-900">{r.amount}</span>
+            <span className="text-[var(--text-secondary)]">{r.label}</span>
+            <span className="font-bold tabular text-[var(--text)]">{r.amount}</span>
           </li>
         ))}
       </ul>
@@ -370,7 +370,7 @@ function MoneyCell({ value, tint }: { value: number; tint: string }) {
 
 function SmallCell({ label, value, on }: { label: string; value: number; on: string }) {
   return (
-    <div className={`rounded-md py-1 ${value > 0 ? on : "bg-slate-50 text-slate-300"}`}>
+    <div className={`rounded-md py-1 ${value > 0 ? on : "bg-[var(--surface-hover)] text-slate-300"}`}>
       <div className="text-[8px] font-medium uppercase tracking-wider opacity-80">
         {label}
       </div>

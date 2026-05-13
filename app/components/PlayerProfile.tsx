@@ -96,7 +96,7 @@ export function PlayerProfile({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)]"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path
@@ -109,7 +109,7 @@ export function PlayerProfile({
           </svg>
           Back to gallery
         </button>
-        <span className="text-[11px] text-slate-500">{rangeLabel}</span>
+        <span className="text-[11px] text-[var(--text-muted)]">{rangeLabel}</span>
       </div>
 
       <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-sox-navy)] via-[var(--color-sox-ink)] to-[#1d2f4b] p-5 text-white shadow-md sm:p-6">
@@ -183,7 +183,7 @@ export function PlayerProfile({
               return (
                 <span
                   key={id}
-                  className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-inset ring-slate-200"
+                  className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] ring-1 ring-inset ring-slate-200"
                 >
                   {a.label}
                 </span>
@@ -198,15 +198,15 @@ export function PlayerProfile({
           {playerWalks.length === 0 ? (
             <Empty text="No walks recorded in this range." />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-[var(--border)]">
               {playerWalks.slice(0, 50).map((w, i) => (
                 <li key={i} className="flex items-center gap-2 px-1 py-2 text-xs">
-                  <span className="w-12 shrink-0 font-medium tabular text-slate-500">
+                  <span className="w-12 shrink-0 font-medium tabular text-[var(--text-muted)]">
                     {formatDate(w.date)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-slate-700">
+                  <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
                     vs <span className="font-medium">{w.batterName}</span>
-                    <span className="ml-1 text-slate-400">
+                    <span className="ml-1 text-[var(--text-muted)]">
                       ({w.opponent} · {w.halfInning === "top" ? "T" : "B"}
                       {w.inning} · {w.finalCount.balls}-{w.finalCount.strikes})
                     </span>
@@ -224,7 +224,7 @@ export function PlayerProfile({
                 </li>
               ))}
               {playerWalks.length > 50 && (
-                <li className="py-2 text-center text-[10px] text-slate-400">
+                <li className="py-2 text-center text-[10px] text-[var(--text-muted)]">
                   + {playerWalks.length - 50} more
                 </li>
               )}
@@ -236,15 +236,15 @@ export function PlayerProfile({
           {playerKs.length === 0 ? (
             <Empty text="No strikeouts recorded in this range." />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-[var(--border)]">
               {playerKs.slice(0, 50).map((s, i) => (
                 <li key={i} className="flex items-center gap-2 px-1 py-2 text-xs">
-                  <span className="w-12 shrink-0 font-medium tabular text-slate-500">
+                  <span className="w-12 shrink-0 font-medium tabular text-[var(--text-muted)]">
                     {formatDate(s.date)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-slate-700">
+                  <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
                     <span className="font-medium">{s.batterName}</span>
-                    <span className="ml-1 text-slate-400">
+                    <span className="ml-1 text-[var(--text-muted)]">
                       ({s.opponent} · {s.halfInning === "top" ? "T" : "B"}
                       {s.inning} · {s.pitchesInPA}p)
                     </span>
@@ -262,7 +262,7 @@ export function PlayerProfile({
                 </li>
               ))}
               {playerKs.length > 50 && (
-                <li className="py-2 text-center text-[10px] text-slate-400">
+                <li className="py-2 text-center text-[10px] text-[var(--text-muted)]">
                   + {playerKs.length - 50} more
                 </li>
               )}
@@ -313,9 +313,9 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-2.5">
-        <h3 className="text-sm font-bold text-[var(--color-sox-navy)]">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className="border-b border-[var(--border)] px-4 py-2.5">
+        <h3 className="text-sm font-bold text-[var(--text)]">
           {title}
         </h3>
       </div>
@@ -343,12 +343,12 @@ function CategoryRow({
   }[tone];
   return (
     <div className="flex items-center justify-between py-1.5 text-sm">
-      <div className="flex items-center gap-2 text-slate-700">
+      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
         <span className={`h-2 w-2 rounded-full ${dot}`} />
         <span>{label}</span>
       </div>
       <span
-        className={`tabular font-bold ${value > 0 ? "text-[var(--color-sox-navy)]" : "text-slate-300"}`}
+        className={`tabular font-bold ${value > 0 ? "text-[var(--text)]" : "text-slate-300"}`}
       >
         {value}
       </span>
@@ -357,5 +357,5 @@ function CategoryRow({
 }
 
 function Empty({ text }: { text: string }) {
-  return <div className="py-6 text-center text-xs text-slate-500">{text}</div>;
+  return <div className="py-6 text-center text-xs text-[var(--text-muted)]">{text}</div>;
 }

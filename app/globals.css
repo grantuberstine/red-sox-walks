@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-sox-red: #bd3039;
   --color-sox-red-dark: #8e1f26;
@@ -7,15 +9,42 @@
   --color-sox-ink: #14213d;
   --color-woo-gold: #f0ce63;
   --color-woo-gold-deep: #e6b840;
-  --color-sand: #faf7ef;
-  --color-paper: #ffffff;
-  --color-line: #e8e3d5;
   --font-display: "Inter", system-ui, sans-serif;
 }
 
+:root {
+  --bg: #faf7ef;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f7f5ef;
+  --surface-subtle: #f6f4ec;
+  --text: #0c2340;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: #e8e3d5;
+  --border-strong: #d4cebd;
+  --row-stripe: rgba(241, 245, 249, 0.4);
+  --row-hover: rgba(12, 35, 64, 0.05);
+}
+
+.dark {
+  --bg: #0a0f1c;
+  --bg-elevated: #131a2e;
+  --surface: #131a2e;
+  --surface-hover: #1b2440;
+  --surface-subtle: #0f1626;
+  --text: #e8eaf0;
+  --text-secondary: #a8b3cc;
+  --text-muted: #6c7896;
+  --border: #2a3454;
+  --border-strong: #3b4a72;
+  --row-stripe: rgba(255, 255, 255, 0.025);
+  --row-hover: rgba(240, 206, 99, 0.08);
+}
+
 html, body {
-  background: var(--color-sand);
-  color: var(--color-sox-navy);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
 }
@@ -28,7 +57,3 @@ html, body {
 }
 
 .fade-in { animation: fadeUp 0.4s ease-out both; }
-
-.woo-shine {
-  background-image: linear-gradient(135deg, #f0ce63 0%, #e6b840 50%, #c89425 100%);
-}

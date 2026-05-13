@@ -32,13 +32,13 @@ export function StrikeoutsFeed({
   const items = strikeouts.slice(0, limit);
   if (items.length === 0) {
     return (
-      <div className="px-5 py-8 text-center text-sm text-slate-500">
+      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
         No strikeouts in this range.
       </div>
     );
   }
   return (
-    <ul className="divide-y divide-slate-100">
+    <ul className="divide-y divide-[var(--border)]">
       {items.map((s, idx) => (
         <li
           key={`${s.gamePk}-${s.pitcherId}-${s.inning}-${s.halfInning}-${idx}`}
@@ -51,13 +51,13 @@ export function StrikeoutsFeed({
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <span className="font-semibold text-[var(--color-sox-navy)]">
+              <span className="font-semibold text-[var(--text)]">
                 {s.pitcherName}
               </span>
               <span className="text-xs text-emerald-600">struck out</span>
-              <span className="text-sm text-slate-700">{s.batterName}</span>
+              <span className="text-sm text-[var(--text-secondary)]">{s.batterName}</span>
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--text-muted)]">
               <span>{formatDate(s.date)}</span>
               <span>·</span>
               <span>vs {s.opponent}</span>
@@ -83,7 +83,7 @@ export function StrikeoutsFeed({
         </li>
       ))}
       {strikeouts.length > limit && (
-        <li className="px-4 py-2 text-center text-[11px] text-slate-400">
+        <li className="px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
           + {strikeouts.length - limit} more
         </li>
       )}

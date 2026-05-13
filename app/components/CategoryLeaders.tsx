@@ -54,8 +54,8 @@ const CATEGORIES: CategoryDef[] = [
 
 const RANK_LABELS = ["1st", "2nd", "3rd"];
 const RANK_COLORS = [
-  "bg-[var(--color-woo-gold)] text-[var(--color-sox-navy)]",
-  "bg-slate-300 text-slate-700",
+  "bg-[var(--color-woo-gold)] text-[var(--text)]",
+  "bg-slate-300 text-[var(--text-secondary)]",
   "bg-amber-700 text-white",
 ];
 
@@ -70,16 +70,16 @@ export function CategoryLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
         return (
           <div
             key={cat.key}
-            className={`rounded-2xl border border-slate-200 bg-gradient-to-br ${cat.tint} p-4 shadow-sm`}
+            className={`rounded-2xl border border-[var(--border)] bg-gradient-to-br ${cat.tint} p-4 shadow-sm`}
           >
             <div className="mb-3">
-              <h3 className="text-sm font-bold text-[var(--color-sox-navy)]">
+              <h3 className="text-sm font-bold text-[var(--text)]">
                 {cat.title}
               </h3>
-              <p className="text-[11px] text-slate-600">{cat.subtitle}</p>
+              <p className="text-[11px] text-[var(--text-secondary)]">{cat.subtitle}</p>
             </div>
             {ranked.length === 0 ? (
-              <div className="rounded-lg bg-white/60 px-3 py-4 text-center text-xs text-slate-500">
+              <div className="rounded-lg bg-white/60 px-3 py-4 text-center text-xs text-[var(--text-muted)]">
                 No walks of this type yet
               </div>
             ) : (
@@ -100,7 +100,7 @@ export function CategoryLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
                         src={p.headshotUrl}
                         size={32}
                       />
-                      <span className="truncate text-sm font-medium text-[var(--color-sox-navy)]">
+                      <span className="truncate text-sm font-medium text-[var(--text)]">
                         {p.name}
                       </span>
                     </div>

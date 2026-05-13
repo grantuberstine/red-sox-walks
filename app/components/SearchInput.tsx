@@ -93,7 +93,7 @@ export function SearchInput({
         onKeyDown={onKey}
         placeholder={placeholder}
         autoComplete="off"
-        className="w-full rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-8 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[var(--color-sox-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-navy)]/10"
+        className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-1.5 pl-8 pr-8 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:border-[var(--color-sox-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-navy)]/10"
       />
       {value && (
         <button
@@ -103,7 +103,7 @@ export function SearchInput({
             onChange("");
             setFocused(false);
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-secondary)]"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path
@@ -119,7 +119,7 @@ export function SearchInput({
       {showDropdown && (
         <ul
           role="listbox"
-          className="absolute left-0 right-0 top-full z-40 mt-1 max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+          className="absolute left-0 right-0 top-full z-40 mt-1 max-h-80 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg ring-1 ring-black/5"
         >
           {filtered.map((s, i) => {
             const active = i === highlight;
@@ -139,11 +139,11 @@ export function SearchInput({
               >
                 <PitcherAvatar name={s.name} src={s.headshotUrl} size={28} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium text-[var(--color-sox-navy)]">
+                  <div className="truncate font-medium text-[var(--text)]">
                     <Highlight text={s.name} query={value} />
                   </div>
                   {s.hint && (
-                    <div className="truncate text-[11px] text-slate-500">
+                    <div className="truncate text-[11px] text-[var(--text-muted)]">
                       {s.hint}
                     </div>
                   )}
@@ -160,7 +160,7 @@ export function SearchInput({
 function SearchIcon() {
   return (
     <svg
-      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
       width="16"
       height="16"
       viewBox="0 0 24 24"
@@ -186,7 +186,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-[var(--color-woo-gold)]/40 px-0.5 text-[var(--color-sox-navy)]">
+      <mark className="rounded bg-[var(--color-woo-gold)]/40 px-0.5 text-[var(--text)]">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}

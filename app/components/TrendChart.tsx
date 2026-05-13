@@ -38,7 +38,7 @@ export function TrendChart({
 }) {
   if (data.length === 0) {
     return (
-      <div className="px-5 py-8 text-center text-sm text-slate-500">
+      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
         No games to chart in this range.
       </div>
     );
@@ -49,7 +49,7 @@ export function TrendChart({
 
   return (
     <div className="px-4 pb-4 pt-2">
-      <div className="mb-2 flex items-baseline justify-between text-[11px] text-slate-500">
+      <div className="mb-2 flex items-baseline justify-between text-[11px] text-[var(--text-muted)]">
         <span>Walks per game · {data.length} games</span>
         <span className="tabular">avg {avg.toFixed(1)}</span>
       </div>

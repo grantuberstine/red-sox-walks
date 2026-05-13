@@ -56,7 +56,7 @@ export function PlayersGallery({
 
   if (pitchers.length === 0) {
     return (
-      <div className="px-6 py-14 text-center text-sm text-slate-500">
+      <div className="px-6 py-14 text-center text-sm text-[var(--text-muted)]">
         No pitchers match the current filter.
       </div>
     );
@@ -65,15 +65,15 @@ export function PlayersGallery({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-700">
+        <h2 className="text-sm font-semibold text-[var(--text-secondary)]">
           {pitchers.length} {pitchers.length === 1 ? "pitcher" : "pitchers"}
         </h2>
-        <label className="flex items-center gap-2 text-xs text-slate-600">
+        <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <span className="font-semibold">Sort</span>
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="cursor-pointer rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+            className="cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.key} value={o.key}>
@@ -90,15 +90,15 @@ export function PlayersGallery({
             key={p.pitcherId}
             type="button"
             onClick={() => onSelect(p.pitcherId)}
-            className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--color-sox-navy)]/30 hover:shadow-md"
+            className="group cursor-pointer rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--color-sox-navy)]/30 hover:shadow-md"
           >
             <div className="flex items-center gap-3">
               <PitcherAvatar name={p.name} src={p.headshotUrl} size={52} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-[var(--color-sox-navy)] group-hover:text-[var(--color-sox-red)]">
+                <div className="truncate text-sm font-semibold text-[var(--text)] group-hover:text-[var(--color-sox-red)]">
                   {p.name}
                 </div>
-                <div className="text-[11px] text-slate-500">
+                <div className="text-[11px] text-[var(--text-muted)]">
                   {inningsPitched(p)} IP · {p.appearances} apps
                 </div>
               </div>
@@ -107,7 +107,7 @@ export function PlayersGallery({
               <Mini label="Walks" value={p.totalWalks} rate={`${fmt(walksPerNine(p))} BB/9`} tone="rose" />
               <Mini label="K's" value={p.totalStrikeouts} rate={`${fmt(strikeoutsPerNine(p))} K/9`} tone="emerald" />
             </div>
-            <div className="mt-3 flex flex-wrap gap-1 text-[10px] text-slate-500">
+            <div className="mt-3 flex flex-wrap gap-1 text-[10px] text-[var(--text-muted)]">
               <Pill label="4P" value={p.fourPitchWalks} on="bg-amber-50 text-amber-700" />
               <Pill label="0-2" value={p.ohTwoWalks} on="bg-rose-50 text-rose-700" />
               <Pill label="LO" value={p.leadoffWalks} on="bg-sky-50 text-sky-700" />
@@ -115,7 +115,7 @@ export function PlayersGallery({
               <Pill label="3P-K" value={p.threePitchStrikeouts} on="bg-emerald-50 text-emerald-700" />
               <Pill label="3-UP" value={p.sideStrikeouts} on="bg-indigo-50 text-indigo-700" />
             </div>
-            <div className="mt-3 text-right text-[10px] font-semibold text-slate-400 group-hover:text-[var(--color-sox-red)]">
+            <div className="mt-3 text-right text-[10px] font-semibold text-[var(--text-muted)] group-hover:text-[var(--color-sox-red)]">
               View profile →
             </div>
           </button>
@@ -147,7 +147,7 @@ function Mini({
         <span className={`text-xl font-bold tabular leading-none ${txt}`}>
           {value}
         </span>
-        <span className="text-[10px] text-slate-500 tabular">{rate}</span>
+        <span className="text-[10px] text-[var(--text-muted)] tabular">{rate}</span>
       </div>
     </div>
   );

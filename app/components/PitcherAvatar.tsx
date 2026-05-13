@@ -39,7 +39,7 @@ export function PitcherAvatar({
       height={size}
       onError={() => setErrored(true)}
       style={{ width: size, height: size }}
-      className="shrink-0 rounded-full bg-slate-100 object-cover ring-1 ring-slate-200"
+      className="shrink-0 rounded-full bg-[var(--surface-hover)] object-cover ring-1 ring-slate-200"
       loading="lazy"
     />
   );

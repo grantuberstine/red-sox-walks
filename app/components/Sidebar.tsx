@@ -109,22 +109,24 @@ export function Sidebar({
   onOpenRoster,
   hiddenCount,
   totalsLine,
+  themeToggle,
 }: {
   section: Section;
   onSectionChange: (s: Section) => void;
   onOpenRoster: () => void;
   hiddenCount: number;
   totalsLine: string;
+  themeToggle?: React.ReactNode;
 }) {
   return (
-    <aside className="hidden h-screen flex-col border-r border-[var(--color-line)] bg-white lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0 xl:w-[240px]">
-      <div className="flex items-center gap-2.5 border-b border-[var(--color-line)] px-4 py-4">
+    <aside className="hidden h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)] lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0 xl:w-[240px]">
+      <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-4 py-4">
         <WooSoxLogo size={36} />
         <div className="min-w-0">
-          <div className="truncate text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
+          <div className="truncate text-sm font-bold leading-tight text-[var(--text)]">
             WooSox
           </div>
-          <div className="text-[10px] leading-tight text-slate-500">Tracker</div>
+          <div className="text-[10px] leading-tight text-[var(--text-muted)]">Tracker</div>
         </div>
       </div>
 
@@ -139,8 +141,8 @@ export function Sidebar({
               aria-pressed={active}
               className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
                 active
-                  ? "bg-[var(--color-sox-navy)] text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--color-sox-navy)]"
+                  ? "bg-[var(--color-sox-navy)] text-white shadow-sm dark:bg-[var(--color-sox-red)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               }`}
             >
               <span className={active ? "text-[var(--color-woo-gold)]" : ""}>
@@ -149,7 +151,7 @@ export function Sidebar({
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-semibold">{item.label}</span>
                 <span
-                  className={`block truncate text-[10px] ${active ? "text-white/70" : "text-slate-400"}`}
+                  className={`block truncate text-[10px] ${active ? "text-white/70" : "text-[var(--text-muted)]"}`}
                 >
                   {item.description}
                 </span>
@@ -159,11 +161,11 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="space-y-2 border-t border-[var(--color-line)] px-3 py-3">
+      <div className="space-y-2 border-t border-[var(--border)] px-3 py-3">
         <button
           type="button"
           onClick={onOpenRoster}
-          className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)]"
+          className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
         >
           <span className="inline-flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -178,7 +180,8 @@ export function Sidebar({
             </span>
           )}
         </button>
-        <div className="px-1 text-[10px] leading-tight text-slate-400">
+        {themeToggle}
+        <div className="px-1 text-[10px] leading-tight text-[var(--text-muted)]">
           {totalsLine}
         </div>
       </div>
@@ -195,7 +198,7 @@ export function MobileTabBar({
 }) {
   return (
     <nav
-      className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-[var(--color-line)] bg-white shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
+      className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-[var(--border)] bg-[var(--surface)] shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {NAV.map((item) => {
@@ -207,10 +210,10 @@ export function MobileTabBar({
             onClick={() => onSectionChange(item.key)}
             aria-pressed={active}
             aria-label={item.label}
-            className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-slate-50 ${
+            className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-[var(--surface-hover)] ${
               active
-                ? "text-[var(--color-sox-red)]"
-                : "text-slate-500"
+                ? "text-[var(--color-sox-red)] dark:text-[var(--color-woo-gold)]"
+                : "text-[var(--text-muted)]"
             }`}
           >
             <span

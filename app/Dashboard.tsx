@@ -15,6 +15,8 @@ import {
 } from "@/lib/filters";
 import { computeFundReport } from "@/lib/fund";
 import { useHiddenPitchers } from "@/lib/preferences";
+import { useTheme } from "@/lib/theme";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { Sidebar, MobileTabBar, type Section } from "./components/Sidebar";
 import { WooSoxLogo } from "./components/WooSoxLogo";
 import { FilterRow } from "./components/FilterRow";
@@ -69,6 +71,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const [profileId, setProfileId] = useState<number | null>(null);
 
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const filteredWalksAllCats = useMemo(
     () => filterWalks(state.walks, range, state, query, "all", hidden),
@@ -249,13 +252,14 @@ export function Dashboard({ state }: { state: SeasonState }) {
   })();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--color-sand)] lg:flex-row">
+    <div className="flex min-h-screen flex-col bg-[var(--bg)] lg:flex-row">
       <Sidebar
         section={section}
         onSectionChange={changeSection}
         onOpenRoster={() => setRosterOpen(true)}
         hiddenCount={hidden.size}
         totalsLine={totalsLine}
+        themeToggle={<ThemeToggle theme={theme} onToggle={toggleTheme} />}
       />
 
       <RosterDrawer
@@ -270,25 +274,25 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-line)] bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8"
+          className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)]/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8"
           style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
         >
           <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
             <WooSoxLogo size={28} />
             <div className="min-w-0">
-              <div className="truncate text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
+              <div className="truncate text-sm font-bold leading-tight text-[var(--text)]">
                 {sectionLabel[section]}
               </div>
-              <div className="truncate text-[10px] leading-tight text-slate-500">
+              <div className="truncate text-[10px] leading-tight text-[var(--text-muted)]">
                 {totalsLine}
               </div>
             </div>
           </div>
           <div className="hidden min-w-0 lg:block">
-            <h1 className="truncate text-base font-bold text-[var(--color-sox-navy)]">
+            <h1 className="truncate text-base font-bold text-[var(--text)]">
               {sectionLabel[section]}
             </h1>
-            <p className="truncate text-[11px] text-slate-500">
+            <p className="truncate text-[11px] text-[var(--text-muted)]">
               {state.season} season · last refresh{" "}
               <span className="tabular">
                 {formatTimestamp(state.meta.lastRefreshAt)}
@@ -299,7 +303,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
             type="button"
             onClick={() => setRosterOpen(true)}
             aria-label="Manage roster"
-            className="relative inline-flex min-h-[36px] cursor-pointer items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)] lg:hidden"
+            className="relative inline-flex min-h-[36px] cursor-pointer items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[11px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:hidden"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -392,7 +396,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
               />
             )}
 
-            <footer className="mt-8 text-center text-[11px] text-slate-400">
+            <footer className="mt-8 text-center text-[11px] text-[var(--text-muted)]">
               Data: MLB Stats API · Daily refresh via Vercel Cron
             </footer>
           </div>
@@ -540,13 +544,13 @@ function LeaderboardSection({
   onSelect: (id: number) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--color-line)] px-5 py-3">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] px-5 py-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">
+          <h2 className="text-sm font-bold text-[var(--text)]">
             {title}
           </h2>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
             {pitchers.length === 0
               ? "No matching pitchers"
               : `${hint} · click a row for the full profile`}
@@ -555,7 +559,7 @@ function LeaderboardSection({
         <ViewToggle value={view} onChange={onViewChange} />
       </div>
       {pitchers.length === 0 ? (
-        <div className="px-6 py-14 text-center text-sm text-slate-500">
+        <div className="px-6 py-14 text-center text-sm text-[var(--text-muted)]">
           Nothing matches the current filter.
         </div>
       ) : view === "table" ? (
@@ -587,7 +591,7 @@ function SectionHeader({
   subtitle: string;
 }) {
   return (
-    <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+    <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
       <span>{title}</span>
       <span className="opacity-60">· {subtitle}</span>
       <span className="h-px flex-1 bg-slate-200" />
@@ -605,10 +609,10 @@ function FeedSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-[var(--color-line)] px-5 py-3">
-        <h2 className="text-sm font-bold text-[var(--color-sox-navy)]">{title}</h2>
-        <p className="mt-0.5 text-[11px] text-slate-500">{subtitle}</p>
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className="border-b border-[var(--border)] px-5 py-3">
+        <h2 className="text-sm font-bold text-[var(--text)]">{title}</h2>
+        <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{subtitle}</p>
       </div>
       {children}
     </div>

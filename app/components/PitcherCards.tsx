@@ -139,12 +139,12 @@ export function PitcherCards({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50/60 px-4 py-2 text-xs">
-        <span className="font-semibold uppercase tracking-wider text-slate-600">Sort</span>
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2 text-xs">
+        <span className="font-semibold uppercase tracking-wider text-[var(--text-secondary)]">Sort</span>
         <select
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as WalkSortKey | KSortKey)}
-          className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+          className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]"
         >
           {sortOptions.map((o) => (
             <option key={o.key} value={o.key}>
@@ -164,7 +164,7 @@ export function PitcherCards({
           return (
             <div
               key={p.pitcherId}
-              className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md ${
+              className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition hover:shadow-md ${
                 open ? "ring-2 ring-[var(--color-sox-red)]/30" : ""
               }`}
             >
@@ -181,14 +181,14 @@ export function PitcherCards({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="truncate font-semibold text-[var(--color-sox-navy)]">
+                      <span className="truncate font-semibold text-[var(--text)]">
                         <Highlight text={p.name} query={query} />
                       </span>
-                      <span className="text-2xl font-bold tabular leading-none text-[var(--color-sox-navy)]">
+                      <span className="text-2xl font-bold tabular leading-none text-[var(--text)]">
                         {primaryNum}
                       </span>
                     </div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
                       <span className="tabular">{inningsPitched(p)} IP</span>
                       <span>·</span>
                       <span className="tabular">
@@ -229,7 +229,7 @@ export function PitcherCards({
                 )}
               </button>
               {open && (
-                <div className="mt-3 border-t border-slate-100 pt-3">
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
                   {mode === "walks" ? (
                     walks.length === 0 ? (
                       <EmptyDetail mode={mode} />
@@ -238,12 +238,12 @@ export function PitcherCards({
                         {walks.slice(0, 10).map((w, i) => (
                           <li
                             key={i}
-                            className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1 text-[11px]"
+                            className="flex items-center justify-between gap-2 rounded-lg bg-[var(--surface-hover)] px-2 py-1 text-[11px]"
                           >
-                            <span className="font-medium tabular text-slate-600">
+                            <span className="font-medium tabular text-[var(--text-secondary)]">
                               {formatDate(w.date)}
                             </span>
-                            <span className="min-w-0 flex-1 truncate text-slate-700">
+                            <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
                               <Highlight text={w.batterName} query={query} />
                             </span>
                             <span className="flex gap-0.5">
@@ -259,7 +259,7 @@ export function PitcherCards({
                           </li>
                         ))}
                         {walks.length > 10 && (
-                          <li className="text-center text-[10px] text-slate-400">
+                          <li className="text-center text-[10px] text-[var(--text-muted)]">
                             + {walks.length - 10} more
                           </li>
                         )}
@@ -272,12 +272,12 @@ export function PitcherCards({
                       {ks.slice(0, 10).map((s, i) => (
                         <li
                           key={i}
-                          className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1 text-[11px]"
+                          className="flex items-center justify-between gap-2 rounded-lg bg-[var(--surface-hover)] px-2 py-1 text-[11px]"
                         >
-                          <span className="font-medium tabular text-slate-600">
+                          <span className="font-medium tabular text-[var(--text-secondary)]">
                             {formatDate(s.date)}
                           </span>
-                          <span className="min-w-0 flex-1 truncate text-slate-700">
+                          <span className="min-w-0 flex-1 truncate text-[var(--text-secondary)]">
                             <Highlight text={s.batterName} query={query} />
                           </span>
                           <span className="flex gap-0.5">
@@ -293,7 +293,7 @@ export function PitcherCards({
                         </li>
                       ))}
                       {ks.length > 10 && (
-                        <li className="text-center text-[10px] text-slate-400">
+                        <li className="text-center text-[10px] text-[var(--text-muted)]">
                           + {ks.length - 10} more
                         </li>
                       )}
@@ -310,12 +310,12 @@ export function PitcherCards({
 }
 
 const CELL_TONES = {
-  amber: { on: "bg-amber-50 text-amber-800", off: "bg-slate-50 text-slate-300" },
-  rose: { on: "bg-rose-50 text-rose-800", off: "bg-slate-50 text-slate-300" },
-  sky: { on: "bg-sky-50 text-sky-800", off: "bg-slate-50 text-slate-300" },
-  violet: { on: "bg-violet-50 text-violet-800", off: "bg-slate-50 text-slate-300" },
-  emerald: { on: "bg-emerald-50 text-emerald-800", off: "bg-slate-50 text-slate-300" },
-  indigo: { on: "bg-indigo-50 text-indigo-800", off: "bg-slate-50 text-slate-300" },
+  amber: { on: "bg-amber-50 text-amber-800", off: "bg-[var(--surface-hover)] text-slate-300" },
+  rose: { on: "bg-rose-50 text-rose-800", off: "bg-[var(--surface-hover)] text-slate-300" },
+  sky: { on: "bg-sky-50 text-sky-800", off: "bg-[var(--surface-hover)] text-slate-300" },
+  violet: { on: "bg-violet-50 text-violet-800", off: "bg-[var(--surface-hover)] text-slate-300" },
+  emerald: { on: "bg-emerald-50 text-emerald-800", off: "bg-[var(--surface-hover)] text-slate-300" },
+  indigo: { on: "bg-indigo-50 text-indigo-800", off: "bg-[var(--surface-hover)] text-slate-300" },
 } as const;
 
 function Cell({
@@ -345,7 +345,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-yellow-200 px-0.5 text-[var(--color-sox-navy)]">
+      <mark className="rounded bg-yellow-200 px-0.5 text-[var(--text)]">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}
@@ -355,7 +355,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 function EmptyDetail({ mode }: { mode: Mode }) {
   return (
-    <div className="text-center text-xs text-slate-500">
+    <div className="text-center text-xs text-[var(--text-muted)]">
       No {mode === "walks" ? "walks" : "strikeouts"} in current filter.
     </div>
   );

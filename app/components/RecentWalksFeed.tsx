@@ -40,13 +40,13 @@ export function RecentWalksFeed({
   const items = walks.slice(0, limit);
   if (items.length === 0) {
     return (
-      <div className="px-5 py-8 text-center text-sm text-slate-500">
+      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
         No walks in this range.
       </div>
     );
   }
   return (
-    <ul className="divide-y divide-slate-100">
+    <ul className="divide-y divide-[var(--border)]">
       {items.map((w, idx) => (
         <li
           key={`${w.gamePk}-${w.pitcherId}-${w.inning}-${w.halfInning}-${idx}`}
@@ -59,13 +59,13 @@ export function RecentWalksFeed({
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <span className="font-semibold text-[var(--color-sox-navy)]">
+              <span className="font-semibold text-[var(--text)]">
                 {w.pitcherName}
               </span>
-              <span className="text-xs text-slate-500">walked</span>
-              <span className="text-sm text-slate-700">{w.batterName}</span>
+              <span className="text-xs text-[var(--text-muted)]">walked</span>
+              <span className="text-sm text-[var(--text-secondary)]">{w.batterName}</span>
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--text-muted)]">
               <span>{formatDate(w.date)}</span>
               <span>·</span>
               <span>vs {w.opponent}</span>
@@ -93,7 +93,7 @@ export function RecentWalksFeed({
         </li>
       ))}
       {walks.length > limit && (
-        <li className="px-4 py-2 text-center text-[11px] text-slate-400">
+        <li className="px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
           + {walks.length - limit} more
         </li>
       )}
