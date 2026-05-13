@@ -1,0 +1,183 @@
+"use client";
+
+import { WooSoxLogo } from "./WooSoxLogo";
+
+export type Section = "players" | "team" | "fund";
+
+const NAV: Array<{
+  key: Section;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+}> = [
+  {
+    key: "players",
+    label: "Players",
+    description: "Per-pitcher breakdowns",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth="2" />
+        <path
+          d="M2.5 19c.4-3 3-5 6.5-5s6.1 2 6.5 5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle cx="17.5" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M14 18.5c.3-1.7 1.7-3 3.5-3s3.2 1.3 3.5 3"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "team",
+    label: "Team",
+    description: "Record, charts, game log",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M3 21V8l9-5 9 5v13"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="2" />
+      </svg>
+    ),
+  },
+  {
+    key: "fund",
+    label: "No Pass Fund",
+    description: "Walk fees · K bonuses",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+        <path
+          d="M9 9.5c0-1 1-2 3-2s3 1 3 2-1 1.5-3 2-3 1-3 2 1 2 3 2 3-1 3-2M12 6v2M12 16v2"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+];
+
+export function Sidebar({
+  section,
+  onSectionChange,
+  onOpenRoster,
+  hiddenCount,
+  totalsLine,
+}: {
+  section: Section;
+  onSectionChange: (s: Section) => void;
+  onOpenRoster: () => void;
+  hiddenCount: number;
+  totalsLine: string;
+}) {
+  return (
+    <aside className="hidden h-[calc(100vh-0px)] flex-col border-r border-[var(--color-line)] bg-white lg:sticky lg:top-0 lg:flex lg:w-[220px] lg:shrink-0">
+      <div className="flex items-center gap-2.5 border-b border-[var(--color-line)] px-4 py-4">
+        <WooSoxLogo size={36} />
+        <div>
+          <div className="text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
+            WooSox
+          </div>
+          <div className="text-[10px] leading-tight text-slate-500">Tracker</div>
+        </div>
+      </div>
+
+      <nav className="flex-1 space-y-0.5 px-2 py-3">
+        {NAV.map((item) => {
+          const active = item.key === section;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onSectionChange(item.key)}
+              aria-pressed={active}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
+                active
+                  ? "bg-[var(--color-sox-navy)] text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-[var(--color-sox-navy)]"
+              }`}
+            >
+              <span className={active ? "text-[var(--color-woo-gold)]" : ""}>
+                {item.icon}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-semibold">{item.label}</span>
+                <span
+                  className={`block text-[10px] ${active ? "text-white/70" : "text-slate-400"}`}
+                >
+                  {item.description}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="space-y-2 border-t border-[var(--color-line)] px-3 py-3">
+        <button
+          type="button"
+          onClick={onOpenRoster}
+          className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)]"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+              <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            Roster
+          </span>
+          {hiddenCount > 0 && (
+            <span className="rounded-full bg-[var(--color-sox-red)] px-1.5 text-[10px] font-bold text-white">
+              {hiddenCount}
+            </span>
+          )}
+        </button>
+        <div className="px-1 text-[10px] leading-tight text-slate-400">
+          {totalsLine}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+export function MobileTabBar({
+  section,
+  onSectionChange,
+}: {
+  section: Section;
+  onSectionChange: (s: Section) => void;
+}) {
+  return (
+    <nav className="sticky bottom-0 z-30 grid grid-cols-3 border-t border-[var(--color-line)] bg-white shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden">
+      {NAV.map((item) => {
+        const active = item.key === section;
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => onSectionChange(item.key)}
+            aria-pressed={active}
+            className={`flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-semibold transition ${
+              active
+                ? "text-[var(--color-sox-red)]"
+                : "text-slate-500 hover:text-[var(--color-sox-navy)]"
+            }`}
+          >
+            <span>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
