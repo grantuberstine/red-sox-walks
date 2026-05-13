@@ -14,7 +14,7 @@ export function ViewToggle({
       <button
         type="button"
         onClick={() => onChange("table")}
-        className={`flex items-center gap-1 rounded-md px-2 py-1 font-semibold transition ${
+        className={`flex min-h-[32px] cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition ${
           value === "table"
             ? "bg-white text-[var(--color-sox-navy)] shadow-sm"
             : "text-slate-500 hover:text-[var(--color-sox-navy)]"
@@ -34,7 +34,7 @@ export function ViewToggle({
       <button
         type="button"
         onClick={() => onChange("cards")}
-        className={`flex items-center gap-1 rounded-md px-2 py-1 font-semibold transition ${
+        className={`flex min-h-[32px] cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition ${
           value === "cards"
             ? "bg-white text-[var(--color-sox-navy)] shadow-sm"
             : "text-slate-500 hover:text-[var(--color-sox-navy)]"

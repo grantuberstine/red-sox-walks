@@ -45,8 +45,11 @@ export function HeroBar({
           </div>
         </div>
         <div
-          className={`grid w-full grid-cols-${breakdown.length} gap-1 sm:w-auto sm:gap-2`}
-          style={{ gridTemplateColumns: `repeat(${breakdown.length}, minmax(0, 1fr))` }}
+          className={`grid w-full gap-1.5 sm:w-auto sm:gap-2 ${
+            breakdown.length >= 4
+              ? "grid-cols-2 sm:grid-cols-4"
+              : "grid-cols-2"
+          }`}
         >
           {breakdown.map((b) => (
             <HeroStat key={b.label} tone={b.tone} label={b.label} value={b.value} />

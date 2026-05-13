@@ -7,12 +7,14 @@ export type Section = "walks" | "strikeouts" | "players" | "team" | "fund";
 const NAV: Array<{
   key: Section;
   label: string;
+  short: string;
   description: string;
   icon: React.ReactNode;
 }> = [
   {
     key: "walks",
     label: "Walks",
+    short: "Walks",
     description: "Team walk tracker",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -28,6 +30,7 @@ const NAV: Array<{
   {
     key: "strikeouts",
     label: "Strikeouts",
+    short: "Ks",
     description: "Team K tracker",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -43,6 +46,7 @@ const NAV: Array<{
   {
     key: "players",
     label: "Players",
+    short: "Players",
     description: "Profiles & gallery",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -66,6 +70,7 @@ const NAV: Array<{
   {
     key: "team",
     label: "Team",
+    short: "Team",
     description: "Record, log, charts",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -82,6 +87,7 @@ const NAV: Array<{
   {
     key: "fund",
     label: "No Pass Fund",
+    short: "Fund",
     description: "Walk fees · K bonus",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -188,7 +194,10 @@ export function MobileTabBar({
   onSectionChange: (s: Section) => void;
 }) {
   return (
-    <nav className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-[var(--color-line)] bg-white shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden">
+    <nav
+      className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-[var(--color-line)] bg-white shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       {NAV.map((item) => {
         const active = item.key === section;
         return (
@@ -197,14 +206,23 @@ export function MobileTabBar({
             type="button"
             onClick={() => onSectionChange(item.key)}
             aria-pressed={active}
-            className={`flex cursor-pointer flex-col items-center justify-center gap-0.5 py-2 text-[9px] font-semibold transition ${
+            aria-label={item.label}
+            className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-slate-50 ${
               active
                 ? "text-[var(--color-sox-red)]"
                 : "text-slate-500"
             }`}
           >
-            <span>{item.icon}</span>
-            <span className="leading-tight">{item.label}</span>
+            <span
+              className={
+                active
+                  ? "scale-110 transition-transform"
+                  : "transition-transform"
+              }
+            >
+              {item.icon}
+            </span>
+            <span className="leading-none">{item.short}</span>
           </button>
         );
       })}

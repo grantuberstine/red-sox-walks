@@ -40,12 +40,12 @@ export function FilterRow({
 }) {
   return (
     <div className="border-b border-[var(--color-line)] bg-white">
-      <div className="mx-auto w-full px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center gap-2.5">
+      <div className="mx-auto w-full space-y-2.5 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
           <div
             role="tablist"
             aria-label="Time range"
-            className="inline-flex shrink-0 overflow-hidden rounded-lg bg-slate-100 p-0.5"
+            className="grid grid-cols-4 overflow-hidden rounded-lg bg-slate-100 p-0.5 md:inline-flex md:w-auto"
           >
             {ORDER.map((k) => {
               const active = k === range;
@@ -56,7 +56,7 @@ export function FilterRow({
                   role="tab"
                   aria-selected={active}
                   onClick={() => onRangeChange(k)}
-                  className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  className={`min-h-[36px] cursor-pointer rounded-md px-3 text-sm font-semibold transition ${
                     active
                       ? "bg-[var(--color-sox-navy)] text-white shadow-sm"
                       : "text-slate-600 hover:text-[var(--color-sox-navy)]"
@@ -69,17 +69,7 @@ export function FilterRow({
             })}
           </div>
 
-          {categories && categoryValue !== undefined && onCategoryChange && (
-            <div className="flex-1 sm:flex-initial">
-              <CategoryChips
-                categories={categories}
-                value={categoryValue}
-                onChange={onCategoryChange}
-              />
-            </div>
-          )}
-
-          <div className="ml-auto w-full sm:w-72">
+          <div className="w-full md:w-72 md:ml-auto">
             <SearchInput
               value={query}
               onChange={onQueryChange}
@@ -88,10 +78,23 @@ export function FilterRow({
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-          <span>{rangeContext}</span>
-          <span className="tabular">
-            {resultCount.toLocaleString()} {resultCount === 1 ? resultUnit : `${resultUnit}s`}
+        {categories && categoryValue !== undefined && onCategoryChange && (
+          <div className="-mx-1 overflow-x-auto px-1">
+            <div className="flex flex-nowrap gap-1.5 pb-0.5 md:flex-wrap">
+              <CategoryChips
+                categories={categories}
+                value={categoryValue}
+                onChange={onCategoryChange}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <span className="truncate">{rangeContext}</span>
+          <span className="shrink-0 tabular">
+            {resultCount.toLocaleString()}{" "}
+            {resultCount === 1 ? resultUnit : `${resultUnit}s`}
           </span>
         </div>
       </div>

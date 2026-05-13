@@ -269,23 +269,26 @@ export function Dashboard({ state }: { state: SeasonState }) {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-line)] bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2.5 lg:hidden">
+        <header
+          className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-line)] bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8"
+          style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
+        >
+          <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
             <WooSoxLogo size={28} />
             <div className="min-w-0">
-              <div className="text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
+              <div className="truncate text-sm font-bold leading-tight text-[var(--color-sox-navy)]">
                 {sectionLabel[section]}
               </div>
-              <div className="text-[10px] leading-tight text-slate-500">
+              <div className="truncate text-[10px] leading-tight text-slate-500">
                 {totalsLine}
               </div>
             </div>
           </div>
-          <div className="hidden lg:block">
-            <h1 className="text-base font-bold text-[var(--color-sox-navy)]">
+          <div className="hidden min-w-0 lg:block">
+            <h1 className="truncate text-base font-bold text-[var(--color-sox-navy)]">
               {sectionLabel[section]}
             </h1>
-            <p className="text-[11px] text-slate-500">
+            <p className="truncate text-[11px] text-slate-500">
               {state.season} season · last refresh{" "}
               <span className="tabular">
                 {formatTimestamp(state.meta.lastRefreshAt)}
@@ -295,9 +298,10 @@ export function Dashboard({ state }: { state: SeasonState }) {
           <button
             type="button"
             onClick={() => setRosterOpen(true)}
-            className="relative inline-flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)] lg:hidden"
+            aria-label="Manage roster"
+            className="relative inline-flex min-h-[36px] cursor-pointer items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-[var(--color-sox-navy)] lg:hidden"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
               <path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>

@@ -57,7 +57,7 @@ export function CategoryChips<K extends string>({
   onChange: (v: K) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <>
       {categories.map((c) => {
         const active = c.key === value;
         const tone = TONES[c.tone];
@@ -67,7 +67,7 @@ export function CategoryChips<K extends string>({
             type="button"
             onClick={() => onChange(c.key as K)}
             aria-pressed={active}
-            className={`inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold transition ${
+            className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold transition ${
               active ? tone.on : tone.off
             } ${active ? "shadow-sm" : ""}`}
           >
@@ -76,6 +76,6 @@ export function CategoryChips<K extends string>({
           </button>
         );
       })}
-    </div>
+    </>
   );
 }
