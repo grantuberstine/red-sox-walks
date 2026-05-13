@@ -482,7 +482,6 @@ function StrikeoutsView({
   query: string;
   onSelect: (id: number) => void;
 }) {
-  const bonusEligible = totals.threePitch + totals.side;
   return (
     <div className="space-y-5">
       <HeroBar
@@ -490,11 +489,7 @@ function StrikeoutsView({
         eventLabel="strikeouts"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
-        totalSub={
-          totals.total > 0
-            ? `${bonusEligible} qualify for a coach bonus`
-            : undefined
-        }
+        totalSub={undefined}
         breakdown={[
           { label: "3-Pitch K", value: totals.threePitch, tone: "neutral" },
           { label: "3-Up-3-Dn", value: totals.side, tone: "neutral" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { LedgerEntry, FundReport } from "@/lib/fund";
+import type { FundReport } from "@/lib/fund";
 import {
   WALK_FEE_PER_CATEGORY,
   THREE_PITCH_K_BONUS,
@@ -29,50 +29,21 @@ export function FundView({ report }: { report: FundReport }) {
     return rows;
   }, [report.entries, sortKey]);
 
-  const topOwer = [...report.entries].sort(
-    (a, b) => b.feesOwed - a.feesOwed,
-  )[0];
-  const topEarner = [...report.entries].sort(
-    (a, b) => b.bonusEarned - a.bonusEarned,
-  )[0];
-
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-sox-navy)] via-[var(--color-sox-ink)] to-[#1d2f4b] p-5 text-white shadow-md sm:p-6">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <BigStat
-            label="Players owe the fund"
-            value={formatMoney(report.team.totalFees)}
-            sub={`${report.team.walkCount} walk fees · ${WALK_FEE_PER_CATEGORY} per category`}
-            tone="rose"
-          />
-          <BigStat
-            label="Coaches owe the fund"
-            value={formatMoney(report.team.totalBonus)}
-            sub={`${report.team.threePitchCount} 3-pitch K × $${THREE_PITCH_K_BONUS} + ${report.team.sideInningCount} 3-up-3-down × $${SIDE_K_BONUS}`}
-            tone="emerald"
-          />
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {topOwer && topOwer.feesOwed > 0 && (
-            <TopCallout
-              title="Biggest contributor to the fund"
-              entry={topOwer}
-              valueLabel={`${formatMoney(topOwer.feesOwed)} owed`}
-              tone="rose"
-            />
-          )}
-          {topEarner && topEarner.bonusEarned > 0 && (
-            <TopCallout
-              title="Biggest K-bonus generator"
-              entry={topEarner}
-              valueLabel={`${formatMoney(topEarner.bonusEarned)} into fund`}
-              tone="emerald"
-            />
-          )}
-        </div>
-
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FilledStat
+          label="Players owe the fund"
+          value={formatMoney(report.team.totalFees)}
+          sub={`${report.team.walkCount} walk fees · $${WALK_FEE_PER_CATEGORY} per category`}
+          tone="rose"
+        />
+        <FilledStat
+          label="Coaches owe the fund"
+          value={formatMoney(report.team.totalBonus)}
+          sub={`${report.team.threePitchCount} 3-pitch K · ${report.team.sideInningCount} 3-up-3-down`}
+          tone="emerald"
+        />
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
@@ -105,12 +76,7 @@ export function FundView({ report }: { report: FundReport }) {
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] px-5 py-3">
-          <div>
-            <h2 className="text-sm font-bold text-[var(--text)]">Ledger</h2>
-            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              Two columns: what they owe · what coaches owe them
-            </p>
-          </div>
+          <h2 className="text-sm font-bold text-[var(--text)]">Ledger</h2>
           <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
             <span className="font-semibold">Sort</span>
             <select
@@ -130,14 +96,19 @@ export function FundView({ report }: { report: FundReport }) {
         <div className="hidden md:block">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
                 <th className="px-4 py-2.5 text-left">Pitcher</th>
-                <th className="px-3 py-2.5 text-right">4P</th>
-                <th className="px-3 py-2.5 text-right">0-2</th>
-                <th className="px-3 py-2.5 text-right">LO</th>
-                <th className="px-3 py-2.5 text-right">2O</th>
-                <th className="px-3 py-2.5 text-right text-[var(--color-sox-red)]">
-                  Owes the fund
+                <th className="w-[64px] px-3 py-2.5 text-right">4P</th>
+                <th className="w-[64px] px-3 py-2.5 text-right">0-2</th>
+                <th className="w-[64px] px-3 py-2.5 text-right">LO</th>
+                <th className="w-[64px] px-3 py-2.5 text-right">2O</th>
+                <th className="w-[110px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-[var(--color-sox-red)]">
+                  Owes
+                </th>
+                <th className="w-[80px] px-3 py-2.5 text-right">3-Pitch K</th>
+                <th className="w-[90px] px-3 py-2.5 text-right">3-Up-3-Dn</th>
+                <th className="w-[120px] px-3 py-2.5 text-right text-emerald-700 dark:text-emerald-400">
+                  Coaches owe
                 </th>
               </tr>
             </thead>
@@ -161,11 +132,14 @@ export function FundView({ report }: { report: FundReport }) {
                       </span>
                     </div>
                   </td>
-                  <NumCell value={e.walkBuckets.fourPitch} tint="text-[var(--text)]" />
-                  <NumCell value={e.walkBuckets.ohTwo} tint="text-[var(--text)]" />
-                  <NumCell value={e.walkBuckets.leadoff} tint="text-[var(--text)]" />
-                  <NumCell value={e.walkBuckets.twoOut} tint="text-[var(--text)]" />
-                  <MoneyCell value={e.feesOwed} tint="rose" />
+                  <NumCell value={e.walkBuckets.fourPitch} />
+                  <NumCell value={e.walkBuckets.ohTwo} />
+                  <NumCell value={e.walkBuckets.leadoff} />
+                  <NumCell value={e.walkBuckets.twoOut} />
+                  <MoneyCell value={e.feesOwed} tint="rose" withDivider />
+                  <NumCell value={e.threePitchKs} />
+                  <NumCell value={e.threeUpThreeDownInnings} />
+                  <MoneyCell value={e.bonusEarned} tint="emerald" />
                 </tr>
               ))}
             </tbody>
@@ -182,24 +156,34 @@ export function FundView({ report }: { report: FundReport }) {
                   size={48}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate font-semibold text-[var(--text)]">
-                      {e.name}
-                    </span>
-                    <span className="text-xl font-bold tabular text-[var(--color-sox-red)]">
-                      {formatMoney(e.feesOwed)}
-                    </span>
+                  <div className="truncate font-semibold text-[var(--text)]">
+                    {e.name}
                   </div>
-                  <div className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                    Owes the fund
+                  <div className="mt-1 flex items-baseline gap-4 text-[11px]">
+                    <span className="text-[var(--text-secondary)]">
+                      Owes{" "}
+                      <span className="font-bold tabular text-[var(--color-sox-red)]">
+                        {formatMoney(e.feesOwed)}
+                      </span>
+                    </span>
+                    <span className="text-[var(--text-secondary)]">
+                      Coaches owe{" "}
+                      <span className="font-bold tabular text-emerald-700 dark:text-emerald-400">
+                        {formatMoney(e.bonusEarned)}
+                      </span>
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
+              <div className="mt-3 grid grid-cols-4 gap-1 text-center text-[10px]">
                 <SmallCell label="4P" value={e.walkBuckets.fourPitch} />
                 <SmallCell label="0-2" value={e.walkBuckets.ohTwo} />
                 <SmallCell label="LO" value={e.walkBuckets.leadoff} />
                 <SmallCell label="2O" value={e.walkBuckets.twoOut} />
+              </div>
+              <div className="mt-1.5 grid grid-cols-2 gap-1 text-center text-[10px]">
+                <SmallCell label="3-Pitch K" value={e.threePitchKs} />
+                <SmallCell label="3-Up-3-Dn" value={e.threeUpThreeDownInnings} />
               </div>
             </li>
           ))}
@@ -209,63 +193,32 @@ export function FundView({ report }: { report: FundReport }) {
   );
 }
 
-function BigStat({
+function FilledStat({
   label,
   value,
   sub,
   tone,
 }: {
   label: string;
-  value: string | number;
+  value: string;
   sub: string;
   tone: "rose" | "emerald";
 }) {
-  const valueTone =
+  const gradient =
     tone === "rose"
-      ? "text-rose-200"
-      : "text-emerald-200";
+      ? "from-[#8e1f26] via-[var(--color-sox-red)] to-[#8e1f26]"
+      : "from-emerald-800 via-emerald-700 to-emerald-800";
   return (
-    <div className="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-inset ring-white/10">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
+    <div
+      className={`overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-5 text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:p-6`}
+    >
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-white/75">
         {label}
       </div>
-      <div className={`mt-1 text-4xl font-bold tabular leading-none ${valueTone}`}>
+      <div className="mt-2 text-5xl font-bold tabular leading-none sm:text-6xl">
         {value}
       </div>
-      <div className="mt-1.5 text-[11px] text-white/60">{sub}</div>
-    </div>
-  );
-}
-
-function TopCallout({
-  title,
-  entry,
-  valueLabel,
-  tone,
-}: {
-  title: string;
-  entry: LedgerEntry;
-  valueLabel: string;
-  tone: "rose" | "emerald";
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5 ring-1 ring-inset ring-white/10">
-      <PitcherAvatar name={entry.name} src={entry.headshotUrl} size={36} />
-      <div className="min-w-0 flex-1">
-        <div className="text-[10px] uppercase tracking-widest text-white/60">
-          {title}
-        </div>
-        <div className="truncate text-sm font-semibold text-white">
-          {entry.name}
-        </div>
-      </div>
-      <div
-        className={`text-sm font-bold tabular ${
-          tone === "emerald" ? "text-emerald-200" : "text-rose-200"
-        }`}
-      >
-        {valueLabel}
-      </div>
+      <div className="mt-3 text-[11px] text-white/75">{sub}</div>
     </div>
   );
 }
@@ -321,27 +274,31 @@ function RuleBlock({
   );
 }
 
-function NumCell({ value, tint }: { value: number; tint: string }) {
+function NumCell({ value }: { value: number }) {
   return (
-    <td
-      className={`px-3 py-2.5 text-right tabular ${
-        value > 0 ? `font-semibold ${tint}` : "text-[var(--text-muted)]/60"
-      }`}
-    >
+    <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
       {value}
     </td>
   );
 }
 
-function MoneyCell({ value, tint }: { value: number; tint: "rose" | "emerald" }) {
+function MoneyCell({
+  value,
+  tint,
+  withDivider = false,
+}: {
+  value: number;
+  tint: "rose" | "emerald";
+  withDivider?: boolean;
+}) {
   const color =
     tint === "rose"
-      ? "text-rose-700 dark:text-rose-300"
+      ? "text-[var(--color-sox-red)] dark:text-rose-300"
       : "text-emerald-700 dark:text-emerald-300";
   return (
     <td
-      className={`px-3 py-2.5 text-right text-base font-bold tabular ${
-        value > 0 ? color : "text-[var(--text-muted)]/60"
+      className={`px-3 py-2.5 text-right text-base font-bold tabular ${color} ${
+        withDivider ? "border-r border-[var(--border-strong)]" : ""
       }`}
     >
       {formatMoney(value)}
