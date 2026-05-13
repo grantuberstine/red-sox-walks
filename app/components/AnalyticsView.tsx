@@ -8,12 +8,13 @@ import type {
 } from "@/lib/types";
 import { PitcherAvatar } from "./PitcherAvatar";
 
-type ChartView = "velocity" | "usage" | "count";
+type ChartView = "velocity" | "usage" | "count" | "outings";
 
 const VIEW_OPTIONS: Array<{ key: ChartView; label: string }> = [
   { key: "velocity", label: "Velocity" },
   { key: "usage", label: "Pitch usage" },
   { key: "count", label: "Pitch count" },
+  { key: "outings", label: "Outings" },
 ];
 
 // MLB Stats API / Statcast / Baseball Savant pitch codes.
@@ -234,16 +235,6 @@ export function AnalyticsView({
         <PitchMixTable byType={career.byType} total={career.totalPitches} />
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-        <div className="border-b border-[var(--border)] px-5 py-3">
-          <h3 className="text-sm font-bold text-[var(--text)]">Outing log</h3>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            {appearances.length}{" "}
-            {appearances.length === 1 ? "appearance" : "appearances"} · newest first
-          </p>
-        </div>
-        <OutingsTable appearances={[...appearances].reverse()} />
-      </section>
     </div>
   );
 }
@@ -320,14 +311,18 @@ function PitcherChartCard({
                 ? `Velocity — ${selectedType ? labelFor(selectedType) : ""}`
                 : view === "usage"
                   ? "Pitch usage by outing"
-                  : "Pitch count by outing"}
+                  : view === "count"
+                    ? "Pitch count by outing"
+                    : "Outings"}
             </h3>
-            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
               {view === "velocity"
                 ? "Avg + max per outing for the selected pitch type · hover for detail"
                 : view === "usage"
                   ? "Stacked by pitch type · hover for breakdown"
-                  : "Total pitches thrown per outing"}
+                  : view === "count"
+                    ? "Total pitches thrown per outing"
+                    : "Every outing at a glance · best max velo highlighted"}
             </p>
           </div>
           <ViewPills value={view} onChange={setView} />
@@ -349,6 +344,8 @@ function PitcherChartCard({
           <UsageChart appearances={appearances} byType={byType} />
         ) : view === "count" ? (
           <PitchCountChart appearances={appearances} />
+        ) : view === "outings" ? (
+          <OutingsGrid appearances={appearances} byType={byType} />
         ) : (
           <div className="px-5 py-10 text-center text-sm text-[var(--text-secondary)]">
             No pitch type data.
@@ -1162,6 +1159,170 @@ function Tooltip({
   );
 }
 
+function OutingsGrid({
+  appearances,
+  byType,
+}: {
+  appearances: AppearanceVelo[];
+  byType: Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>;
+}) {
+  const isDark = useIsDark();
+  if (appearances.length === 0) {
+    return (
+      <div className="px-5 py-10 text-center text-sm text-[var(--text-secondary)]">
+        No outings yet.
+      </div>
+    );
+  }
+  const bestMaxVelo = Math.max(...appearances.map((a) => a.maxVelo));
+  const bestPitchCount = Math.max(...appearances.map((a) => a.pitchCount));
+  const orderedTypes = byType.map((b) => b.type);
+
+  // Newest first
+  const ordered = [...appearances].reverse();
+
+  return (
+    <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+      {ordered.map((a) => {
+        const ff = a.byType.find((t) => t.type === "FF");
+        const otherFb = a.byType.find(
+          (t) => FASTBALL_CODES.has(t.type) && t.type !== "FF",
+        );
+        const primary = ff ?? otherFb;
+        const fbAvg = primary ? primary.avgVelo : null;
+        const isBestMax = a.maxVelo === bestMaxVelo;
+        const isBestPitches = a.pitchCount === bestPitchCount;
+
+        return (
+          <div
+            key={a.gamePk}
+            className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md"
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold text-[var(--text)]">
+                  {formatDate(a.date)}
+                </div>
+                <div className="truncate text-[11px] text-[var(--text-secondary)]">
+                  vs {a.opponent}
+                </div>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                {isBestMax && (
+                  <span className="rounded-full bg-[var(--color-sox-red)]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--color-sox-red)] dark:bg-red-400/20 dark:text-red-300">
+                    Top velo
+                  </span>
+                )}
+                {isBestPitches && !isBestMax && (
+                  <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-300">
+                    Most pitches
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              <MiniStat
+                label="Pitches"
+                value={a.pitchCount}
+                accent={isBestPitches}
+              />
+              <MiniStat
+                label="FB avg"
+                value={fbAvg !== null ? fbAvg.toFixed(1) : "—"}
+                suffix={fbAvg !== null ? "mph" : ""}
+              />
+              <MiniStat
+                label="Max"
+                value={a.maxVelo.toFixed(1)}
+                suffix="mph"
+                accent={isBestMax}
+              />
+            </div>
+
+            {a.byType.length > 0 && (
+              <div className="mt-3">
+                <div className="flex h-2 overflow-hidden rounded-full bg-[var(--surface)]">
+                  {orderedTypes.map((type) => {
+                    const t = a.byType.find((b) => b.type === type);
+                    if (!t || t.count === 0) return null;
+                    const pct = (t.count / a.pitchCount) * 100;
+                    const c = colorFor(type);
+                    return (
+                      <div
+                        key={type}
+                        style={{
+                          width: `${pct}%`,
+                          background: isDark ? c.dark : c.light,
+                        }}
+                        title={`${labelFor(type)}: ${t.count} (${pct.toFixed(0)}%)`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-[var(--text-secondary)]">
+                  {a.byType.slice(0, 5).map((t) => {
+                    const c = colorFor(t.type);
+                    return (
+                      <span
+                        key={t.type}
+                        className="inline-flex items-center gap-1"
+                      >
+                        <span
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ background: isDark ? c.dark : c.light }}
+                        />
+                        {labelFor(t.type)}{" "}
+                        <span className="tabular">{t.count}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniStat({
+  label,
+  value,
+  suffix,
+  accent = false,
+}: {
+  label: string;
+  value: string | number;
+  suffix?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-lg bg-[var(--surface)] px-2 py-1.5">
+      <div className="text-[9px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+        {label}
+      </div>
+      <div className="mt-0.5 flex items-baseline gap-0.5">
+        <span
+          className={`text-base font-bold tabular leading-none ${
+            accent
+              ? "text-[var(--color-sox-red)] dark:text-red-400"
+              : "text-[var(--text)]"
+          }`}
+        >
+          {value}
+        </span>
+        {suffix && (
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+            {suffix}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PitchMixTable({
   byType,
   total,
@@ -1276,48 +1437,3 @@ function PitchMixTable({
   );
 }
 
-function OutingsTable({ appearances }: { appearances: AppearanceVelo[] }) {
-  return (
-    <table className="min-w-full text-sm">
-      <thead>
-        <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-          <th className="px-4 py-2.5 text-left">Date</th>
-          <th className="px-3 py-2.5 text-left">Opponent</th>
-          <th className="px-3 py-2.5 text-right">Pitches</th>
-          <th className="px-3 py-2.5 text-right">FB avg</th>
-          <th className="px-3 py-2.5 text-right">Max</th>
-        </tr>
-      </thead>
-      <tbody>
-        {appearances.map((a) => {
-          const ff = a.byType.find((t) => t.type === "FF");
-          const otherFb = a.byType.find(
-            (t) => FASTBALL_CODES.has(t.type) && t.type !== "FF",
-          );
-          const primary = ff ?? otherFb;
-          const fbAvg = primary ? primary.avgVelo : null;
-          return (
-            <tr
-              key={a.gamePk}
-              className="border-b border-[var(--border)] last:border-0"
-            >
-              <td className="px-4 py-2.5 tabular text-[var(--text-muted)]">
-                {formatDate(a.date)}
-              </td>
-              <td className="px-3 py-2.5 text-[var(--text)]">{a.opponent}</td>
-              <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
-                {a.pitchCount}
-              </td>
-              <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
-                {fbAvg === null ? "—" : fbAvg.toFixed(1)}
-              </td>
-              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
-                {a.maxVelo.toFixed(1)}
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
-}

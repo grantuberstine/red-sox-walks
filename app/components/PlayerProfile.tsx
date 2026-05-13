@@ -13,7 +13,6 @@ import {
   strikeoutsPerNine,
   walksPerNine,
 } from "@/lib/filters";
-import { achievementById } from "@/lib/achievements";
 import { computeFundReport, formatMoney } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
 
@@ -109,38 +108,40 @@ export function PlayerProfile({
         <div className="flex items-center gap-4">
           <PitcherAvatar name={pitcher.name} src={pitcher.headshotUrl} size={72} />
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-2xl font-bold leading-tight text-[var(--text)]">
-                {pitcher.name}
-              </h1>
-              <a
-                href={`https://www.mlb.com/player/${pitcher.pitcherId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)] underline-offset-2 transition hover:text-[var(--color-sox-red)] hover:underline"
-              >
-                MLB.com profile
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M7 17 17 7" />
-                  <path d="M7 7h10v10" />
-                </svg>
-              </a>
-            </div>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              {inningsPitched(pitcher)} IP · {pitcher.appearances} appearances ·{" "}
-              {pitcher.totalWalks} walks · {pitcher.totalStrikeouts} K
-              {pitcher.outsRecorded > 0 && (
-                <>
-                  {" · "}
-                  {fmt(walksPerNine(pitcher))} BB/9 ·{" "}
-                  {fmt(strikeoutsPerNine(pitcher))} K/9
-                </>
-              )}
-            </p>
+            <h1 className="text-2xl font-bold leading-tight text-[var(--text)]">
+              {pitcher.name}
+            </h1>
+            <a
+              href={`https://www.mlb.com/player/${pitcher.pitcherId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-secondary)] underline-offset-2 transition hover:text-[var(--color-sox-red)] hover:underline"
+            >
+              MLB.com profile
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17 17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          <StatCard label="IP" value={inningsPitched(pitcher)} />
+          <StatCard label="Apps" value={pitcher.appearances} />
+          <StatCard label="Walks" value={pitcher.totalWalks} />
+          <StatCard label="K's" value={pitcher.totalStrikeouts} />
+          <StatCard
+            label="BB/9"
+            value={pitcher.outsRecorded > 0 ? fmt(walksPerNine(pitcher)) : "—"}
+          />
+          <StatCard
+            label="K/9"
+            value={pitcher.outsRecorded > 0 ? fmt(strikeoutsPerNine(pitcher)) : "—"}
+          />
+        </div>
+
+        <div className="mt-4">
           <MoneyCard
             label="Owes the Fund"
             value={formatMoney(fees)}
@@ -187,25 +188,6 @@ export function PlayerProfile({
           />
         </Card>
       </section>
-
-      {pitcher.achievements.length > 0 && (
-        <Card title="Achievements">
-          <div className="flex flex-wrap gap-1.5">
-            {pitcher.achievements.map((id) => {
-              const a = achievementById(id);
-              if (!a) return null;
-              return (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] ring-1 ring-inset ring-slate-200"
-                >
-                  {a.label}
-                </span>
-              );
-            })}
-          </div>
-        </Card>
-      )}
 
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Card title={`Walk Log (${playerWalks.length})`}>
@@ -284,6 +266,25 @@ export function PlayerProfile({
           )}
         </Card>
       </section>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-2.5 py-2 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-md">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+        {label}
+      </div>
+      <div className="mt-1 text-xl font-bold tabular leading-none text-[var(--text)]">
+        {value}
+      </div>
     </div>
   );
 }

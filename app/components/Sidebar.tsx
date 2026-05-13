@@ -179,7 +179,7 @@ export function Sidebar({
               <span className={active ? "text-white" : ""}>
                 {item.icon}
               </span>
-              <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                 {item.label}
               </span>
             </button>
