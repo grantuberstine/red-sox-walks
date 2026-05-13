@@ -116,18 +116,28 @@ export type PlayEvent = {
 
 export async function fetchGameFeed(gamePk: number): Promise<LiveFeed> {
   const url = `${MLB_API_BASE}/api/v1.1/game/${gamePk}/feed/live`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(
-      `Game feed fetch failed for ${gamePk}: ${res.status} ${res.statusText}`,
-    );
+  let lastErr: unknown = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(
+          `Game feed fetch failed for ${gamePk}: ${res.status} ${res.statusText}`,
+        );
+      }
+      const data = await res.json();
+      return {
+        gamePk,
+        homeTeamId: data.gameData?.teams?.home?.id,
+        awayTeamId: data.gameData?.teams?.away?.id,
+        plays: (data.liveData?.plays?.allPlays ?? []) as LivePlay[],
+      };
+    } catch (e) {
+      lastErr = e;
+      if (attempt < 3) {
+        await new Promise((r) => setTimeout(r, 500 * attempt));
+      }
+    }
   }
-  const data = await res.json();
-
-  return {
-    gamePk,
-    homeTeamId: data.gameData?.teams?.home?.id,
-    awayTeamId: data.gameData?.teams?.away?.id,
-    plays: (data.liveData?.plays?.allPlays ?? []) as LivePlay[],
-  };
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }

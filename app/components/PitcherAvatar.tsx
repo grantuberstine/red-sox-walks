@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export function PitcherAvatar({
   name,
@@ -31,16 +32,15 @@ export function PitcherAvatar({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={src}
       alt={name}
       width={size}
       height={size}
       onError={() => setErrored(true)}
+      unoptimized={false}
       style={{ width: size, height: size }}
-      className="shrink-0 rounded-full bg-[var(--surface-hover)] object-cover ring-1 ring-slate-200"
-      loading="lazy"
+      className="shrink-0 rounded-full bg-[var(--surface-hover)] object-cover ring-1 ring-slate-200 dark:ring-slate-700"
     />
   );
 }

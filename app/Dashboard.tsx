@@ -9,7 +9,6 @@ import {
   aggregatePitchersFromWalks,
   filterStrikeouts,
   filterWalks,
-  formatRangeContext,
 } from "@/lib/filters";
 import {
   computeFundReport,
@@ -124,8 +123,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
         })),
     [allPitchers, hidden],
   );
-
-  const rangeContext = formatRangeContext(range, state);
 
   const walkTotals = useMemo(
     () =>

@@ -72,7 +72,7 @@ const K_TAG_COLORS: Record<StrikeoutType, string> = {
 };
 const K_TAG_LABELS: Record<StrikeoutType, string> = {
   threePitch: "3P",
-  side: "side",
+  side: "3-Up",
 };
 
 function fmtRate(n: number) {

@@ -1,4 +1,4 @@
-import { put, list, del } from "@vercel/blob";
+import { put, list } from "@vercel/blob";
 import { BLOB_KEY, SEASON, WOOSOX_TEAM_ID } from "./constants";
 import { computeAchievements, headshotUrl } from "./achievements";
 import type { AppearanceVeloPartial } from "./walk-classifier";
@@ -87,18 +87,11 @@ export async function loadState(): Promise<SeasonState> {
 }
 
 export async function saveState(state: SeasonState): Promise<void> {
-  try {
-    const existing = await findBlobUrl();
-    if (existing) {
-      await del(existing);
-    }
-  } catch {
-    // first write
-  }
   await put(BLOB_KEY, JSON.stringify(state), {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 

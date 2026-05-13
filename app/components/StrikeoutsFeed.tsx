@@ -49,7 +49,7 @@ export function StrikeoutsFeed({
               <span className="font-semibold text-[var(--text)]">
                 {s.pitcherName}
               </span>
-              <span className="text-xs text-emerald-600">struck out</span>
+              <span className="text-xs text-emerald-700 dark:text-emerald-400">struck out</span>
               <span className="text-sm text-[var(--text-secondary)]">{s.batterName}</span>
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--text-muted)]">
