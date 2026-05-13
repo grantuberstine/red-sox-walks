@@ -4,13 +4,11 @@ import { computeAchievements, headshotUrl } from "./achievements";
 import type {
   GameSummary,
   PitcherStats,
-  RecentWalk,
   SeasonState,
   WalkClassification,
+  WalkRecord,
   WalkType,
 } from "./types";
-
-const RECENT_LIMIT = 50;
 
 const emptyState = (): SeasonState => ({
   season: SEASON,
@@ -18,7 +16,7 @@ const emptyState = (): SeasonState => ({
   processedGamePks: [],
   pitchers: {},
   games: [],
-  recentWalks: [],
+  walks: [],
   meta: {
     lastRefreshAt: null,
     lastGameDate: null,
@@ -73,7 +71,7 @@ export async function saveState(state: SeasonState): Promise<void> {
   } catch {
     // first write
   }
-  await put(BLOB_KEY, JSON.stringify(state, null, 2), {
+  await put(BLOB_KEY, JSON.stringify(state), {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
@@ -99,7 +97,7 @@ export function applyWalksToState(
     pitchers: { ...state.pitchers },
     games: [...state.games],
     processedGamePks: [...state.processedGamePks],
-    recentWalks: [...state.recentWalks],
+    walks: [...state.walks],
   };
 
   if (next.processedGamePks.includes(game.gamePk)) return next;
@@ -134,7 +132,8 @@ export function applyWalksToState(
       lastWalkDate: w.date,
     };
 
-    const recent: RecentWalk = {
+    const record: WalkRecord = {
+      gamePk: game.gamePk,
       pitcherId: w.pitcherId,
       pitcherName: w.pitcherName,
       date: w.date,
@@ -146,7 +145,7 @@ export function applyWalksToState(
       pitchesInPA: w.pitchesInPA,
       tags: tagsFor(w),
     };
-    next.recentWalks.unshift(recent);
+    next.walks.push(record);
   }
 
   for (const pid of pitcherIdsThisGame) {
@@ -166,7 +165,7 @@ export function applyWalksToState(
     };
   }
 
-  next.recentWalks = next.recentWalks.slice(0, RECENT_LIMIT);
+  next.walks.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   next.games.push(game);
   next.processedGamePks.push(game.gamePk);
   next.meta = {

@@ -22,7 +22,8 @@ export type GameSummary = {
   walksProcessed: number;
 };
 
-export type RecentWalk = {
+export type WalkRecord = {
+  gamePk: number;
   pitcherId: number;
   pitcherName: string;
   date: string;
@@ -41,7 +42,7 @@ export type SeasonState = {
   processedGamePks: number[];
   pitchers: Record<string, PitcherStats>;
   games: GameSummary[];
-  recentWalks: RecentWalk[];
+  walks: WalkRecord[];
   meta: {
     lastRefreshAt: string | null;
     lastGameDate: string | null;
