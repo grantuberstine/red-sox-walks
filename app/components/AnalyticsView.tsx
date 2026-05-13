@@ -198,7 +198,6 @@ export function AnalyticsView({
             label="Max velocity"
             value={career.maxVelo.toFixed(1)}
             suffix="mph"
-            highlight
           />
           <BigStat
             label="Total pitches"
@@ -328,7 +327,7 @@ function PitcherChartCard({
           ) : null}
         </div>
       </div>
-      <div className="min-h-[340px]">
+      <div className="min-h-[360px]">
         {view === "velocity" && selectedType ? (
           <VelocityChart appearances={appearances} pitchType={selectedType} />
         ) : view === "usage" ? (
@@ -465,8 +464,8 @@ function VelocityChart({
     );
   }
 
-  const h = 240;
-  const pad = { top: 24, right: 16, bottom: 36, left: 36 };
+  const h = 260;
+  const pad = { top: 24, right: 16, bottom: 44, left: 36 };
   const innerW = Math.max(80, w - pad.left - pad.right);
   const innerH = h - pad.top - pad.bottom;
 
@@ -534,7 +533,7 @@ function VelocityChart({
         <svg
           viewBox={`0 0 ${w} ${h}`}
           preserveAspectRatio="xMidYMid meet"
-          className="block h-[240px] w-full"
+          className="block h-[260px] w-full"
         >
           <g transform={`translate(${pad.left} ${pad.top})`}>
             {yTicks.map((t, i) => (
@@ -619,10 +618,10 @@ function VelocityChart({
                   <text
                     key={`d-${i}`}
                     x={x(i)}
-                    y={innerH + 18}
+                    y={innerH + 24}
                     textAnchor="middle"
                     fontSize="10"
-                    fill="var(--text-muted)"
+                    fill="var(--text-secondary)"
                     className="tabular"
                   >
                     {formatDate(p.date)}
@@ -692,10 +691,10 @@ function UsageChart({
   const isDark = useIsDark();
 
   const orderedTypes = byType.map((b) => b.type);
-  const maxTotal = Math.max(...appearances.map((a) => a.pitchCount), 1);
+  const totalPitches = appearances.reduce((s, a) => s + a.pitchCount, 0);
 
-  const h = 240;
-  const pad = { top: 24, right: 16, bottom: 36, left: 36 };
+  const h = 260;
+  const pad = { top: 24, right: 16, bottom: 44, left: 36 };
   const innerW = Math.max(80, w - pad.left - pad.right);
   const innerH = h - pad.top - pad.bottom;
 
@@ -705,13 +704,10 @@ function UsageChart({
     (innerW - gap * (appearances.length - 1)) / appearances.length,
   );
 
-  const yScale = (v: number) => innerH - (v / maxTotal) * innerH;
-
-  const ticks = 4;
-  const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
-    const v = (maxTotal * i) / ticks;
-    return { v: Math.round(v), y: yScale(v) };
-  });
+  const yTicks = [0, 25, 50, 75, 100].map((p) => ({
+    v: p,
+    y: innerH - (p / 100) * innerH,
+  }));
 
   const onMove = (e: React.MouseEvent<SVGRectElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -742,14 +738,14 @@ function UsageChart({
           })}
         </div>
         <span className="ml-auto shrink-0 tabular">
-          {appearances.length} outings · peak {maxTotal} pitches
+          {appearances.length} outings · {totalPitches} pitches
         </span>
       </div>
       <div ref={containerRef} className="relative">
         <svg
           viewBox={`0 0 ${w} ${h}`}
           preserveAspectRatio="xMidYMid meet"
-          className="block h-[240px] w-full"
+          className="block h-[260px] w-full"
         >
           <g transform={`translate(${pad.left} ${pad.top})`}>
             {yTicks.map((t, i) => (
@@ -768,30 +764,33 @@ function UsageChart({
                   dy="0.32em"
                   textAnchor="end"
                   fontSize="10"
-                  fill="var(--text-muted)"
+                  fill="var(--text-secondary)"
                   className="tabular"
                 >
-                  {t.v}
+                  {t.v}%
                 </text>
               </g>
             ))}
 
             {appearances.map((a, i) => {
               const xPos = i * (barW + gap);
+              const total = a.pitchCount || 1;
               let yAcc = innerH;
               const segments = orderedTypes
                 .map((type) => {
                   const t = a.byType.find((b) => b.type === type);
                   if (!t || t.count === 0) return null;
-                  const segH = (t.count / maxTotal) * innerH;
+                  const pct = t.count / total;
+                  const segH = pct * innerH;
                   yAcc -= segH;
-                  return { type, height: segH, y: yAcc, count: t.count };
+                  return { type, height: segH, y: yAcc, count: t.count, pct };
                 })
                 .filter(Boolean) as Array<{
                 type: string;
                 height: number;
                 y: number;
                 count: number;
+                pct: number;
               }>;
               return (
                 <g key={a.gamePk} opacity={hovered === null || hovered === i ? 1 : 0.45}>
@@ -825,10 +824,10 @@ function UsageChart({
                   <text
                     key={`d-${i}`}
                     x={i * (barW + gap) + barW / 2}
-                    y={innerH + 18}
+                    y={innerH + 24}
                     textAnchor="middle"
                     fontSize="10"
-                    fill="var(--text-muted)"
+                    fill="var(--text-secondary)"
                     className="tabular"
                   >
                     {formatDate(a.date)}
@@ -856,19 +855,20 @@ function UsageChart({
           >
             <div className="text-[11px] font-semibold text-[var(--text)]">
               {formatDate(hoveredApp.date)}
-              <span className="ml-1.5 font-normal text-[var(--text-muted)]">
+              <span className="ml-1.5 font-normal text-[var(--text-secondary)]">
                 vs {hoveredApp.opponent}
               </span>
             </div>
             <div className="mt-1 space-y-0.5">
               {hoveredApp.byType.map((t) => {
                 const c = colorFor(t.type);
+                const pct = (t.count / Math.max(1, hoveredApp.pitchCount)) * 100;
                 return (
                   <div
                     key={t.type}
                     className="flex items-center justify-between gap-3 text-[11px]"
                   >
-                    <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
+                    <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
                       <span
                         className="inline-block h-2 w-2 rounded-full"
                         style={{ background: isDark ? c.dark : c.light }}
@@ -876,13 +876,16 @@ function UsageChart({
                       {labelFor(t.type)}
                     </span>
                     <span className="font-semibold tabular text-[var(--text)]">
-                      {t.count}
+                      {pct.toFixed(0)}%{" "}
+                      <span className="font-normal text-[var(--text-secondary)]">
+                        ({t.count})
+                      </span>
                     </span>
                   </div>
                 );
               })}
             </div>
-            <div className="mt-1 border-t border-[var(--border)] pt-1 text-[10px] tabular text-[var(--text-muted)]">
+            <div className="mt-1 border-t border-[var(--border)] pt-1 text-[10px] tabular text-[var(--text-secondary)]">
               <span className="font-semibold text-[var(--text)]">
                 {hoveredApp.pitchCount}
               </span>{" "}
@@ -899,22 +902,20 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
   const [containerRef, w] = useChartWidth();
   const [hovered, setHovered] = useState<number | null>(null);
   const isDark = useIsDark();
-  const barColor = isDark ? "#f87171" : "#bd3039";
+  const lineColor = isDark ? "#f87171" : "#bd3039";
 
   const counts = appearances.map((a) => a.pitchCount);
   const maxCount = Math.max(...counts, 1);
 
-  const h = 240;
-  const pad = { top: 24, right: 16, bottom: 36, left: 36 };
+  const h = 260;
+  const pad = { top: 24, right: 16, bottom: 44, left: 36 };
   const innerW = Math.max(80, w - pad.left - pad.right);
   const innerH = h - pad.top - pad.bottom;
 
-  const gap = 6;
-  const barW = Math.max(
-    8,
-    (innerW - gap * (appearances.length - 1)) / appearances.length,
-  );
-
+  const x = (i: number) =>
+    appearances.length === 1
+      ? innerW / 2
+      : (i / (appearances.length - 1)) * innerW;
   const yScale = (v: number) => innerH - (v / maxCount) * innerH;
 
   const ticks = 4;
@@ -923,13 +924,26 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
     return { v: Math.round(v), y: yScale(v) };
   });
 
+  const linePath = appearances
+    .map((a, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${yScale(a.pitchCount)}`)
+    .join(" ");
+
+  const areaPath =
+    appearances.length > 0
+      ? `${linePath} L ${x(appearances.length - 1)} ${innerH} L ${x(0)} ${innerH} Z`
+      : "";
+
   const onMove = (e: React.MouseEvent<SVGRectElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const px = e.clientX - rect.left;
-    const step = barW + gap;
+    if (appearances.length === 1) {
+      setHovered(0);
+      return;
+    }
+    const step = innerW / (appearances.length - 1);
     const idx = Math.max(
       0,
-      Math.min(appearances.length - 1, Math.floor(px / step)),
+      Math.min(appearances.length - 1, Math.round(px / step)),
     );
     setHovered(idx);
   };
@@ -939,8 +953,8 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
 
   return (
     <div className="relative px-4 pb-4 pt-3">
-      <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-        <Legend swatch={barColor} label="pitches" />
+      <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-secondary)]">
+        <Legend swatch={lineColor} label="pitches" line />
         <span className="ml-auto tabular">
           avg {avg.toFixed(0)} · peak {maxCount}
         </span>
@@ -949,7 +963,7 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
         <svg
           viewBox={`0 0 ${w} ${h}`}
           preserveAspectRatio="xMidYMid meet"
-          className="block h-[240px] w-full"
+          className="block h-[260px] w-full"
         >
           <g transform={`translate(${pad.left} ${pad.top})`}>
             {yTicks.map((t, i) => (
@@ -968,7 +982,7 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
                   dy="0.32em"
                   textAnchor="end"
                   fontSize="10"
-                  fill="var(--text-muted)"
+                  fill="var(--text-secondary)"
                   className="tabular"
                 >
                   {t.v}
@@ -976,25 +990,36 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
               </g>
             ))}
 
-            {appearances.map((a, i) => {
-              const xPos = i * (barW + gap);
-              const barH = (a.pitchCount / maxCount) * innerH;
-              const yPos = innerH - barH;
-              const isActive = hovered === null || hovered === i;
-              return (
-                <rect
-                  key={a.gamePk}
-                  x={xPos}
-                  y={yPos}
-                  width={barW}
-                  height={barH}
-                  rx={3}
-                  ry={3}
-                  fill={barColor}
-                  opacity={isActive ? 0.9 : 0.4}
-                />
-              );
-            })}
+            <path d={areaPath} fill={lineColor} fillOpacity={0.12} />
+            <path
+              d={linePath}
+              fill="none"
+              stroke={lineColor}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {appearances.map((a, i) => (
+              <circle
+                key={a.gamePk}
+                cx={x(i)}
+                cy={yScale(a.pitchCount)}
+                r={hovered === i ? 5 : 3.5}
+                fill={lineColor}
+              />
+            ))}
+
+            {hovered !== null && (
+              <line
+                x1={x(hovered)}
+                x2={x(hovered)}
+                y1={0}
+                y2={innerH}
+                stroke="var(--border-strong)"
+                strokeDasharray="3 3"
+              />
+            )}
 
             {(() => {
               const labelStep = Math.max(
@@ -1005,11 +1030,11 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
                 i % labelStep === 0 || i === appearances.length - 1 ? (
                   <text
                     key={`d-${i}`}
-                    x={i * (barW + gap) + barW / 2}
-                    y={innerH + 18}
+                    x={x(i)}
+                    y={innerH + 24}
                     textAnchor="middle"
                     fontSize="10"
-                    fill="var(--text-muted)"
+                    fill="var(--text-secondary)"
                     className="tabular"
                   >
                     {formatDate(a.date)}
@@ -1031,18 +1056,18 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
         </svg>
         {hoveredApp && (
           <Tooltip
-            x={pad.left + hovered! * (barW + gap) + barW / 2}
+            x={pad.left + x(hovered!)}
             chartWidth={w}
             chartHeight={h}
           >
             <div className="text-[11px] font-semibold text-[var(--text)]">
               {formatDate(hoveredApp.date)}
-              <span className="ml-1.5 font-normal text-[var(--text-muted)]">
+              <span className="ml-1.5 font-normal text-[var(--text-secondary)]">
                 vs {hoveredApp.opponent}
               </span>
             </div>
             <div className="mt-1 flex items-center justify-between gap-3">
-              <span className="text-[11px] text-[var(--text-muted)]">
+              <span className="text-[11px] text-[var(--text-secondary)]">
                 Total pitches
               </span>
               <span className="text-base font-bold tabular text-[var(--text)]">
