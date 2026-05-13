@@ -8,15 +8,7 @@ import type {
 } from "@/lib/types";
 import { PitcherAvatar } from "./PitcherAvatar";
 
-type RangeKey = "last5" | "last10" | "last20" | "season";
 type ChartView = "velocity" | "usage" | "count";
-
-const RANGE_OPTIONS: Array<{ key: RangeKey; label: string; take: number | null }> = [
-  { key: "last5", label: "Last 5", take: 5 },
-  { key: "last10", label: "Last 10", take: 10 },
-  { key: "last20", label: "Last 20", take: 20 },
-  { key: "season", label: "Season", take: null },
-];
 
 const VIEW_OPTIONS: Array<{ key: ChartView; label: string }> = [
   { key: "velocity", label: "Velocity" },
@@ -46,24 +38,40 @@ const FASTBALL_CODES = new Set(["FF", "FT", "SI", "FC"]);
 const PITCH_COLORS: Record<string, { light: string; dark: string }> = {
   FF: { light: "#bd3039", dark: "#f87171" },
   FT: { light: "#e11d48", dark: "#fb7185" },
-  SI: { light: "#ec4899", dark: "#f472b6" },
-  FC: { light: "#d946ef", dark: "#e879f9" },
-  SL: { light: "#8b5cf6", dark: "#a78bfa" },
-  ST: { light: "#6366f1", dark: "#818cf8" },
-  CU: { light: "#3b82f6", dark: "#60a5fa" },
-  KC: { light: "#0ea5e9", dark: "#38bdf8" },
-  CH: { light: "#10b981", dark: "#34d399" },
-  FS: { light: "#14b8a6", dark: "#2dd4bf" },
-  SV: { light: "#06b6d4", dark: "#22d3ee" },
-  KN: { light: "#64748b", dark: "#94a3b8" },
-  EP: { light: "#78716c", dark: "#a8a29e" },
-  PO: { light: "#71717a", dark: "#a1a1aa" },
+  SI: { light: "#059669", dark: "#34d399" },
+  FC: { light: "#0d9488", dark: "#2dd4bf" },
+  SL: { light: "#2563eb", dark: "#60a5fa" },
+  ST: { light: "#0284c7", dark: "#38bdf8" },
+  CU: { light: "#0891b2", dark: "#22d3ee" },
+  KC: { light: "#4338ca", dark: "#818cf8" },
+  CH: { light: "#16a34a", dark: "#4ade80" },
+  FS: { light: "#0f766e", dark: "#5eead4" },
+  SV: { light: "#475569", dark: "#94a3b8" },
+  KN: { light: "#3f3f46", dark: "#a1a1aa" },
+  EP: { light: "#44403c", dark: "#a8a29e" },
+  PO: { light: "#525252", dark: "#a3a3a3" },
 };
 
 const DEFAULT_PITCH_COLOR = { light: "#475569", dark: "#94a3b8" };
 
 function colorFor(type: string): { light: string; dark: string } {
   return PITCH_COLORS[type] ?? DEFAULT_PITCH_COLOR;
+}
+
+function useIsDark(): boolean {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const update = () =>
+      setIsDark(document.documentElement.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+  return isDark;
 }
 
 function labelFor(type: string): string {
@@ -86,18 +94,10 @@ export function AnalyticsView({
   state: SeasonState;
   pitcher: PitcherStats | null;
 }) {
-  const [range, setRange] = useState<RangeKey>("last10");
-
-  const allAppearances: AppearanceVelo[] = useMemo(() => {
+  const appearances: AppearanceVelo[] = useMemo(() => {
     if (!pitcher) return [];
     return state.velocity[String(pitcher.pitcherId)] ?? [];
   }, [pitcher, state.velocity]);
-
-  const appearances: AppearanceVelo[] = useMemo(() => {
-    const take = RANGE_OPTIONS.find((r) => r.key === range)?.take ?? null;
-    if (take === null || allAppearances.length <= take) return allAppearances;
-    return allAppearances.slice(-take);
-  }, [allAppearances, range]);
 
   const career = useMemo(() => {
     if (appearances.length === 0) {
@@ -106,9 +106,7 @@ export function AnalyticsView({
         totalPitches: 0,
         appearances: 0,
         byType: [] as Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>,
-        fastballAvg: 0,
-        fastballMax: 0,
-        fastballCount: 0,
+        primaryFastball: null as null | { type: string; avg: number; max: number; count: number },
       };
     }
     let total = 0;
@@ -134,25 +132,20 @@ export function AnalyticsView({
       }))
       .sort((a, b) => b.count - a.count);
 
-    let fbCount = 0;
-    let fbSumVelo = 0;
-    let fbMax = 0;
-    for (const t of byType) {
-      if (!FASTBALL_CODES.has(t.type)) continue;
-      fbCount += t.count;
-      fbSumVelo += t.avgVelo * t.count;
-      if (t.maxVelo > fbMax) fbMax = t.maxVelo;
-    }
-    const fastballAvg = fbCount > 0 ? fbSumVelo / fbCount : 0;
+    // Primary fastball: prefer 4-Seam (FF), else most-thrown of FT/SI/FC
+    const ff = byType.find((t) => t.type === "FF");
+    const otherFb = byType.find((t) => FASTBALL_CODES.has(t.type) && t.type !== "FF");
+    const primary = ff ?? otherFb ?? null;
+    const primaryFastball = primary
+      ? { type: primary.type, avg: primary.avgVelo, max: primary.maxVelo, count: primary.count }
+      : null;
 
     return {
       maxVelo: max,
       totalPitches: total,
       appearances: appearances.length,
       byType,
-      fastballAvg,
-      fastballMax: fbMax,
-      fastballCount: fbCount,
+      primaryFastball,
     };
   }, [appearances]);
 
@@ -180,24 +173,26 @@ export function AnalyticsView({
               {pitcher.name}
             </h1>
             <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-              {allAppearances.length}{" "}
-              {allAppearances.length === 1 ? "outing" : "outings"} this season ·{" "}
-              showing {career.appearances}{" "}
-              {career.appearances === 1 ? "outing" : "outings"}
+              {appearances.length}{" "}
+              {appearances.length === 1 ? "outing" : "outings"} this season ·{" "}
+              {career.totalPitches} pitches tracked
             </p>
           </div>
-          <RangePills value={range} onChange={setRange} />
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <BigStat
-            label="Fastball avg"
+            label={
+              career.primaryFastball
+                ? `${labelFor(career.primaryFastball.type)} avg`
+                : "Fastball avg"
+            }
             value={
-              career.fastballCount > 0
-                ? career.fastballAvg.toFixed(1)
+              career.primaryFastball
+                ? career.primaryFastball.avg.toFixed(1)
                 : "—"
             }
-            suffix={career.fastballCount > 0 ? "mph" : ""}
+            suffix={career.primaryFastball ? "mph" : ""}
           />
           <BigStat
             label="Max velocity"
@@ -235,37 +230,6 @@ export function AnalyticsView({
         </div>
         <OutingsTable appearances={[...appearances].reverse()} />
       </section>
-    </div>
-  );
-}
-
-function RangePills({
-  value,
-  onChange,
-}: {
-  value: RangeKey;
-  onChange: (k: RangeKey) => void;
-}) {
-  return (
-    <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0.5">
-      {RANGE_OPTIONS.map((r) => {
-        const active = r.key === value;
-        return (
-          <button
-            key={r.key}
-            type="button"
-            onClick={() => onChange(r.key)}
-            aria-pressed={active}
-            className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
-              active
-                ? "bg-[var(--color-sox-red)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text)]"
-            }`}
-          >
-            {r.label}
-          </button>
-        );
-      })}
     </div>
   );
 }
@@ -419,6 +383,7 @@ function PitchTypePills({
   value: string | null;
   onChange: (t: string) => void;
 }) {
+  const isDark = useIsDark();
   return (
     <div className="flex flex-wrap gap-1.5">
       {types.map((t) => {
@@ -438,9 +403,7 @@ function PitchTypePills({
           >
             <span
               className="h-2 w-2 shrink-0 rounded-full"
-              style={{
-                background: `light-dark(${c.light}, ${c.dark})`,
-              }}
+              style={{ background: isDark ? c.dark : c.light }}
             />
             <span>{labelFor(t.type)}</span>
             <span className="text-[10px] tabular opacity-60">{t.count}</span>
@@ -476,6 +439,7 @@ function VelocityChart({
 }) {
   const [containerRef, w] = useChartWidth();
   const [hovered, setHovered] = useState<number | null>(null);
+  const isDark = useIsDark();
 
   const points = useMemo(() => {
     return appearances.map((a) => {
@@ -538,6 +502,7 @@ function VelocityChart({
   });
 
   const color = colorFor(pitchType);
+  const colorVal = isDark ? color.dark : color.light;
 
   const hoveredPoint = hovered !== null ? points[hovered] : null;
   const showTooltip = hoveredPoint && hoveredPoint.avg !== null;
@@ -558,11 +523,7 @@ function VelocityChart({
     <div className="relative px-4 pb-4 pt-3">
       <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
         <Legend swatch="#94a3b8" label="avg" line />
-        <Legend
-          swatch={`light-dark(${color.light}, ${color.dark})`}
-          label="max"
-          line
-        />
+        <Legend swatch={colorVal} label="max" line />
         <span className="ml-auto tabular">
           {minV.toFixed(0)}–{maxV.toFixed(0)} mph
         </span>
@@ -601,7 +562,7 @@ function VelocityChart({
             <path
               d={maxPath}
               fill="none"
-              stroke={`light-dark(${color.light}, ${color.dark})`}
+              stroke={colorVal}
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -623,7 +584,7 @@ function VelocityChart({
                     cx={x(i)}
                     cy={y(p.max!)}
                     r={hovered === i ? 5 : 3.5}
-                    fill={`light-dark(${color.light}, ${color.dark})`}
+                    fill={colorVal}
                   />
                   <circle
                     cx={x(i)}
@@ -676,7 +637,6 @@ function VelocityChart({
               fill="transparent"
               onMouseMove={onMove}
               onMouseLeave={() => setHovered(null)}
-              style={{ cursor: "crosshair" }}
             />
           </g>
         </svg>
@@ -696,9 +656,7 @@ function VelocityChart({
               <span className="text-[var(--text-muted)]">Max</span>
               <span
                 className="font-bold tabular"
-                style={{
-                  color: `light-dark(${color.light}, ${color.dark})`,
-                }}
+                style={{ color: colorVal }}
               >
                 {hoveredPoint!.max!.toFixed(1)} mph
               </span>
@@ -729,6 +687,7 @@ function UsageChart({
 }) {
   const [containerRef, w] = useChartWidth();
   const [hovered, setHovered] = useState<number | null>(null);
+  const isDark = useIsDark();
 
   const orderedTypes = byType.map((b) => b.type);
   const maxTotal = Math.max(...appearances.map((a) => a.pitchCount), 1);
@@ -773,7 +732,7 @@ function UsageChart({
           return (
             <Legend
               key={t}
-              swatch={`light-dark(${c.light}, ${c.dark})`}
+              swatch={isDark ? c.dark : c.light}
               label={labelFor(t)}
             />
           );
@@ -844,7 +803,7 @@ function UsageChart({
                         height={s.height}
                         rx={isTop ? 2 : 0}
                         ry={isTop ? 2 : 0}
-                        fill={`light-dark(${c.light}, ${c.dark})`}
+                        fill={isDark ? c.dark : c.light}
                       />
                     );
                   })}
@@ -882,7 +841,6 @@ function UsageChart({
               fill="transparent"
               onMouseMove={onMove}
               onMouseLeave={() => setHovered(null)}
-              style={{ cursor: "crosshair" }}
             />
           </g>
         </svg>
@@ -909,9 +867,7 @@ function UsageChart({
                     <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                       <span
                         className="inline-block h-2 w-2 rounded-full"
-                        style={{
-                          background: `light-dark(${c.light}, ${c.dark})`,
-                        }}
+                        style={{ background: isDark ? c.dark : c.light }}
                       />
                       {labelFor(t.type)}
                     </span>
@@ -938,6 +894,8 @@ function UsageChart({
 function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
   const [containerRef, w] = useChartWidth();
   const [hovered, setHovered] = useState<number | null>(null);
+  const isDark = useIsDark();
+  const barColor = isDark ? "#f87171" : "#bd3039";
 
   const counts = appearances.map((a) => a.pitchCount);
   const maxCount = Math.max(...counts, 1);
@@ -978,7 +936,7 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
   return (
     <div className="relative px-4 pb-4 pt-3">
       <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-        <Legend swatch="light-dark(#bd3039, #f87171)" label="pitches" />
+        <Legend swatch={barColor} label="pitches" />
         <span className="ml-auto tabular">
           avg {avg.toFixed(0)} · peak {maxCount}
         </span>
@@ -1028,7 +986,7 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
                   height={barH}
                   rx={3}
                   ry={3}
-                  fill="light-dark(#bd3039, #f87171)"
+                  fill={barColor}
                   opacity={isActive ? 0.9 : 0.4}
                 />
               );
@@ -1064,7 +1022,6 @@ function PitchCountChart({ appearances }: { appearances: AppearanceVelo[] }) {
               fill="transparent"
               onMouseMove={onMove}
               onMouseLeave={() => setHovered(null)}
-              style={{ cursor: "crosshair" }}
             />
           </g>
         </svg>
@@ -1151,6 +1108,7 @@ function PitchMixTable({
   byType: Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>;
   total: number;
 }) {
+  const isDark = useIsDark();
   if (byType.length === 0) {
     return (
       <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
@@ -1182,9 +1140,7 @@ function PitchMixTable({
                 <span className="inline-flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{
-                      background: `light-dark(${c.light}, ${c.dark})`,
-                    }}
+                    style={{ background: isDark ? c.dark : c.light }}
                   />
                   <span className="inline-block min-w-[36px] rounded-md bg-[var(--surface-hover)] px-2 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider">
                     {t.type}
@@ -1228,14 +1184,12 @@ function OutingsTable({ appearances }: { appearances: AppearanceVelo[] }) {
       </thead>
       <tbody>
         {appearances.map((a) => {
-          let fbCount = 0;
-          let fbSum = 0;
-          for (const t of a.byType) {
-            if (!FASTBALL_CODES.has(t.type)) continue;
-            fbCount += t.count;
-            fbSum += t.avgVelo * t.count;
-          }
-          const fbAvg = fbCount > 0 ? fbSum / fbCount : null;
+          const ff = a.byType.find((t) => t.type === "FF");
+          const otherFb = a.byType.find(
+            (t) => FASTBALL_CODES.has(t.type) && t.type !== "FF",
+          );
+          const primary = ff ?? otherFb;
+          const fbAvg = primary ? primary.avgVelo : null;
           return (
             <tr
               key={a.gamePk}
