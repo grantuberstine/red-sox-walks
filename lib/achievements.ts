@@ -14,19 +14,30 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "fifteen-walks", label: "Walk Factory", emoji: "🏭", description: "15 walks issued" },
   { id: "first-four-pitch", label: "Auto-Walk", emoji: "🚶", description: "First 4-pitch walk" },
   { id: "three-four-pitch", label: "Hat Trick", emoji: "🎩", description: "3 4-pitch walks" },
-  { id: "first-oh-two", label: "Choke Up", emoji: "😬", description: "Walked a batter after going up 0-2" },
+  { id: "first-oh-two", label: "Choke Up", emoji: "😬", description: "Walked a batter after going 0-2" },
   { id: "three-oh-two", label: "0-2 Specialist", emoji: "🎯", description: "3 walks after going 0-2" },
   { id: "first-leadoff", label: "Setting the Table", emoji: "🍽️", description: "First leadoff walk" },
   { id: "five-leadoff", label: "Welcome Wagon", emoji: "🛻", description: "5 leadoff walks" },
   { id: "first-two-out", label: "Extender", emoji: "🪢", description: "First 2-out walk" },
   { id: "five-two-out", label: "Inning Stretcher", emoji: "🤸", description: "5 two-out walks" },
-  { id: "all-four", label: "Bingo", emoji: "🎰", description: "Hit every walk category at least once" },
+  { id: "all-four-walks", label: "Walk Bingo", emoji: "🎰", description: "Hit every walk category at least once" },
+
+  { id: "first-k", label: "Punchout", emoji: "👊", description: "First strikeout of the season" },
+  { id: "ten-k", label: "Strike Zone", emoji: "🎯", description: "10 strikeouts" },
+  { id: "twenty-five-k", label: "K Machine", emoji: "🤖", description: "25 strikeouts" },
+  { id: "fifty-k", label: "Mr. K", emoji: "🅺", description: "50 strikeouts" },
+  { id: "first-three-pitch-k", label: "Quick Work", emoji: "⚡", description: "First 3-pitch strikeout" },
+  { id: "five-three-pitch-k", label: "Efficiency", emoji: "💨", description: "5 3-pitch strikeouts" },
+  { id: "first-side", label: "Sit Down", emoji: "🪑", description: "Struck out the side for the first time" },
+  { id: "two-sides", label: "Untouchable", emoji: "🔥", description: "Struck out the side twice" },
+  { id: "dominant", label: "Dominant", emoji: "👑", description: "K:BB ratio of 3.0 or better with 15+ K's" },
 ];
 
 const BY_ID = new Map(ACHIEVEMENTS.map((a) => [a.id, a]));
 
 export function computeAchievements(p: PitcherStats): string[] {
   const earned: string[] = [];
+
   if (p.totalWalks >= 1) earned.push("first-walk");
   if (p.totalWalks >= 5) earned.push("five-walks");
   if (p.totalWalks >= 10) earned.push("ten-walks");
@@ -45,8 +56,22 @@ export function computeAchievements(p: PitcherStats): string[] {
     p.leadoffWalks > 0 &&
     p.twoOutWalks > 0
   ) {
-    earned.push("all-four");
+    earned.push("all-four-walks");
   }
+
+  if (p.totalStrikeouts >= 1) earned.push("first-k");
+  if (p.totalStrikeouts >= 10) earned.push("ten-k");
+  if (p.totalStrikeouts >= 25) earned.push("twenty-five-k");
+  if (p.totalStrikeouts >= 50) earned.push("fifty-k");
+  if (p.threePitchStrikeouts >= 1) earned.push("first-three-pitch-k");
+  if (p.threePitchStrikeouts >= 5) earned.push("five-three-pitch-k");
+  if (p.sideStrikeouts >= 1) earned.push("first-side");
+  if (p.sideStrikeouts >= 2) earned.push("two-sides");
+
+  if (p.totalStrikeouts >= 15 && p.totalWalks > 0) {
+    if (p.totalStrikeouts / p.totalWalks >= 3) earned.push("dominant");
+  }
+
   return earned;
 }
 

@@ -16,7 +16,26 @@ function formatDate(iso: string): string {
   });
 }
 
-export function TrendChart({ data }: { data: Point[] }) {
+const ACCENT_CLASSES = {
+  red: {
+    high: "bg-[var(--color-sox-red)]",
+    mid: "bg-[var(--color-sox-red)]/70",
+    low: "bg-[var(--color-sox-navy)]/40",
+  },
+  emerald: {
+    high: "bg-emerald-600",
+    mid: "bg-emerald-500/70",
+    low: "bg-emerald-700/40",
+  },
+} as const;
+
+export function TrendChart({
+  data,
+  accent = "red",
+}: {
+  data: Point[];
+  accent?: keyof typeof ACCENT_CLASSES;
+}) {
   if (data.length === 0) {
     return (
       <div className="px-5 py-8 text-center text-sm text-slate-500">
@@ -37,13 +56,14 @@ export function TrendChart({ data }: { data: Point[] }) {
       <div className="flex items-end gap-0.5 overflow-x-auto" style={{ minHeight: 96 }}>
         {data.map((d) => {
           const h = Math.max(4, Math.round((d.count / max) * 84));
+          const colors = ACCENT_CLASSES[accent];
           const intensity =
             d.count >= avg * 1.5
-              ? "bg-[var(--color-sox-red)]"
+              ? colors.high
               : d.count >= avg
-                ? "bg-[var(--color-sox-red)]/70"
+                ? colors.mid
                 : d.count > 0
-                  ? "bg-[var(--color-sox-navy)]/40"
+                  ? colors.low
                   : "bg-slate-200";
           return (
             <div

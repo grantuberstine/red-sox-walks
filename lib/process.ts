@@ -1,10 +1,14 @@
 import { WOOSOX_TEAM_ID } from "./constants";
 import { fetchGameFeed, fetchWooSoxSchedule } from "./mlb-api";
-import { classifyWooSoxWalks } from "./walk-classifier";
-import { applyWalksToState, loadState, saveState } from "./storage";
+import { classifyWooSoxEvents } from "./walk-classifier";
+import { applyEventsToState, loadState, saveState } from "./storage";
 import type { GameSummary, ScheduleGame, SeasonState } from "./types";
 
-function toGameSummary(g: ScheduleGame, walksProcessed: number): GameSummary {
+function toGameSummary(
+  g: ScheduleGame,
+  walksProcessed: number,
+  strikeoutsProcessed: number,
+): GameSummary {
   const isHome = g.homeTeamId === WOOSOX_TEAM_ID;
   return {
     gamePk: g.gamePk,
@@ -12,6 +16,7 @@ function toGameSummary(g: ScheduleGame, walksProcessed: number): GameSummary {
     opponent: isHome ? g.awayTeamName : g.homeTeamName,
     homeAway: isHome ? "home" : "away",
     walksProcessed,
+    strikeoutsProcessed,
   };
 }
 
@@ -20,6 +25,7 @@ export type ProcessReport = {
   processedNew: number;
   skippedAlreadyProcessed: number;
   totalWalksAdded: number;
+  totalStrikeoutsAdded: number;
   newGames: GameSummary[];
   errors: Array<{ gamePk: number; message: string }>;
 };
@@ -40,6 +46,7 @@ export async function processGames(options?: {
     processedNew: 0,
     skippedAlreadyProcessed: 0,
     totalWalksAdded: 0,
+    totalStrikeoutsAdded: 0,
     newGames: [],
     errors: [],
   };
@@ -51,11 +58,12 @@ export async function processGames(options?: {
     }
     try {
       const feed = await fetchGameFeed(g.gamePk);
-      const walks = classifyWooSoxWalks(feed, g.date);
-      const summary = toGameSummary(g, walks.length);
-      state = applyWalksToState(state, walks, summary);
+      const { walks, strikeouts } = classifyWooSoxEvents(feed, g.date);
+      const summary = toGameSummary(g, walks.length, strikeouts.length);
+      state = applyEventsToState(state, walks, strikeouts, summary);
       report.processedNew += 1;
       report.totalWalksAdded += walks.length;
+      report.totalStrikeoutsAdded += strikeouts.length;
       report.newGames.push(summary);
     } catch (e) {
       report.errors.push({

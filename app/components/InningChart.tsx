@@ -2,7 +2,18 @@
 
 type Bin = { inning: number; count: number };
 
-export function InningChart({ data }: { data: Bin[] }) {
+const BAR_COLOR = {
+  red: "bg-[var(--color-sox-red)]/70 hover:bg-[var(--color-sox-red)]",
+  emerald: "bg-emerald-500/70 hover:bg-emerald-600",
+} as const;
+
+export function InningChart({
+  data,
+  accent = "red",
+}: {
+  data: Bin[];
+  accent?: keyof typeof BAR_COLOR;
+}) {
   const max = Math.max(1, ...data.map((d) => d.count));
   const total = data.reduce((s, d) => s + d.count, 0);
   if (total === 0) {
@@ -27,9 +38,9 @@ export function InningChart({ data }: { data: Bin[] }) {
             <div key={d.inning} className="flex flex-col items-center gap-1">
               <div className="flex h-24 w-full items-end">
                 <div
-                  className="w-full rounded-t bg-[var(--color-sox-red)]/70 transition-all hover:bg-[var(--color-sox-red)]"
+                  className={`w-full rounded-t transition-all ${BAR_COLOR[accent]}`}
                   style={{ height: `${h}px` }}
-                  title={`Inning ${d.inning}: ${d.count} walks`}
+                  title={`Inning ${d.inning}: ${d.count}`}
                 />
               </div>
               <div className="flex flex-col items-center">

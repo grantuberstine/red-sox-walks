@@ -5,6 +5,9 @@ import type {
   GameSummary,
   PitcherStats,
   SeasonState,
+  StrikeoutClassification,
+  StrikeoutRecord,
+  StrikeoutType,
   WalkClassification,
   WalkRecord,
   WalkType,
@@ -17,11 +20,13 @@ const emptyState = (): SeasonState => ({
   pitchers: {},
   games: [],
   walks: [],
+  strikeouts: [],
   meta: {
     lastRefreshAt: null,
     lastGameDate: null,
     totalGames: 0,
     totalWalks: 0,
+    totalStrikeouts: 0,
   },
 });
 
@@ -43,7 +48,7 @@ export async function loadState(): Promise<SeasonState> {
       const localPath = path.resolve(process.cwd(), "tmp", "season-state.json");
       const raw = await fs.readFile(localPath, "utf-8");
       const parsed = JSON.parse(raw) as SeasonState;
-      return { ...emptyState(), ...parsed };
+      return mergeWithDefaults(parsed);
     } catch {
       return emptyState();
     }
@@ -56,10 +61,24 @@ export async function loadState(): Promise<SeasonState> {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return emptyState();
     const parsed = (await res.json()) as SeasonState;
-    return { ...emptyState(), ...parsed };
+    return mergeWithDefaults(parsed);
   } catch {
     return emptyState();
   }
+}
+
+function mergeWithDefaults(parsed: SeasonState): SeasonState {
+  const empty = emptyState();
+  return {
+    ...empty,
+    ...parsed,
+    walks: parsed.walks ?? [],
+    strikeouts: parsed.strikeouts ?? [],
+    games: parsed.games ?? [],
+    processedGamePks: parsed.processedGamePks ?? [],
+    pitchers: parsed.pitchers ?? {},
+    meta: { ...empty.meta, ...(parsed.meta ?? {}) },
+  };
 }
 
 export async function saveState(state: SeasonState): Promise<void> {
@@ -78,7 +97,7 @@ export async function saveState(state: SeasonState): Promise<void> {
   });
 }
 
-function tagsFor(w: WalkClassification): WalkType[] {
+function walkTags(w: WalkClassification): WalkType[] {
   const t: WalkType[] = [];
   if (w.isFourPitch) t.push("fourPitch");
   if (w.isOhTwo) t.push("ohTwo");
@@ -87,9 +106,45 @@ function tagsFor(w: WalkClassification): WalkType[] {
   return t;
 }
 
-export function applyWalksToState(
+function strikeoutTags(s: StrikeoutClassification): StrikeoutType[] {
+  const t: StrikeoutType[] = [];
+  if (s.isThreePitch) t.push("threePitch");
+  if (s.isSide) t.push("side");
+  return t;
+}
+
+function ensurePitcher(
+  pitchers: Record<string, PitcherStats>,
+  id: number,
+  name: string,
+): PitcherStats {
+  const key = String(id);
+  if (!pitchers[key]) {
+    pitchers[key] = {
+      pitcherId: id,
+      name,
+      headshotUrl: headshotUrl(id),
+      appearances: 0,
+      totalWalks: 0,
+      fourPitchWalks: 0,
+      ohTwoWalks: 0,
+      leadoffWalks: 0,
+      twoOutWalks: 0,
+      totalStrikeouts: 0,
+      threePitchStrikeouts: 0,
+      sideStrikeouts: 0,
+      lastWalkDate: null,
+      lastStrikeoutDate: null,
+      achievements: [],
+    };
+  }
+  return pitchers[key];
+}
+
+export function applyEventsToState(
   state: SeasonState,
   walks: WalkClassification[],
+  strikeouts: StrikeoutClassification[],
   game: GameSummary,
 ): SeasonState {
   const next: SeasonState = {
@@ -98,6 +153,7 @@ export function applyWalksToState(
     games: [...state.games],
     processedGamePks: [...state.processedGamePks],
     walks: [...state.walks],
+    strikeouts: [...state.strikeouts],
   };
 
   if (next.processedGamePks.includes(game.gamePk)) return next;
@@ -106,33 +162,17 @@ export function applyWalksToState(
 
   for (const w of walks) {
     pitcherIdsThisGame.add(w.pitcherId);
-    const key = String(w.pitcherId);
-    const prev: PitcherStats = next.pitchers[key] ?? {
-      pitcherId: w.pitcherId,
-      name: w.pitcherName,
-      headshotUrl: headshotUrl(w.pitcherId),
-      appearances: 0,
-      totalWalks: 0,
-      fourPitchWalks: 0,
-      ohTwoWalks: 0,
-      leadoffWalks: 0,
-      twoOutWalks: 0,
-      lastWalkDate: null,
-      achievements: [],
-    };
-    next.pitchers[key] = {
-      ...prev,
-      name: w.pitcherName,
-      headshotUrl: headshotUrl(w.pitcherId),
-      totalWalks: prev.totalWalks + 1,
-      fourPitchWalks: prev.fourPitchWalks + (w.isFourPitch ? 1 : 0),
-      ohTwoWalks: prev.ohTwoWalks + (w.isOhTwo ? 1 : 0),
-      leadoffWalks: prev.leadoffWalks + (w.isLeadoff ? 1 : 0),
-      twoOutWalks: prev.twoOutWalks + (w.isTwoOut ? 1 : 0),
-      lastWalkDate: w.date,
-    };
+    const p = ensurePitcher(next.pitchers, w.pitcherId, w.pitcherName);
+    p.name = w.pitcherName;
+    p.headshotUrl = headshotUrl(w.pitcherId);
+    p.totalWalks += 1;
+    if (w.isFourPitch) p.fourPitchWalks += 1;
+    if (w.isOhTwo) p.ohTwoWalks += 1;
+    if (w.isLeadoff) p.leadoffWalks += 1;
+    if (w.isTwoOut) p.twoOutWalks += 1;
+    p.lastWalkDate = w.date;
 
-    const record: WalkRecord = {
+    next.walks.push({
       gamePk: game.gamePk,
       pitcherId: w.pitcherId,
       pitcherName: w.pitcherName,
@@ -143,19 +183,52 @@ export function applyWalksToState(
       batterName: w.batterName,
       finalCount: w.finalCount,
       pitchesInPA: w.pitchesInPA,
-      tags: tagsFor(w),
-    };
-    next.walks.push(record);
+      tags: walkTags(w),
+    } satisfies WalkRecord);
+  }
+
+  const sideInningsThisGame = new Map<number, Set<string>>();
+  for (const s of strikeouts) {
+    pitcherIdsThisGame.add(s.pitcherId);
+    const p = ensurePitcher(next.pitchers, s.pitcherId, s.pitcherName);
+    p.name = s.pitcherName;
+    p.headshotUrl = headshotUrl(s.pitcherId);
+    p.totalStrikeouts += 1;
+    if (s.isThreePitch) p.threePitchStrikeouts += 1;
+    p.lastStrikeoutDate = s.date;
+
+    if (s.isSide) {
+      const key = `${s.inning}-${s.halfInning}`;
+      if (!sideInningsThisGame.has(s.pitcherId)) {
+        sideInningsThisGame.set(s.pitcherId, new Set());
+      }
+      sideInningsThisGame.get(s.pitcherId)!.add(key);
+    }
+
+    next.strikeouts.push({
+      gamePk: game.gamePk,
+      pitcherId: s.pitcherId,
+      pitcherName: s.pitcherName,
+      date: s.date,
+      opponent: game.opponent,
+      inning: s.inning,
+      halfInning: s.halfInning,
+      batterName: s.batterName,
+      pitchesInPA: s.pitchesInPA,
+      tags: strikeoutTags(s),
+    } satisfies StrikeoutRecord);
+  }
+  for (const [pid, innings] of sideInningsThisGame) {
+    const key = String(pid);
+    next.pitchers[key].sideStrikeouts += innings.size;
   }
 
   for (const pid of pitcherIdsThisGame) {
     const key = String(pid);
-    if (next.pitchers[key]) {
-      next.pitchers[key] = {
-        ...next.pitchers[key],
-        appearances: next.pitchers[key].appearances + 1,
-      };
-    }
+    next.pitchers[key] = {
+      ...next.pitchers[key],
+      appearances: next.pitchers[key].appearances + 1,
+    };
   }
 
   for (const key of Object.keys(next.pitchers)) {
@@ -166,6 +239,9 @@ export function applyWalksToState(
   }
 
   next.walks.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  next.strikeouts.sort((a, b) =>
+    a.date < b.date ? 1 : a.date > b.date ? -1 : 0,
+  );
   next.games.push(game);
   next.processedGamePks.push(game.gamePk);
   next.meta = {
@@ -174,6 +250,7 @@ export function applyWalksToState(
     lastGameDate: game.date,
     totalGames: next.processedGamePks.length,
     totalWalks: next.meta.totalWalks + walks.length,
+    totalStrikeouts: next.meta.totalStrikeouts + strikeouts.length,
   };
 
   return next;

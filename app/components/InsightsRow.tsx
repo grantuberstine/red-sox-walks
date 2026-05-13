@@ -11,34 +11,39 @@ function formatDate(iso: string): string {
   });
 }
 
-export function InsightsRow({ insights }: { insights: Insights }) {
+export function InsightsRow({
+  insights,
+  mode,
+  worstLabel,
+}: {
+  insights: Insights;
+  mode: "walks" | "strikeouts";
+  worstLabel: string;
+}) {
+  const isWalks = mode === "walks";
   const cards = [
     {
-      label: "Worst game",
-      icon: "💀",
-      primary: insights.worstGame
-        ? `${insights.worstGame.walks} walks`
-        : "—",
-      secondary: insights.worstGame
-        ? `${formatDate(insights.worstGame.date)} vs ${insights.worstGame.opponent}`
+      label: worstLabel,
+      icon: isWalks ? "💀" : "🔥",
+      primary: insights.bestGame ? `${insights.bestGame.count} ${isWalks ? "walks" : "K's"}` : "—",
+      secondary: insights.bestGame
+        ? `${formatDate(insights.bestGame.date)} vs ${insights.bestGame.opponent}`
         : "No games yet",
     },
     {
-      label: "Most-walked batter",
+      label: isWalks ? "Most-walked batter" : "Most K'd batter",
       icon: "🎯",
-      primary: insights.mostWalkedBatter
-        ? insights.mostWalkedBatter.name
-        : "—",
-      secondary: insights.mostWalkedBatter
-        ? `${insights.mostWalkedBatter.walks} walks issued`
+      primary: insights.topVictim ? insights.topVictim.name : "—",
+      secondary: insights.topVictim
+        ? `${insights.topVictim.count} ${isWalks ? "walks issued" : "K's"}`
         : "No data",
     },
     {
-      label: "Best opponent",
-      icon: "🤝",
+      label: isWalks ? "Most generous opponent" : "Top victim opponent",
+      icon: isWalks ? "🤝" : "🥊",
       primary: insights.topOpponent ? insights.topOpponent.name : "—",
       secondary: insights.topOpponent
-        ? `${insights.topOpponent.walks} walks given up`
+        ? `${insights.topOpponent.count} ${isWalks ? "walks given up" : "K's recorded"}`
         : "No data",
     },
   ];
@@ -50,14 +55,14 @@ export function InsightsRow({ insights }: { insights: Insights }) {
           className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
         >
           <div className="flex items-start justify-between">
-            <div>
+            <div className="min-w-0">
               <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                 {c.label}
               </div>
               <div className="mt-1 truncate text-lg font-bold text-[var(--color-sox-navy)]">
                 {c.primary}
               </div>
-              <div className="text-[11px] text-slate-500">{c.secondary}</div>
+              <div className="truncate text-[11px] text-slate-500">{c.secondary}</div>
             </div>
             <span className="text-2xl leading-none">{c.icon}</span>
           </div>

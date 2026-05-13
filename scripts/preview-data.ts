@@ -1,8 +1,8 @@
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
 import { fetchGameFeed, fetchWooSoxSchedule } from "../lib/mlb-api";
-import { classifyWooSoxWalks } from "../lib/walk-classifier";
-import { applyWalksToState, emptyState } from "../lib/storage";
+import { classifyWooSoxEvents } from "../lib/walk-classifier";
+import { applyEventsToState, emptyState } from "../lib/storage";
 import { WOOSOX_TEAM_ID } from "../lib/constants";
 import type { GameSummary } from "../lib/types";
 
@@ -16,7 +16,7 @@ async function main() {
     i += 1;
     process.stdout.write(`\r[${i}/${games.length}] gamePk ${g.gamePk}    `);
     const feed = await fetchGameFeed(g.gamePk);
-    const walks = classifyWooSoxWalks(feed, g.date);
+    const { walks, strikeouts } = classifyWooSoxEvents(feed, g.date);
     const isHome = g.homeTeamId === WOOSOX_TEAM_ID;
     const summary: GameSummary = {
       gamePk: g.gamePk,
@@ -24,8 +24,9 @@ async function main() {
       opponent: isHome ? g.awayTeamName : g.homeTeamName,
       homeAway: isHome ? "home" : "away",
       walksProcessed: walks.length,
+      strikeoutsProcessed: strikeouts.length,
     };
-    state = applyWalksToState(state, walks, summary);
+    state = applyEventsToState(state, walks, strikeouts, summary);
   }
   process.stdout.write("\n");
 
@@ -40,6 +41,7 @@ async function main() {
   console.log(`Pitchers: ${Object.keys(state.pitchers).length}`);
   console.log(`Games: ${state.meta.totalGames}`);
   console.log(`Total walks: ${state.meta.totalWalks}`);
+  console.log(`Total strikeouts: ${state.meta.totalStrikeouts}`);
 }
 
 main().catch((e) => {

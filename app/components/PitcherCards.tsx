@@ -1,11 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { PitcherStats, WalkRecord, WalkType } from "@/lib/types";
+import type {
+  PitcherStats,
+  StrikeoutRecord,
+  StrikeoutType,
+  WalkRecord,
+  WalkType,
+} from "@/lib/types";
 import { achievementById } from "@/lib/achievements";
 import { PitcherAvatar } from "./PitcherAvatar";
 
-type SortKey =
+type Mode = "walks" | "strikeouts";
+
+type WalkSortKey =
   | "totalWalks"
   | "fourPitchWalks"
   | "ohTwoWalks"
@@ -14,7 +22,14 @@ type SortKey =
   | "walksPerApp"
   | "name";
 
-const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
+type KSortKey =
+  | "totalStrikeouts"
+  | "threePitchStrikeouts"
+  | "sideStrikeouts"
+  | "ksPerApp"
+  | "name";
+
+const WALK_SORTS: Array<{ key: WalkSortKey; label: string }> = [
   { key: "totalWalks", label: "Total walks" },
   { key: "walksPerApp", label: "Walks per app" },
   { key: "fourPitchWalks", label: "4-Pitch" },
@@ -24,27 +39,45 @@ const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: "name", label: "Name (A–Z)" },
 ];
 
-const TAG_COLORS: Record<WalkType, string> = {
+const K_SORTS: Array<{ key: KSortKey; label: string }> = [
+  { key: "totalStrikeouts", label: "Total K's" },
+  { key: "ksPerApp", label: "K's per app" },
+  { key: "threePitchStrikeouts", label: "3-Pitch" },
+  { key: "sideStrikeouts", label: "Sat-Side" },
+  { key: "name", label: "Name (A–Z)" },
+];
+
+const WALK_TAG_COLORS: Record<WalkType, string> = {
   fourPitch: "bg-amber-100 text-amber-800",
   ohTwo: "bg-rose-100 text-rose-800",
   leadoff: "bg-sky-100 text-sky-800",
   twoOut: "bg-violet-100 text-violet-800",
 };
-
-const TAG_LABELS: Record<WalkType, string> = {
+const WALK_TAG_LABELS: Record<WalkType, string> = {
   fourPitch: "4P",
   ohTwo: "0-2",
   leadoff: "LO",
   twoOut: "2O",
 };
+const K_TAG_COLORS: Record<StrikeoutType, string> = {
+  threePitch: "bg-emerald-100 text-emerald-800",
+  side: "bg-indigo-100 text-indigo-800",
+};
+const K_TAG_LABELS: Record<StrikeoutType, string> = {
+  threePitch: "3P",
+  side: "side",
+};
 
-function rate(p: PitcherStats): number {
+function walkRate(p: PitcherStats) {
   return p.appearances === 0 ? 0 : p.totalWalks / p.appearances;
 }
-function fmtRate(n: number): string {
+function kRate(p: PitcherStats) {
+  return p.appearances === 0 ? 0 : p.totalStrikeouts / p.appearances;
+}
+function fmtRate(n: number) {
   return n === 0 ? "—" : n.toFixed(2);
 }
-function formatDate(iso: string): string {
+function formatDate(iso: string) {
   const d = new Date(iso + "T12:00:00Z");
   return d.toLocaleDateString("en-US", {
     month: "short",
@@ -55,14 +88,21 @@ function formatDate(iso: string): string {
 
 export function PitcherCards({
   pitchers,
-  allWalks,
+  allWalks = [],
+  allStrikeouts = [],
   query = "",
+  mode = "walks",
 }: {
   pitchers: PitcherStats[];
-  allWalks: WalkRecord[];
+  allWalks?: WalkRecord[];
+  allStrikeouts?: StrikeoutRecord[];
   query?: string;
+  mode?: Mode;
 }) {
-  const [sortKey, setSortKey] = useState<SortKey>("totalWalks");
+  const sortOptions = mode === "walks" ? WALK_SORTS : K_SORTS;
+  const defaultSort: WalkSortKey | KSortKey =
+    mode === "walks" ? "totalWalks" : "totalStrikeouts";
+  const [sortKey, setSortKey] = useState<WalkSortKey | KSortKey>(defaultSort);
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const walksByPitcher = useMemo(() => {
@@ -74,12 +114,31 @@ export function PitcherCards({
     return m;
   }, [allWalks]);
 
+  const ksByPitcher = useMemo(() => {
+    const m = new Map<number, StrikeoutRecord[]>();
+    for (const s of allStrikeouts) {
+      if (!m.has(s.pitcherId)) m.set(s.pitcherId, []);
+      m.get(s.pitcherId)!.push(s);
+    }
+    return m;
+  }, [allStrikeouts]);
+
   const sorted = useMemo(() => {
     const rows = [...pitchers];
     rows.sort((a, b) => {
       if (sortKey === "name") return a.name.localeCompare(b.name);
-      const av = sortKey === "walksPerApp" ? rate(a) : a[sortKey];
-      const bv = sortKey === "walksPerApp" ? rate(b) : b[sortKey];
+      const av =
+        sortKey === "walksPerApp"
+          ? walkRate(a)
+          : sortKey === "ksPerApp"
+            ? kRate(a)
+            : (a[sortKey as keyof PitcherStats] as number);
+      const bv =
+        sortKey === "walksPerApp"
+          ? walkRate(b)
+          : sortKey === "ksPerApp"
+            ? kRate(b)
+            : (b[sortKey as keyof PitcherStats] as number);
       return Number(bv) - Number(av);
     });
     return rows;
@@ -88,15 +147,13 @@ export function PitcherCards({
   return (
     <div>
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50/60 px-4 py-2 text-xs">
-        <span className="font-semibold uppercase tracking-wider text-slate-600">
-          Sort
-        </span>
+        <span className="font-semibold uppercase tracking-wider text-slate-600">Sort</span>
         <select
           value={sortKey}
-          onChange={(e) => setSortKey(e.target.value as SortKey)}
+          onChange={(e) => setSortKey(e.target.value as WalkSortKey | KSortKey)}
           className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700"
         >
-          {SORT_OPTIONS.map((o) => (
+          {sortOptions.map((o) => (
             <option key={o.key} value={o.key}>
               {o.label}
             </option>
@@ -107,16 +164,19 @@ export function PitcherCards({
         {sorted.map((p) => {
           const open = expanded === p.pitcherId;
           const walks = walksByPitcher.get(p.pitcherId) ?? [];
+          const ks = ksByPitcher.get(p.pitcherId) ?? [];
+          const primaryNum = mode === "walks" ? p.totalWalks : p.totalStrikeouts;
+          const rate = mode === "walks" ? walkRate(p) : kRate(p);
           return (
             <div
               key={p.pitcherId}
-              className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md ${open ? "ring-2 ring-[var(--color-sox-red)]/30" : ""}`}
+              className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md ${
+                open ? "ring-2 ring-[var(--color-sox-red)]/30" : ""
+              }`}
             >
               <button
                 type="button"
-                onClick={() =>
-                  setExpanded(open ? null : p.pitcherId)
-                }
+                onClick={() => setExpanded(open ? null : p.pitcherId)}
                 className="w-full text-left"
               >
                 <div className="flex items-center gap-3">
@@ -131,25 +191,34 @@ export function PitcherCards({
                         <Highlight text={p.name} query={query} />
                       </span>
                       <span className="text-2xl font-bold tabular leading-none text-[var(--color-sox-navy)]">
-                        {p.totalWalks}
+                        {primaryNum}
                       </span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
                       <span className="tabular">{p.appearances} apps</span>
                       <span>·</span>
-                      <span className="tabular">{fmtRate(rate(p))} BB/app</span>
+                      <span className="tabular">
+                        {fmtRate(rate)} {mode === "walks" ? "BB" : "K"}/app
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-4 gap-1 text-center">
-                  <Cell label="4P" value={p.fourPitchWalks} color="amber" />
-                  <Cell label="0-2" value={p.ohTwoWalks} color="rose" />
-                  <Cell label="LO" value={p.leadoffWalks} color="sky" />
-                  <Cell label="2O" value={p.twoOutWalks} color="violet" />
-                </div>
+                {mode === "walks" ? (
+                  <div className="mt-3 grid grid-cols-4 gap-1 text-center">
+                    <Cell label="4P" value={p.fourPitchWalks} color="amber" />
+                    <Cell label="0-2" value={p.ohTwoWalks} color="rose" />
+                    <Cell label="LO" value={p.leadoffWalks} color="sky" />
+                    <Cell label="2O" value={p.twoOutWalks} color="violet" />
+                  </div>
+                ) : (
+                  <div className="mt-3 grid grid-cols-2 gap-1 text-center">
+                    <Cell label="3-Pitch" value={p.threePitchStrikeouts} color="emerald" />
+                    <Cell label="Sat-Side" value={p.sideStrikeouts} color="indigo" />
+                  </div>
+                )}
                 {p.achievements.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-0.5">
-                    {p.achievements.slice(0, 8).map((id) => {
+                    {p.achievements.slice(0, 10).map((id) => {
                       const a = achievementById(id);
                       if (!a) return null;
                       return (
@@ -167,38 +236,71 @@ export function PitcherCards({
               </button>
               {open && (
                 <div className="mt-3 border-t border-slate-100 pt-3">
-                  {walks.length === 0 ? (
-                    <div className="text-center text-xs text-slate-500">
-                      No walks in current filter.
-                    </div>
+                  {mode === "walks" ? (
+                    walks.length === 0 ? (
+                      <EmptyDetail mode={mode} />
+                    ) : (
+                      <ul className="space-y-1">
+                        {walks.slice(0, 10).map((w, i) => (
+                          <li
+                            key={i}
+                            className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1 text-[11px]"
+                          >
+                            <span className="font-medium tabular text-slate-600">
+                              {formatDate(w.date)}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-slate-700">
+                              <Highlight text={w.batterName} query={query} />
+                            </span>
+                            <span className="flex gap-0.5">
+                              {w.tags.map((t) => (
+                                <span
+                                  key={t}
+                                  className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${WALK_TAG_COLORS[t]}`}
+                                >
+                                  {WALK_TAG_LABELS[t]}
+                                </span>
+                              ))}
+                            </span>
+                          </li>
+                        ))}
+                        {walks.length > 10 && (
+                          <li className="text-center text-[10px] text-slate-400">
+                            + {walks.length - 10} more
+                          </li>
+                        )}
+                      </ul>
+                    )
+                  ) : ks.length === 0 ? (
+                    <EmptyDetail mode={mode} />
                   ) : (
                     <ul className="space-y-1">
-                      {walks.slice(0, 10).map((w, i) => (
+                      {ks.slice(0, 10).map((s, i) => (
                         <li
                           key={i}
                           className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1 text-[11px]"
                         >
                           <span className="font-medium tabular text-slate-600">
-                            {formatDate(w.date)}
+                            {formatDate(s.date)}
                           </span>
                           <span className="min-w-0 flex-1 truncate text-slate-700">
-                            <Highlight text={w.batterName} query={query} />
+                            <Highlight text={s.batterName} query={query} />
                           </span>
                           <span className="flex gap-0.5">
-                            {w.tags.map((t) => (
+                            {s.tags.map((t) => (
                               <span
                                 key={t}
-                                className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${TAG_COLORS[t]}`}
+                                className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${K_TAG_COLORS[t]}`}
                               >
-                                {TAG_LABELS[t]}
+                                {K_TAG_LABELS[t]}
                               </span>
                             ))}
                           </span>
                         </li>
                       ))}
-                      {walks.length > 10 && (
+                      {ks.length > 10 && (
                         <li className="text-center text-[10px] text-slate-400">
-                          + {walks.length - 10} more
+                          + {ks.length - 10} more
                         </li>
                       )}
                     </ul>
@@ -218,6 +320,8 @@ const CELL_TONES = {
   rose: { on: "bg-rose-50 text-rose-800", off: "bg-slate-50 text-slate-300" },
   sky: { on: "bg-sky-50 text-sky-800", off: "bg-slate-50 text-slate-300" },
   violet: { on: "bg-violet-50 text-violet-800", off: "bg-slate-50 text-slate-300" },
+  emerald: { on: "bg-emerald-50 text-emerald-800", off: "bg-slate-50 text-slate-300" },
+  indigo: { on: "bg-indigo-50 text-indigo-800", off: "bg-slate-50 text-slate-300" },
 } as const;
 
 function Cell({
@@ -232,9 +336,7 @@ function Cell({
   const tone = CELL_TONES[color];
   return (
     <div className={`rounded-md py-1 ${value > 0 ? tone.on : tone.off}`}>
-      <div className="text-[9px] font-medium uppercase tracking-wider opacity-80">
-        {label}
-      </div>
+      <div className="text-[9px] font-medium uppercase tracking-wider opacity-80">{label}</div>
       <div className="text-base font-bold tabular leading-none">{value}</div>
     </div>
   );
@@ -254,5 +356,13 @@ function Highlight({ text, query }: { text: string; query: string }) {
       </mark>
       {text.slice(idx + q.length)}
     </>
+  );
+}
+
+function EmptyDetail({ mode }: { mode: Mode }) {
+  return (
+    <div className="text-center text-xs text-slate-500">
+      No {mode === "walks" ? "walks" : "strikeouts"} in current filter.
+    </div>
   );
 }

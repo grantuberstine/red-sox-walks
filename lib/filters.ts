@@ -1,22 +1,22 @@
-import type { PitcherStats, SeasonState, WalkRecord, WalkType } from "./types";
+import type {
+  PitcherStats,
+  SeasonState,
+  StrikeoutRecord,
+  StrikeoutType,
+  WalkRecord,
+  WalkType,
+} from "./types";
 import { headshotUrl } from "./achievements";
 
 export type RangeKey = "today" | "week" | "month" | "season";
-export type CategoryFilter = "all" | WalkType;
+export type WalkCategoryFilter = "all" | WalkType;
+export type StrikeoutCategoryFilter = "all" | StrikeoutType;
 
 export const RANGE_LABELS: Record<RangeKey, string> = {
   today: "Last game",
   week: "Last 7 days",
   month: "Last 30 days",
   season: "Season",
-};
-
-export const CATEGORY_LABELS: Record<CategoryFilter, string> = {
-  all: "All walks",
-  fourPitch: "4-pitch only",
-  ohTwo: "0-2 only",
-  leadoff: "Leadoff only",
-  twoOut: "2-out only",
 };
 
 function addDays(yyyymmdd: string, days: number): string {
@@ -27,11 +27,12 @@ function addDays(yyyymmdd: string, days: number): string {
 
 export function rangeBounds(
   range: RangeKey,
-  state: Pick<SeasonState, "walks" | "meta">,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
 ): { start: string | null; end: string | null } {
   const latest =
     state.meta.lastGameDate ??
     state.walks[0]?.date ??
+    state.strikeouts[0]?.date ??
     new Date().toISOString().slice(0, 10);
 
   switch (range) {
@@ -50,13 +51,15 @@ export function rangeBounds(
 export function filterWalks(
   walks: WalkRecord[],
   range: RangeKey,
-  state: Pick<SeasonState, "walks" | "meta">,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
   query: string = "",
-  category: CategoryFilter = "all",
+  category: WalkCategoryFilter = "all",
+  hiddenIds: Set<number> = new Set(),
 ): WalkRecord[] {
   const { start, end } = rangeBounds(range, state);
   const q = query.trim().toLowerCase();
   return walks.filter((w) => {
+    if (hiddenIds.has(w.pitcherId)) return false;
     if (start && w.date < start) return false;
     if (end && w.date > end) return false;
     if (q) {
@@ -71,39 +74,63 @@ export function filterWalks(
   });
 }
 
-export function aggregateByPitcher(
+export function filterStrikeouts(
+  strikeouts: StrikeoutRecord[],
+  range: RangeKey,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
+  query: string = "",
+  category: StrikeoutCategoryFilter = "all",
+  hiddenIds: Set<number> = new Set(),
+): StrikeoutRecord[] {
+  const { start, end } = rangeBounds(range, state);
+  const q = query.trim().toLowerCase();
+  return strikeouts.filter((s) => {
+    if (hiddenIds.has(s.pitcherId)) return false;
+    if (start && s.date < start) return false;
+    if (end && s.date > end) return false;
+    if (q) {
+      const matches =
+        s.pitcherName.toLowerCase().includes(q) ||
+        s.batterName.toLowerCase().includes(q) ||
+        s.opponent.toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+    if (category !== "all" && !s.tags.includes(category)) return false;
+    return true;
+  });
+}
+
+export function aggregatePitchersFromWalks(
   walks: WalkRecord[],
   meta: Record<string, Pick<PitcherStats, "pitcherId" | "name" | "headshotUrl" | "achievements">>,
 ): PitcherStats[] {
   const map = new Map<number, PitcherStats>();
+  const datesByPitcher = new Map<number, Set<string>>();
 
   const ensure = (id: number, name: string): PitcherStats => {
     const existing = map.get(id);
     if (existing) return existing;
-    const base = meta[String(id)] ?? {
-      pitcherId: id,
-      name,
-      headshotUrl: headshotUrl(id),
-      achievements: [],
-    };
+    const base = meta[String(id)];
     const fresh: PitcherStats = {
       pitcherId: id,
-      name: base.name || name,
-      headshotUrl: base.headshotUrl ?? headshotUrl(id),
+      name: base?.name ?? name,
+      headshotUrl: base?.headshotUrl ?? headshotUrl(id),
       appearances: 0,
       totalWalks: 0,
       fourPitchWalks: 0,
       ohTwoWalks: 0,
       leadoffWalks: 0,
       twoOutWalks: 0,
+      totalStrikeouts: 0,
+      threePitchStrikeouts: 0,
+      sideStrikeouts: 0,
       lastWalkDate: null,
-      achievements: base.achievements ?? [],
+      lastStrikeoutDate: null,
+      achievements: base?.achievements ?? [],
     };
     map.set(id, fresh);
     return fresh;
   };
-
-  const datesByPitcher = new Map<number, Set<string>>();
 
   for (const w of walks) {
     const p = ensure(w.pitcherId, w.pitcherName);
@@ -113,7 +140,6 @@ export function aggregateByPitcher(
     if (w.tags.includes("leadoff")) p.leadoffWalks += 1;
     if (w.tags.includes("twoOut")) p.twoOutWalks += 1;
     if (!p.lastWalkDate || w.date > p.lastWalkDate) p.lastWalkDate = w.date;
-
     if (!datesByPitcher.has(w.pitcherId)) datesByPitcher.set(w.pitcherId, new Set());
     datesByPitcher.get(w.pitcherId)!.add(w.date);
   }
@@ -126,9 +152,70 @@ export function aggregateByPitcher(
   return [...map.values()];
 }
 
+export function aggregatePitchersFromStrikeouts(
+  strikeouts: StrikeoutRecord[],
+  meta: Record<string, Pick<PitcherStats, "pitcherId" | "name" | "headshotUrl" | "achievements">>,
+): PitcherStats[] {
+  const map = new Map<number, PitcherStats>();
+  const datesByPitcher = new Map<number, Set<string>>();
+  const sideInningsByPitcher = new Map<number, Set<string>>();
+
+  const ensure = (id: number, name: string): PitcherStats => {
+    const existing = map.get(id);
+    if (existing) return existing;
+    const base = meta[String(id)];
+    const fresh: PitcherStats = {
+      pitcherId: id,
+      name: base?.name ?? name,
+      headshotUrl: base?.headshotUrl ?? headshotUrl(id),
+      appearances: 0,
+      totalWalks: 0,
+      fourPitchWalks: 0,
+      ohTwoWalks: 0,
+      leadoffWalks: 0,
+      twoOutWalks: 0,
+      totalStrikeouts: 0,
+      threePitchStrikeouts: 0,
+      sideStrikeouts: 0,
+      lastWalkDate: null,
+      lastStrikeoutDate: null,
+      achievements: base?.achievements ?? [],
+    };
+    map.set(id, fresh);
+    return fresh;
+  };
+
+  for (const s of strikeouts) {
+    const p = ensure(s.pitcherId, s.pitcherName);
+    p.totalStrikeouts += 1;
+    if (s.tags.includes("threePitch")) p.threePitchStrikeouts += 1;
+    if (s.tags.includes("side")) {
+      const key = `${s.gamePk}-${s.inning}-${s.halfInning}`;
+      if (!sideInningsByPitcher.has(s.pitcherId)) {
+        sideInningsByPitcher.set(s.pitcherId, new Set());
+      }
+      sideInningsByPitcher.get(s.pitcherId)!.add(key);
+    }
+    if (!p.lastStrikeoutDate || s.date > p.lastStrikeoutDate) p.lastStrikeoutDate = s.date;
+    if (!datesByPitcher.has(s.pitcherId)) datesByPitcher.set(s.pitcherId, new Set());
+    datesByPitcher.get(s.pitcherId)!.add(s.date);
+  }
+
+  for (const [id, dates] of datesByPitcher) {
+    const p = map.get(id);
+    if (p) p.appearances = dates.size;
+  }
+  for (const [id, innings] of sideInningsByPitcher) {
+    const p = map.get(id);
+    if (p) p.sideStrikeouts = innings.size;
+  }
+
+  return [...map.values()];
+}
+
 export function formatRangeContext(
   range: RangeKey,
-  state: Pick<SeasonState, "walks" | "meta">,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
 ): string {
   if (range === "season") return "Full season";
   const { start, end } = rangeBounds(range, state);
@@ -147,46 +234,46 @@ function formatDate(iso: string): string {
 }
 
 export type Insights = {
-  worstGame: { date: string; opponent: string; walks: number; gamePk: number } | null;
-  mostWalkedBatter: { name: string; walks: number } | null;
-  topOpponent: { name: string; walks: number } | null;
-  walksByInning: Array<{ inning: number; count: number }>;
-  walksByGame: Array<{ date: string; opponent: string; count: number; gamePk: number }>;
+  bestGame: { date: string; opponent: string; count: number; gamePk: number } | null;
+  topVictim: { name: string; count: number } | null;
+  topOpponent: { name: string; count: number } | null;
+  byInning: Array<{ inning: number; count: number }>;
+  byGame: Array<{ date: string; opponent: string; count: number; gamePk: number }>;
 };
 
-export function computeInsights(
-  walks: WalkRecord[],
-): Insights {
+type EventLike = {
+  gamePk: number;
+  date: string;
+  opponent: string;
+  batterName: string;
+  inning: number;
+};
+
+export function computeInsights(events: EventLike[]): Insights {
   const byGame = new Map<number, { date: string; opponent: string; count: number }>();
   const byBatter = new Map<string, number>();
   const byOpponent = new Map<string, number>();
   const byInning = new Map<number, number>();
 
-  for (const w of walks) {
-    const g = byGame.get(w.gamePk);
-    if (g) {
-      g.count += 1;
-    } else {
-      byGame.set(w.gamePk, { date: w.date, opponent: w.opponent, count: 1 });
-    }
-    byBatter.set(w.batterName, (byBatter.get(w.batterName) ?? 0) + 1);
-    byOpponent.set(w.opponent, (byOpponent.get(w.opponent) ?? 0) + 1);
-    byInning.set(w.inning, (byInning.get(w.inning) ?? 0) + 1);
+  for (const e of events) {
+    const g = byGame.get(e.gamePk);
+    if (g) g.count += 1;
+    else byGame.set(e.gamePk, { date: e.date, opponent: e.opponent, count: 1 });
+    byBatter.set(e.batterName, (byBatter.get(e.batterName) ?? 0) + 1);
+    byOpponent.set(e.opponent, (byOpponent.get(e.opponent) ?? 0) + 1);
+    byInning.set(e.inning, (byInning.get(e.inning) ?? 0) + 1);
   }
 
-  const games = [...byGame.entries()].map(([gamePk, v]) => ({
-    gamePk,
-    ...v,
-  }));
+  const games = [...byGame.entries()].map(([gamePk, v]) => ({ gamePk, ...v }));
   games.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
-  let worstGame: Insights["worstGame"] = null;
+  let bestGame: Insights["bestGame"] = null;
   for (const g of games) {
-    if (!worstGame || g.count > worstGame.walks) {
-      worstGame = {
+    if (!bestGame || g.count > bestGame.count) {
+      bestGame = {
         date: g.date,
         opponent: g.opponent,
-        walks: g.count,
+        count: g.count,
         gamePk: g.gamePk,
       };
     }
@@ -202,14 +289,12 @@ export function computeInsights(
   }
 
   return {
-    worstGame,
-    mostWalkedBatter: batterTop
-      ? { name: batterTop[0], walks: batterTop[1] }
-      : null,
+    bestGame,
+    topVictim: batterTop ? { name: batterTop[0], count: batterTop[1] } : null,
     topOpponent: opponentTop
-      ? { name: opponentTop[0], walks: opponentTop[1] }
+      ? { name: opponentTop[0], count: opponentTop[1] }
       : null,
-    walksByInning: innings,
-    walksByGame: games,
+    byInning: innings,
+    byGame: games,
   };
 }

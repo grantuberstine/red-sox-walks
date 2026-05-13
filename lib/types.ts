@@ -1,4 +1,5 @@
 export type WalkType = "fourPitch" | "ohTwo" | "leadoff" | "twoOut";
+export type StrikeoutType = "threePitch" | "side";
 
 export type PitcherStats = {
   pitcherId: number;
@@ -10,7 +11,11 @@ export type PitcherStats = {
   ohTwoWalks: number;
   leadoffWalks: number;
   twoOutWalks: number;
+  totalStrikeouts: number;
+  threePitchStrikeouts: number;
+  sideStrikeouts: number;
   lastWalkDate: string | null;
+  lastStrikeoutDate: string | null;
   achievements: string[];
 };
 
@@ -20,6 +25,7 @@ export type GameSummary = {
   opponent: string;
   homeAway: "home" | "away";
   walksProcessed: number;
+  strikeoutsProcessed: number;
 };
 
 export type WalkRecord = {
@@ -36,6 +42,19 @@ export type WalkRecord = {
   tags: WalkType[];
 };
 
+export type StrikeoutRecord = {
+  gamePk: number;
+  pitcherId: number;
+  pitcherName: string;
+  date: string;
+  opponent: string;
+  inning: number;
+  halfInning: "top" | "bottom";
+  batterName: string;
+  pitchesInPA: number;
+  tags: StrikeoutType[];
+};
+
 export type SeasonState = {
   season: number;
   teamId: number;
@@ -43,11 +62,13 @@ export type SeasonState = {
   pitchers: Record<string, PitcherStats>;
   games: GameSummary[];
   walks: WalkRecord[];
+  strikeouts: StrikeoutRecord[];
   meta: {
     lastRefreshAt: string | null;
     lastGameDate: string | null;
     totalGames: number;
     totalWalks: number;
+    totalStrikeouts: number;
   };
 };
 
@@ -64,6 +85,18 @@ export type WalkClassification = {
   isOhTwo: boolean;
   isLeadoff: boolean;
   isTwoOut: boolean;
+};
+
+export type StrikeoutClassification = {
+  pitcherId: number;
+  pitcherName: string;
+  date: string;
+  inning: number;
+  halfInning: "top" | "bottom";
+  batterName: string;
+  pitchesInPA: number;
+  isThreePitch: boolean;
+  isSide: boolean;
 };
 
 export type ScheduleGame = {
