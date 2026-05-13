@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sox-red: #bd3039;
+  --color-sox-navy: #0c2340;
+  --font-display: "Inter", system-ui, sans-serif;
+}
+
+html, body {
+  background: #f7f7f5;
+  color: #0c2340;
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
