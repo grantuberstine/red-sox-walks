@@ -3,6 +3,7 @@ import type {
   StrikeoutRecord,
   WalkRecord,
 } from "./types";
+import { headshotUrl } from "./achievements";
 
 export const WALK_FEE_PER_CATEGORY = 1;
 export const THREE_PITCH_K_BONUS = 2;
@@ -48,9 +49,7 @@ export function computeFundReport(
       byId.set(id, {
         pitcherId: id,
         name: meta?.name ?? name,
-        headshotUrl:
-          meta?.headshotUrl ??
-          `https://midfield.mlbstatic.com/v1/people/${id}/spots/120`,
+        headshotUrl: meta?.headshotUrl ?? headshotUrl(id),
         walkBuckets: { fourPitch: 0, ohTwo: 0, leadoff: 0, twoOut: 0 },
         threePitchKs: 0,
         threeUpThreeDownInnings: 0,

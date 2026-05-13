@@ -80,5 +80,8 @@ export function achievementById(id: string): Achievement | undefined {
 }
 
 export function headshotUrl(pitcherId: number): string {
-  return `https://midfield.mlbstatic.com/v1/people/${pitcherId}/spots/120`;
+  // spots/240 (vs 120) has photos for newer prospects; spots/120 returns a
+  // generic silhouette for IDs that don't yet have a small-size thumbnail.
+  // Next/Image downscales for delivery, so the served bytes stay small.
+  return `https://midfield.mlbstatic.com/v1/people/${pitcherId}/spots/240`;
 }
