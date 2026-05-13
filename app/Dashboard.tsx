@@ -552,7 +552,9 @@ function LeaderboardSection({
             {pitchers.length === 0 ? "No matching pitchers" : hint}
           </p>
         </div>
-        <ViewToggle value={view} onChange={onViewChange} />
+        <div className="hidden lg:block">
+          <ViewToggle value={view} onChange={onViewChange} />
+        </div>
       </div>
       {pitchers.length === 0 ? (
         <div className="px-6 py-14 text-center text-sm text-[var(--text-muted)]">

@@ -10,11 +10,26 @@ import {
 } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
 
-type SortKey = "feesOwed" | "bonusEarned" | "name";
+type SortKey =
+  | "feesOwed"
+  | "bonusEarned"
+  | "fourPitch"
+  | "ohTwo"
+  | "leadoff"
+  | "twoOut"
+  | "threePitchKs"
+  | "threeUpThreeDownInnings"
+  | "name";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: "feesOwed", label: "Players Owe Most" },
   { key: "bonusEarned", label: "Coaches Owe Most" },
+  { key: "fourPitch", label: "Most 4-Pitch Walks" },
+  { key: "ohTwo", label: "Most 0-2 Walks" },
+  { key: "leadoff", label: "Most Leadoff Walks" },
+  { key: "twoOut", label: "Most 2-Out Walks" },
+  { key: "threePitchKs", label: "Most 3-Pitch K" },
+  { key: "threeUpThreeDownInnings", label: "Most 3-Up-3-Dn" },
   { key: "name", label: "Name (A→Z)" },
 ];
 
@@ -24,7 +39,14 @@ export function FundView({ report }: { report: FundReport }) {
     const rows = [...report.entries];
     rows.sort((a, b) => {
       if (sortKey === "name") return a.name.localeCompare(b.name);
-      return b[sortKey] - a[sortKey];
+      if (sortKey === "feesOwed" || sortKey === "bonusEarned") {
+        return b[sortKey] - a[sortKey];
+      }
+      if (sortKey === "threePitchKs" || sortKey === "threeUpThreeDownInnings") {
+        return b[sortKey] - a[sortKey];
+      }
+      // walk bucket sort
+      return b.walkBuckets[sortKey] - a.walkBuckets[sortKey];
     });
     return rows;
   }, [report.entries, sortKey]);

@@ -46,20 +46,20 @@ const FASTBALL_CODES = new Set(["FF", "FT", "SI", "FC", "FA"]);
 
 const PITCH_COLORS: Record<string, { light: string; dark: string }> = {
   FF: { light: "#bd3039", dark: "#f87171" },   // 4-Seam — Sox red
-  FT: { light: "#be123c", dark: "#fb7185" },   // 2-Seam — rose
-  SI: { light: "#059669", dark: "#34d399" },   // Sinker — emerald
-  FC: { light: "#0d9488", dark: "#2dd4bf" },   // Cutter — teal
-  FA: { light: "#991b1b", dark: "#fca5a5" },   // Generic fastball — dark red
-  SL: { light: "#2563eb", dark: "#60a5fa" },   // Slider — blue
-  ST: { light: "#0891b2", dark: "#22d3ee" },   // Sweeper — cyan
+  FT: { light: "#7f1d1d", dark: "#fca5a5" },   // 2-Seam — dark red (different from FF)
+  SI: { light: "#059669", dark: "#34d399" },   // Sinker — emerald (true green)
+  FC: { light: "#92400e", dark: "#fdba74" },   // Cutter — brown/rust (out of green family)
+  FA: { light: "#dc2626", dark: "#fca5a5" },   // Generic fastball — vivid red
+  SL: { light: "#1d4ed8", dark: "#60a5fa" },   // Slider — deep blue
+  ST: { light: "#0e7490", dark: "#67e8f9" },   // Sweeper — deeper cyan-blue
   SV: { light: "#475569", dark: "#94a3b8" },   // Slurve — slate
-  CU: { light: "#1e40af", dark: "#93c5fd" },   // Curveball — navy
-  KC: { light: "#0369a1", dark: "#7dd3fc" },   // Knuckle Curve — sky
+  CU: { light: "#1e3a8a", dark: "#93c5fd" },   // Curveball — navy
+  KC: { light: "#0284c7", dark: "#bae6fd" },   // Knuckle Curve — sky (lighter)
   CS: { light: "#312e81", dark: "#a5b4fc" },   // Slow Curve — indigo
-  CH: { light: "#ea580c", dark: "#fb923c" },   // Changeup — orange (distinct from greens)
-  FS: { light: "#15803d", dark: "#86efac" },   // Splitter — dark green
-  FO: { light: "#65a30d", dark: "#bef264" },   // Forkball — lime-green
-  SC: { light: "#7c2d12", dark: "#fdba74" },   // Screwball — burnt sienna
+  CH: { light: "#ea580c", dark: "#fb923c" },   // Changeup — orange
+  FS: { light: "#16a34a", dark: "#86efac" },   // Splitter — lighter green
+  FO: { light: "#365314", dark: "#bef264" },   // Forkball — olive
+  SC: { light: "#9a3412", dark: "#fdba74" },   // Screwball — burnt sienna
   KN: { light: "#3f3f46", dark: "#a1a1aa" },   // Knuckleball — zinc
   EP: { light: "#44403c", dark: "#a8a29e" },   // Eephus — stone
   PO: { light: "#525252", dark: "#a3a3a3" },   // Pitchout — gray
