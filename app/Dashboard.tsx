@@ -39,6 +39,7 @@ import { FundView } from "./components/FundView";
 import { PlayersGallery } from "./components/PlayersGallery";
 import { PlayerProfile } from "./components/PlayerProfile";
 import { AnalyticsView } from "./components/AnalyticsView";
+import { PitcherPicker } from "./components/PitcherPicker";
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "never";
@@ -57,6 +58,9 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const [view, setView] = useState<ViewMode>("table");
   const [rosterOpen, setRosterOpen] = useState(false);
   const [profileId, setProfileId] = useState<number | null>(null);
+  const [analyticsPitcherId, setAnalyticsPitcherId] = useState<number | null>(
+    null,
+  );
 
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -168,6 +172,24 @@ export function Dashboard({ state }: { state: SeasonState }) {
     return state.pitchers[String(profileId)] ?? null;
   }, [profileId, state.pitchers]);
 
+  const veloPitchers = useMemo(() => {
+    const ids = Object.keys(state.velocity);
+    const list: typeof allPitchers = [];
+    for (const id of ids) {
+      const p = state.pitchers[id];
+      if (p) list.push(p);
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    return list;
+  }, [state.velocity, state.pitchers, allPitchers]);
+
+  const analyticsPitcher = useMemo(() => {
+    const id =
+      analyticsPitcherId ?? (veloPitchers.length > 0 ? veloPitchers[0].pitcherId : null);
+    if (id === null) return null;
+    return state.pitchers[String(id)] ?? null;
+  }, [analyticsPitcherId, veloPitchers, state.pitchers]);
+
   const sectionLabel: Record<Section, string> = {
     walks: "Walks",
     strikeouts: "Strikeouts",
@@ -224,6 +246,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const showFilters =
     section !== "analytics" &&
     (section !== "players" || profileId === null);
+
+  const showAnalyticsPicker = section === "analytics";
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)] lg:flex-row">
@@ -286,6 +310,17 @@ export function Dashboard({ state }: { state: SeasonState }) {
               </div>
             )}
 
+            {showAnalyticsPicker && (
+              <div className="hidden lg:block">
+                <PitcherPicker
+                  pitchers={veloPitchers}
+                  value={analyticsPitcher?.pitcherId ?? null}
+                  onChange={setAnalyticsPitcherId}
+                  placeholder="Pick a pitcher"
+                />
+              </div>
+            )}
+
             <div className="flex items-center gap-1.5 lg:hidden">
               <ThemeToggle theme={theme} onToggle={toggleTheme} compact />
               <button
@@ -312,6 +347,17 @@ export function Dashboard({ state }: { state: SeasonState }) {
                   suggestions={searchSuggestions}
                 />
               </div>
+            </div>
+          )}
+
+          {showAnalyticsPicker && (
+            <div className="border-t border-[var(--border)] px-4 py-2 lg:hidden">
+              <PitcherPicker
+                pitchers={veloPitchers}
+                value={analyticsPitcher?.pitcherId ?? null}
+                onChange={setAnalyticsPitcherId}
+                placeholder="Pick a pitcher"
+              />
             </div>
           )}
         </header>
@@ -377,7 +423,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
             )}
 
             {section === "analytics" && (
-              <AnalyticsView state={state} pitchers={allPitchers} />
+              <AnalyticsView state={state} pitcher={analyticsPitcher} />
             )}
 
             {section === "fund" && (

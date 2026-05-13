@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import type {
   AppearanceVelo,
   PitcherStats,
@@ -40,32 +40,11 @@ function formatDate(iso: string): string {
 
 export function AnalyticsView({
   state,
-  pitchers,
+  pitcher,
 }: {
   state: SeasonState;
-  pitchers: PitcherStats[];
+  pitcher: PitcherStats | null;
 }) {
-  const available = useMemo(
-    () =>
-      pitchers
-        .filter((p) => (state.velocity[String(p.pitcherId)] ?? []).length > 0)
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [pitchers, state.velocity],
-  );
-
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (selectedId === null && available.length > 0) {
-      setSelectedId(available[0].pitcherId);
-    }
-  }, [available, selectedId]);
-
-  const pitcher = useMemo(
-    () => pitchers.find((p) => p.pitcherId === selectedId) ?? null,
-    [pitchers, selectedId],
-  );
-
   const appearances: AppearanceVelo[] = useMemo(() => {
     if (!pitcher) return [];
     return state.velocity[String(pitcher.pitcherId)] ?? [];
@@ -114,121 +93,104 @@ export function AnalyticsView({
     };
   }, [appearances]);
 
-  if (available.length === 0) {
+  if (!pitcher || appearances.length === 0) {
     return (
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--text-muted)]">
-        No velocity data yet. Once games are processed, this view will populate.
+        {pitcher
+          ? `No velocity data tracked for ${pitcher.name} in this season.`
+          : "No velocity data yet. Once games are processed, this view will populate."}
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-[var(--text)]">
-              Pitching Analytics
-            </h2>
-            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              Velocity & pitch mix per outing. {available.length} pitchers tracked.
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
+        <div className="flex items-center gap-4">
+          <PitcherAvatar
+            name={pitcher.name}
+            src={pitcher.headshotUrl}
+            size={64}
+          />
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-bold text-[var(--text)]">
+              {pitcher.name}
+            </h1>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+              {career.appearances}{" "}
+              {career.appearances === 1 ? "outing" : "outings"} ·{" "}
+              {career.totalPitches} pitches tracked
             </p>
           </div>
-          <label className="flex items-center gap-2 text-xs text-[var(--text)]">
-            <span className="font-semibold">Pitcher</span>
-            <select
-              value={selectedId ?? ""}
-              onChange={(e) => setSelectedId(Number(e.target.value))}
-              className="cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm font-medium text-[var(--text)]"
-            >
-              {available.map((p) => (
-                <option key={p.pitcherId} value={p.pitcherId}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
-      </div>
 
-      {pitcher && (
-        <>
-          <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
-            <div className="flex items-center gap-4">
-              <PitcherAvatar
-                name={pitcher.name}
-                src={pitcher.headshotUrl}
-                size={64}
-              />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl font-bold text-[var(--text)]">
-                  {pitcher.name}
-                </h1>
-                <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-                  {career.appearances}{" "}
-                  {career.appearances === 1 ? "outing" : "outings"} ·{" "}
-                  {career.totalPitches} pitches tracked
-                </p>
-              </div>
-            </div>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <BigStat
+            label="Avg velocity"
+            value={career.avgVelo.toFixed(1)}
+            suffix="mph"
+          />
+          <BigStat
+            label="Max velocity"
+            value={career.maxVelo.toFixed(1)}
+            suffix="mph"
+            highlight
+          />
+          <BigStat
+            label="Total pitches"
+            value={`${career.totalPitches}`}
+            suffix=""
+          />
+        </div>
+      </section>
 
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <BigStat
-                label="Avg velocity"
-                value={`${career.avgVelo.toFixed(1)}`}
-                suffix="mph"
-              />
-              <BigStat
-                label="Max velocity"
-                value={`${career.maxVelo.toFixed(1)}`}
-                suffix="mph"
-                accent
-              />
-              <BigStat
-                label="Total pitches"
-                value={`${career.totalPitches}`}
-                suffix=""
-              />
-            </div>
-          </section>
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h3 className="text-sm font-bold text-[var(--text)]">
+            Velocity trend
+          </h3>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            Avg + max per appearance, newest right
+          </p>
+        </div>
+        <VeloLineChart appearances={appearances} />
+      </section>
 
-          <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-            <div className="border-b border-[var(--border)] px-5 py-3">
-              <h3 className="text-sm font-bold text-[var(--text)]">
-                Velocity by outing
-              </h3>
-              <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                Avg + max per appearance, newest right
-              </p>
-            </div>
-            <VeloChart appearances={appearances} />
-          </section>
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h3 className="text-sm font-bold text-[var(--text)]">
+            Velocity by outing
+          </h3>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            Stacked bars — outer is max, inner is avg
+          </p>
+        </div>
+        <VeloBarChart appearances={appearances} />
+      </section>
 
-          <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-            <div className="border-b border-[var(--border)] px-5 py-3">
-              <h3 className="text-sm font-bold text-[var(--text)]">
-                Pitch mix
-              </h3>
-              <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                Career totals — usage and velocity per pitch type
-              </p>
-            </div>
-            <PitchMixTable byType={career.byType} total={career.totalPitches} />
-          </section>
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h3 className="text-sm font-bold text-[var(--text)]">
+            Pitch mix
+          </h3>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            Career totals — usage and velocity per pitch type
+          </p>
+        </div>
+        <PitchMixTable byType={career.byType} total={career.totalPitches} />
+      </section>
 
-          <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-            <div className="border-b border-[var(--border)] px-5 py-3">
-              <h3 className="text-sm font-bold text-[var(--text)]">
-                Outing log
-              </h3>
-              <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                {appearances.length} appearances · newest first
-              </p>
-            </div>
-            <OutingsTable appearances={[...appearances].reverse()} />
-          </section>
-        </>
-      )}
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <h3 className="text-sm font-bold text-[var(--text)]">
+            Outing log
+          </h3>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            {appearances.length} appearances · newest first
+          </p>
+        </div>
+        <OutingsTable appearances={[...appearances].reverse()} />
+      </section>
     </div>
   );
 }
@@ -237,12 +199,12 @@ function BigStat({
   label,
   value,
   suffix,
-  accent = false,
+  highlight = false,
 }: {
   label: string;
   value: string;
   suffix: string;
-  accent?: boolean;
+  highlight?: boolean;
 }) {
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-3">
@@ -252,8 +214,8 @@ function BigStat({
       <div className="mt-1 flex items-baseline gap-1.5">
         <span
           className={`text-3xl font-bold tabular leading-none ${
-            accent
-              ? "text-[var(--color-sox-red)]"
+            highlight
+              ? "text-[var(--color-woo-gold-deep)] dark:text-[var(--color-woo-gold)]"
               : "text-[var(--text)]"
           }`}
         >
@@ -269,7 +231,149 @@ function BigStat({
   );
 }
 
-function VeloChart({ appearances }: { appearances: AppearanceVelo[] }) {
+function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
+  if (appearances.length === 0) {
+    return (
+      <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
+        No outings yet.
+      </div>
+    );
+  }
+
+  const w = 600;
+  const h = 200;
+  const pad = { top: 16, right: 12, bottom: 28, left: 32 };
+  const innerW = w - pad.left - pad.right;
+  const innerH = h - pad.top - pad.bottom;
+
+  const maxV = Math.max(...appearances.map((a) => a.maxVelo)) + 1;
+  const minV = Math.min(...appearances.map((a) => a.avgVelo)) - 2;
+  const range = Math.max(1, maxV - minV);
+
+  const x = (i: number) =>
+    appearances.length === 1
+      ? innerW / 2
+      : (i / (appearances.length - 1)) * innerW;
+  const y = (v: number) => innerH - ((v - minV) / range) * innerH;
+
+  const avgPath = appearances
+    .map((a, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(a.avgVelo)}`)
+    .join(" ");
+  const maxPath = appearances
+    .map((a, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(a.maxVelo)}`)
+    .join(" ");
+
+  const ticks = 4;
+  const yTicks = Array.from({ length: ticks + 1 }, (_, i) => {
+    const v = minV + (range * i) / ticks;
+    return { v, y: y(v) };
+  });
+
+  return (
+    <div className="px-4 pb-4 pt-3">
+      <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-0.5 w-4 bg-[var(--text-muted)]" />
+          avg
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-0.5 w-4 bg-[var(--color-woo-gold-deep)] dark:bg-[var(--color-woo-gold)]" />
+          max
+        </span>
+        <span className="ml-auto tabular">
+          {minV.toFixed(0)}–{maxV.toFixed(0)} mph
+        </span>
+      </div>
+      <div className="w-full overflow-x-auto">
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="none"
+          className="block h-[200px] w-full min-w-[480px]"
+        >
+          <g transform={`translate(${pad.left} ${pad.top})`}>
+            {yTicks.map((t, i) => (
+              <g key={i}>
+                <line
+                  x1={0}
+                  x2={innerW}
+                  y1={t.y}
+                  y2={t.y}
+                  stroke="var(--border)"
+                  strokeDasharray="2 3"
+                />
+                <text
+                  x={-6}
+                  y={t.y}
+                  dy="0.32em"
+                  textAnchor="end"
+                  fontSize="10"
+                  fill="var(--text-muted)"
+                  className="tabular"
+                >
+                  {t.v.toFixed(0)}
+                </text>
+              </g>
+            ))}
+
+            <path
+              d={maxPath}
+              fill="none"
+              stroke="var(--color-woo-gold-deep)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="dark:stroke-[var(--color-woo-gold)]"
+            />
+            <path
+              d={avgPath}
+              fill="none"
+              stroke="var(--text-muted)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {appearances.map((a, i) => (
+              <g key={a.gamePk}>
+                <circle
+                  cx={x(i)}
+                  cy={y(a.maxVelo)}
+                  r="3"
+                  fill="var(--color-woo-gold-deep)"
+                  className="dark:fill-[var(--color-woo-gold)]"
+                >
+                  <title>{`${formatDate(a.date)}: max ${a.maxVelo.toFixed(1)}`}</title>
+                </circle>
+                <circle
+                  cx={x(i)}
+                  cy={y(a.avgVelo)}
+                  r="3"
+                  fill="var(--text-secondary)"
+                >
+                  <title>{`${formatDate(a.date)}: avg ${a.avgVelo.toFixed(1)}`}</title>
+                </circle>
+                {(appearances.length <= 10 || i % Math.ceil(appearances.length / 10) === 0) && (
+                  <text
+                    x={x(i)}
+                    y={innerH + 16}
+                    textAnchor="middle"
+                    fontSize="9"
+                    fill="var(--text-muted)"
+                    className="tabular"
+                  >
+                    {formatDate(a.date)}
+                  </text>
+                )}
+              </g>
+            ))}
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function VeloBarChart({ appearances }: { appearances: AppearanceVelo[] }) {
   if (appearances.length === 0) {
     return (
       <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
@@ -283,16 +387,23 @@ function VeloChart({ appearances }: { appearances: AppearanceVelo[] }) {
 
   return (
     <div className="px-4 pb-4 pt-3">
-      <div className="mb-2 flex items-baseline justify-between text-[11px] text-[var(--text-muted)]">
-        <span>{appearances.length} outings</span>
-        <span className="tabular">
-          Range: {min.toFixed(0)}–{max.toFixed(0)} mph
+      <div className="mb-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--text-secondary)]" />
+          avg
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--color-woo-gold-deep)] dark:bg-[var(--color-woo-gold)]" />
+          max
+        </span>
+        <span className="ml-auto tabular">
+          {appearances.length} outings · {min.toFixed(0)}–{max.toFixed(0)} mph
         </span>
       </div>
       <div
-        className="relative grid items-end gap-1"
+        className="grid items-end gap-1"
         style={{
-          gridTemplateColumns: `repeat(${appearances.length}, minmax(20px, 1fr))`,
+          gridTemplateColumns: `repeat(${appearances.length}, minmax(18px, 1fr))`,
           minHeight: 160,
         }}
       >
@@ -307,30 +418,20 @@ function VeloChart({ appearances }: { appearances: AppearanceVelo[] }) {
             >
               <div className="relative h-full w-full">
                 <div
-                  className="absolute bottom-0 w-full rounded-t bg-[var(--color-sox-red)]/30"
+                  className="absolute bottom-0 w-full rounded-t bg-[var(--color-woo-gold-deep)]/60 dark:bg-[var(--color-woo-gold)]/30"
                   style={{ height: `${maxPct}%` }}
                 />
                 <div
-                  className="absolute bottom-0 w-full rounded-t bg-[var(--color-sox-red)]"
+                  className="absolute bottom-0 w-full rounded-t bg-[var(--text-secondary)]"
                   style={{ height: `${avgPct}%` }}
                 />
               </div>
-              <div className="mt-1 text-[9px] text-[var(--text-muted)] tabular">
-                {formatDate(a.date).replace(/\s/, " ")}
+              <div className="mt-1 truncate text-[9px] text-[var(--text-muted)] tabular">
+                {formatDate(a.date)}
               </div>
             </div>
           );
         })}
-      </div>
-      <div className="mt-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-1">
-          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--color-sox-red)]" />
-          avg
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--color-sox-red)]/30" />
-          max
-        </span>
       </div>
     </div>
   );
@@ -386,7 +487,7 @@ function PitchMixTable({
               <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
                 {t.avgVelo.toFixed(1)}
               </td>
-              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)]">
+              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-woo-gold-deep)] dark:text-[var(--color-woo-gold)]">
                 {t.maxVelo.toFixed(1)}
               </td>
             </tr>
@@ -425,7 +526,7 @@ function OutingsTable({ appearances }: { appearances: AppearanceVelo[] }) {
             <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
               {a.avgVelo.toFixed(1)}
             </td>
-            <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)]">
+            <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-woo-gold-deep)] dark:text-[var(--color-woo-gold)]">
               {a.maxVelo.toFixed(1)}
             </td>
           </tr>
