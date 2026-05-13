@@ -9,20 +9,19 @@ import {
   WalkCategoryFilter,
   aggregatePitchersFromStrikeouts,
   aggregatePitchersFromWalks,
-  computeInsights,
   filterStrikeouts,
   filterWalks,
   formatRangeContext,
 } from "@/lib/filters";
 import { computeFundReport } from "@/lib/fund";
 import { useHiddenPitchers } from "@/lib/preferences";
+import { SearchInput as SearchInputInline, type SearchSuggestion } from "./components/SearchInput";
 import { Sidebar, MobileTabBar, type Section } from "./components/Sidebar";
 import { WooSoxLogo } from "./components/WooSoxLogo";
 import { SubHeader } from "./components/SubHeader";
 import type { Mode } from "./components/TopNav";
 import { RosterDrawer } from "./components/RosterDrawer";
 import { HeroBar } from "./components/HeroBar";
-import { InsightsRow } from "./components/InsightsRow";
 import { CategoryLeaders } from "./components/CategoryLeaders";
 import { StrikeoutLeaders } from "./components/StrikeoutLeaders";
 import { ViewToggle, type ViewMode } from "./components/ViewToggle";
@@ -35,17 +34,17 @@ import { TeamView } from "./components/TeamView";
 import { FundView } from "./components/FundView";
 
 const WALK_CATEGORIES: CategoryDef[] = [
-  { key: "all", label: "All", emoji: "🎯", tone: "neutral" },
-  { key: "fourPitch", label: "4-Pitch", emoji: "🚶", tone: "amber" },
-  { key: "ohTwo", label: "0-2", emoji: "😬", tone: "rose" },
-  { key: "leadoff", label: "Leadoff", emoji: "🛻", tone: "sky" },
-  { key: "twoOut", label: "2-Out", emoji: "🪢", tone: "violet" },
+  { key: "all", label: "All", emoji: "", tone: "neutral" },
+  { key: "fourPitch", label: "4-Pitch", emoji: "", tone: "amber" },
+  { key: "ohTwo", label: "0-2", emoji: "", tone: "rose" },
+  { key: "leadoff", label: "Leadoff", emoji: "", tone: "sky" },
+  { key: "twoOut", label: "2-Out", emoji: "", tone: "violet" },
 ];
 
 const K_CATEGORIES: CategoryDef[] = [
-  { key: "all", label: "All", emoji: "🎯", tone: "neutral" },
-  { key: "threePitch", label: "3-Pitch K", emoji: "⚡", tone: "emerald" },
-  { key: "side", label: "3-Up-3-Dn", emoji: "🪑", tone: "indigo" },
+  { key: "all", label: "All", emoji: "", tone: "neutral" },
+  { key: "threePitch", label: "3-Pitch K", emoji: "", tone: "emerald" },
+  { key: "side", label: "3-Up-3-Dn", emoji: "", tone: "indigo" },
 ];
 
 const WALK_CATEGORY_LABELS: Record<WalkCategoryFilter, string> = {
@@ -119,6 +118,19 @@ export function Dashboard({ state }: { state: SeasonState }) {
   const allPitchers = useMemo(
     () => Object.values(state.pitchers),
     [state.pitchers],
+  );
+
+  const searchSuggestions: SearchSuggestion[] = useMemo(
+    () =>
+      allPitchers
+        .filter((p) => !hidden.has(p.pitcherId))
+        .map((p) => ({
+          id: p.pitcherId,
+          name: p.name,
+          headshotUrl: p.headshotUrl,
+          hint: `${p.totalWalks} BB · ${p.totalStrikeouts} K`,
+        })),
+    [allPitchers, hidden],
   );
 
   const rangeContext = formatRangeContext(range, state);
@@ -273,6 +285,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 : undefined
             }
             categoryLabel={isPlayers ? currentCatLabel : undefined}
+            suggestions={searchSuggestions}
           />
         )}
 
@@ -284,6 +297,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
             onQueryChange={setQuery}
             rangeContext={rangeContext}
             entryCount={fundReport.entries.length}
+            suggestions={searchSuggestions}
           />
         )}
 
@@ -350,6 +364,7 @@ function FundFilters({
   onQueryChange,
   rangeContext,
   entryCount,
+  suggestions,
 }: {
   range: RangeKey;
   onRangeChange: (r: RangeKey) => void;
@@ -357,6 +372,7 @@ function FundFilters({
   onQueryChange: (q: string) => void;
   rangeContext: string;
   entryCount: number;
+  suggestions?: SearchSuggestion[];
 }) {
   const RANGES: RangeKey[] = ["today", "week", "month", "season"];
   const SHORT = { today: "Today", week: "7D", month: "30D", season: "Season" };
@@ -388,15 +404,11 @@ function FundFilters({
               );
             })}
           </div>
-          <div className="relative w-full sm:w-72">
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              placeholder="Search pitcher…"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-[var(--color-sox-navy)] focus:outline-none focus:ring-2 focus:ring-[var(--color-sox-navy)]/10"
-            />
-          </div>
+          <SearchInputInline
+            value={query}
+            onChange={onQueryChange}
+            suggestions={suggestions ?? []}
+          />
         </div>
         <div className="flex items-center justify-between text-[11px] text-slate-500">
           <span>{rangeContext}</span>
@@ -421,12 +433,11 @@ function PlayerWalksContent(props: {
   query: string;
 }) {
   const { range, totals, leader, pitchers, walks, view, onViewChange, isFiltered, query } = props;
-  const insights = computeInsights(walks);
   return (
     <div className="space-y-5">
       <HeroBar
         accent="red"
-        eventLabel="walks"
+        eventLabel="walks issued"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
         leaderName={leader?.name}
@@ -438,11 +449,11 @@ function PlayerWalksContent(props: {
           { label: "2-Out", value: totals.twoOut, tone: "violet" },
         ]}
       />
-      <InsightsRow mode="walks" worstLabel="Most walks in a game" insights={insights} />
       <SectionHeader title="Walk Hall of Shame" subtitle={RANGE_LABELS[range]} />
       <CategoryLeaders pitchers={pitchers} />
       <LeaderboardSection
         title="Pitcher Leaderboard"
+        hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — "Walks" column shows total free passes issued`}
         pitchers={pitchers}
         walks={walks}
         strikeouts={[]}
@@ -471,12 +482,11 @@ function PlayerStrikeoutsContent(props: {
   query: string;
 }) {
   const { range, totals, leader, pitchers, strikeouts, view, onViewChange, isFiltered, query } = props;
-  const insights = computeInsights(strikeouts);
   return (
     <div className="space-y-5">
       <HeroBar
         accent="emerald"
-        eventLabel="strikeouts"
+        eventLabel="strikeouts recorded"
         rangeLabel={RANGE_LABELS[range]}
         total={totals.total}
         leaderName={leader?.name}
@@ -486,11 +496,11 @@ function PlayerStrikeoutsContent(props: {
           { label: "3-Up-3-Dn", value: totals.side, tone: "indigo" },
         ]}
       />
-      <InsightsRow mode="strikeouts" worstLabel="Most K's in a game" insights={insights} />
       <SectionHeader title="K Hall of Fame" subtitle={RANGE_LABELS[range]} />
       <StrikeoutLeaders pitchers={pitchers} />
       <LeaderboardSection
         title="Pitcher Leaderboard"
+        hint={`${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} — "Strikeouts" column shows total K's recorded`}
         pitchers={pitchers}
         walks={[]}
         strikeouts={strikeouts}
@@ -509,6 +519,7 @@ function PlayerStrikeoutsContent(props: {
 
 function LeaderboardSection({
   title,
+  hint,
   pitchers,
   walks,
   strikeouts,
@@ -519,6 +530,7 @@ function LeaderboardSection({
   mode,
 }: {
   title: string;
+  hint: string;
   pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
   walks: ReturnType<typeof filterWalks>;
   strikeouts: ReturnType<typeof filterStrikeouts>;
@@ -538,7 +550,7 @@ function LeaderboardSection({
           <p className="mt-0.5 text-[11px] text-slate-500">
             {pitchers.length === 0
               ? "No matching pitchers"
-              : `${pitchers.length} ${pitchers.length === 1 ? "pitcher" : "pitchers"} · tap row for detail`}
+              : `${hint} · tap a row for the full log`}
           </p>
         </div>
         <div className="flex items-center gap-2">

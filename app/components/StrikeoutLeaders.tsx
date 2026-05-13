@@ -19,22 +19,27 @@ const CATEGORIES: CategoryDef[] = [
   {
     key: "threePitchStrikeouts",
     title: "3-Pitch K's",
-    subtitle: "Got him on 3 straight",
-    emoji: "⚡",
+    subtitle: "Strikeout in 3 straight strikes",
+    emoji: "",
     tint: "from-emerald-50 to-emerald-100",
     accent: "text-emerald-700",
   },
   {
     key: "sideStrikeouts",
-    title: "Sat 'Em Down",
-    subtitle: "Struck out the side (innings)",
-    emoji: "🪑",
+    title: "3-Up-3-Down Innings",
+    subtitle: "Struck out side in order",
+    emoji: "",
     tint: "from-indigo-50 to-indigo-100",
     accent: "text-indigo-700",
   },
 ];
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const RANK_LABELS = ["1st", "2nd", "3rd"];
+const RANK_COLORS = [
+  "bg-[var(--color-woo-gold)] text-[var(--color-sox-navy)]",
+  "bg-slate-300 text-slate-700",
+  "bg-amber-700 text-white",
+];
 
 export function StrikeoutLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
   return (
@@ -49,14 +54,11 @@ export function StrikeoutLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
             key={cat.key}
             className={`rounded-2xl border border-slate-200 bg-gradient-to-br ${cat.tint} p-4 shadow-sm`}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--color-sox-navy)]">
-                  <span className="text-base">{cat.emoji}</span>
-                  {cat.title}
-                </h3>
-                <p className="text-[11px] text-slate-600">{cat.subtitle}</p>
-              </div>
+            <div className="mb-3">
+              <h3 className="text-sm font-bold text-[var(--color-sox-navy)]">
+                {cat.title}
+              </h3>
+              <p className="text-[11px] text-slate-600">{cat.subtitle}</p>
             </div>
             {ranked.length === 0 ? (
               <div className="rounded-lg bg-white/60 px-3 py-4 text-center text-xs text-slate-500">
@@ -70,7 +72,11 @@ export function StrikeoutLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
                     className="flex items-center justify-between rounded-lg bg-white/80 px-2.5 py-1.5 backdrop-blur"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="text-base leading-none">{MEDALS[i]}</span>
+                      <span
+                        className={`inline-flex h-5 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${RANK_COLORS[i]}`}
+                      >
+                        {RANK_LABELS[i]}
+                      </span>
                       <PitcherAvatar
                         name={p.name}
                         src={p.headshotUrl}

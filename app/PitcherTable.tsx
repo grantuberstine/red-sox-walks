@@ -39,7 +39,7 @@ type SortDir = "asc" | "desc";
 const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
   { key: "inningsPitched", label: "IP", align: "right" },
-  { key: "totalWalks", label: "BB", align: "right" },
+  { key: "totalWalks", label: "Walks", align: "right" },
   { key: "walksPerNine", label: "BB/9", align: "right" },
   { key: "fourPitchWalks", label: "4-Pitch", align: "right" },
   { key: "ohTwoWalks", label: "0-2", align: "right" },
@@ -50,7 +50,7 @@ const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "righ
 const K_COLS: Array<{ key: KSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
   { key: "inningsPitched", label: "IP", align: "right" },
-  { key: "totalStrikeouts", label: "K", align: "right" },
+  { key: "totalStrikeouts", label: "Strikeouts", align: "right" },
   { key: "ksPerNine", label: "K/9", align: "right" },
   { key: "threePitchStrikeouts", label: "3-Pitch", align: "right" },
   { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right" },

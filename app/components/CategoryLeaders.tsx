@@ -21,8 +21,8 @@ const CATEGORIES: CategoryDef[] = [
   {
     key: "fourPitchWalks",
     title: "4-Pitch Walks",
-    subtitle: "Never landed a strike",
-    emoji: "🚶",
+    subtitle: "Never threw a strike",
+    emoji: "",
     tint: "from-amber-50 to-amber-100",
     accent: "text-amber-700",
   },
@@ -30,7 +30,7 @@ const CATEGORIES: CategoryDef[] = [
     key: "ohTwoWalks",
     title: "0-2 Walks",
     subtitle: "Up 0-2, then walked him",
-    emoji: "😬",
+    emoji: "",
     tint: "from-rose-50 to-rose-100",
     accent: "text-rose-700",
   },
@@ -38,7 +38,7 @@ const CATEGORIES: CategoryDef[] = [
     key: "leadoffWalks",
     title: "Leadoff Walks",
     subtitle: "First batter of an inning",
-    emoji: "🛻",
+    emoji: "",
     tint: "from-sky-50 to-sky-100",
     accent: "text-sky-700",
   },
@@ -46,13 +46,18 @@ const CATEGORIES: CategoryDef[] = [
     key: "twoOutWalks",
     title: "2-Out Walks",
     subtitle: "Already had 2 outs",
-    emoji: "🪢",
+    emoji: "",
     tint: "from-violet-50 to-violet-100",
     accent: "text-violet-700",
   },
 ];
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const RANK_LABELS = ["1st", "2nd", "3rd"];
+const RANK_COLORS = [
+  "bg-[var(--color-woo-gold)] text-[var(--color-sox-navy)]",
+  "bg-slate-300 text-slate-700",
+  "bg-amber-700 text-white",
+];
 
 export function CategoryLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
   return (
@@ -67,14 +72,11 @@ export function CategoryLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
             key={cat.key}
             className={`rounded-2xl border border-slate-200 bg-gradient-to-br ${cat.tint} p-4 shadow-sm`}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--color-sox-navy)]">
-                  <span className="text-base">{cat.emoji}</span>
-                  {cat.title}
-                </h3>
-                <p className="text-[11px] text-slate-600">{cat.subtitle}</p>
-              </div>
+            <div className="mb-3">
+              <h3 className="text-sm font-bold text-[var(--color-sox-navy)]">
+                {cat.title}
+              </h3>
+              <p className="text-[11px] text-slate-600">{cat.subtitle}</p>
             </div>
             {ranked.length === 0 ? (
               <div className="rounded-lg bg-white/60 px-3 py-4 text-center text-xs text-slate-500">
@@ -88,7 +90,11 @@ export function CategoryLeaders({ pitchers }: { pitchers: PitcherStats[] }) {
                     className="flex items-center justify-between rounded-lg bg-white/80 px-2.5 py-1.5 backdrop-blur"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-base leading-none">{MEDALS[i]}</span>
+                      <span
+                        className={`inline-flex h-5 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${RANK_COLORS[i]}`}
+                      >
+                        {RANK_LABELS[i]}
+                      </span>
                       <PitcherAvatar
                         name={p.name}
                         src={p.headshotUrl}

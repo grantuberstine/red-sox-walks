@@ -97,18 +97,18 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
             title="Players pay (No Pass Fund)"
             color="rose"
             rules={[
-              { label: "4-pitch walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk`, emoji: "🚶" },
-              { label: "0-2 walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk`, emoji: "😬" },
-              { label: "Leadoff walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk`, emoji: "🛻" },
-              { label: "2-out walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk`, emoji: "🪢" },
+              { label: "4-pitch walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "0-2 walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "Leadoff walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "2-out walk", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
             ]}
           />
           <RuleBlock
             title="Coaches pay (K Bonus)"
             color="emerald"
             rules={[
-              { label: "3-pitch K", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each`, emoji: "⚡" },
-              { label: "3-up-3-down inning", amount: `${formatMoney(SIDE_K_BONUS)} per inning`, emoji: "🪑" },
+              { label: "3-pitch K", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
+              { label: "3-up-3-down inning", amount: `${formatMoney(SIDE_K_BONUS)} per inning` },
             ]}
           />
         </div>
@@ -317,7 +317,7 @@ function RuleBlock({
 }: {
   title: string;
   color: "rose" | "emerald";
-  rules: Array<{ label: string; amount: string; emoji: string }>;
+  rules: Array<{ label: string; amount: string }>;
 }) {
   return (
     <div
@@ -335,10 +335,7 @@ function RuleBlock({
       <ul className="space-y-1.5">
         {rules.map((r) => (
           <li key={r.label} className="flex items-center justify-between text-sm">
-            <span className="inline-flex items-center gap-2 text-slate-700">
-              <span className="text-base leading-none">{r.emoji}</span>
-              {r.label}
-            </span>
+            <span className="text-slate-700">{r.label}</span>
             <span className="font-bold tabular text-slate-900">{r.amount}</span>
           </li>
         ))}

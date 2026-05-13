@@ -71,7 +71,7 @@ export function CategoryChips<K extends string>({
               active ? tone.on : tone.off
             } ${active ? "shadow-sm" : ""}`}
           >
-            <span className="text-sm leading-none">{c.emoji}</span>
+            {c.emoji && <span className="text-sm leading-none">{c.emoji}</span>}
             <span>{c.label}</span>
           </button>
         );

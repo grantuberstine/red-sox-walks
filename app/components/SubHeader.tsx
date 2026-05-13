@@ -4,6 +4,7 @@ import type { Mode } from "./TopNav";
 import type { CategoryDef } from "./CategoryChips";
 import { CategoryChips } from "./CategoryChips";
 import { FilterBar } from "./FilterBar";
+import type { SearchSuggestion } from "./SearchInput";
 import type { RangeKey } from "@/lib/filters";
 
 export function SubHeader({
@@ -22,6 +23,7 @@ export function SubHeader({
   categoryValue,
   onCategoryChange,
   categoryLabel,
+  suggestions,
 }: {
   showMode?: boolean;
   mode: Mode;
@@ -38,6 +40,7 @@ export function SubHeader({
   categoryValue?: string;
   onCategoryChange?: (v: string) => void;
   categoryLabel?: string;
+  suggestions?: SearchSuggestion[];
 }) {
   return (
     <div className="border-b border-slate-200 bg-white">
@@ -70,6 +73,7 @@ export function SubHeader({
           onQueryChange={onQueryChange}
           rangeContext={rangeContext}
           resultCount={resultCount}
+          suggestions={suggestions}
         />
 
         {categories && categoryValue !== undefined && onCategoryChange && (

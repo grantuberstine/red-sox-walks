@@ -42,7 +42,7 @@ export function HeroBar({
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
-            {rangeLabel} · {eventLabel}
+            Total {eventLabel} · {rangeLabel}
           </div>
           <div className="flex items-baseline gap-3">
             <div className="text-5xl font-bold tabular leading-none sm:text-6xl">
@@ -51,7 +51,7 @@ export function HeroBar({
             {leaderName && (
               <div className="text-xs text-white/70">
                 <div className="text-[10px] uppercase tracking-widest text-white/50">
-                  Leader
+                  Most by one pitcher
                 </div>
                 <div className="font-medium text-white">
                   {leaderName}
