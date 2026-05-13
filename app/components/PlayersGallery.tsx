@@ -155,8 +155,8 @@ function Pill({
   if (value === 0) return null;
   const cls =
     tone === "walk"
-      ? "bg-[var(--color-sox-red)]/10 text-[var(--color-sox-red)] dark:bg-[var(--color-sox-red)]/20 dark:text-rose-200"
-      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300";
+      ? "border border-rose-300 text-rose-700 dark:border-rose-400/50 dark:text-rose-300"
+      : "border border-emerald-400 text-emerald-700 dark:border-emerald-400/50 dark:text-emerald-300";
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular ${cls}`}

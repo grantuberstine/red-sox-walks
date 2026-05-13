@@ -78,6 +78,20 @@ export type LivePlay = {
     outs: number;
   };
   playEvents: PlayEvent[];
+  runners?: PlayRunner[];
+};
+
+export type PlayRunner = {
+  movement?: {
+    originBase?: string | null;
+    start?: string | null;
+    end?: string | null;
+    outBase?: string | null;
+    isOut?: boolean;
+  };
+  details?: {
+    runner?: { id?: number };
+  };
 };
 
 export type PlayEvent = {

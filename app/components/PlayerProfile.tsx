@@ -17,11 +17,12 @@ import { achievementById } from "@/lib/achievements";
 import { computeFundReport, formatMoney } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
 
+const WALK_TAG_OUTLINE = "border border-rose-300 text-rose-700 dark:border-rose-400/50 dark:text-rose-300";
 const WALK_TAG_COLORS: Record<WalkType, string> = {
-  fourPitch: "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300",
-  ohTwo: "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300",
-  leadoff: "bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300",
-  twoOut: "bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300",
+  fourPitch: WALK_TAG_OUTLINE,
+  ohTwo: WALK_TAG_OUTLINE,
+  leadoff: WALK_TAG_OUTLINE,
+  twoOut: WALK_TAG_OUTLINE,
 };
 const WALK_TAG_LABELS: Record<WalkType, string> = {
   fourPitch: "4P",
@@ -29,9 +30,10 @@ const WALK_TAG_LABELS: Record<WalkType, string> = {
   leadoff: "LO",
   twoOut: "2O",
 };
+const K_TAG_OUTLINE = "border border-emerald-400 text-emerald-700 dark:border-emerald-400/50 dark:text-emerald-300";
 const K_TAG_COLORS: Record<StrikeoutType, string> = {
-  threePitch: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300",
-  side: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300",
+  threePitch: K_TAG_OUTLINE,
+  side: K_TAG_OUTLINE,
 };
 const K_TAG_LABELS: Record<StrikeoutType, string> = {
   threePitch: "3P",

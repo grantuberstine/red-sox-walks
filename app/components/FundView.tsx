@@ -100,7 +100,7 @@ export function FundView({
               { label: "4-pitch walk", detail: "Never threw a strike", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
               { label: "0-2 walk", detail: "Count reached 0-2 then walked", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
               { label: "Leadoff walk", detail: "First batter of an inning", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
-              { label: "2-out walk", detail: "First batter after the 2nd out", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
+              { label: "2-out walk", detail: "Walked a batter with 2 outs, nobody on", amount: `${formatMoney(WALK_FEE_PER_CATEGORY)} per walk` },
             ]}
             footnote="A walk that hits multiple categories gets charged for each."
           />

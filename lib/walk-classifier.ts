@@ -33,6 +33,16 @@ function pitchCount(play: LivePlay): number {
   return (play.playEvents ?? []).filter((e) => e.isPitch).length;
 }
 
+const OCCUPIED_BASES = new Set(["1B", "2B", "3B"]);
+
+function basesEmptyBeforePlay(play: LivePlay): boolean {
+  for (const r of play.runners ?? []) {
+    const start = r.movement?.start;
+    if (start && OCCUPIED_BASES.has(start)) return false;
+  }
+  return true;
+}
+
 export type Classified = {
   walks: WalkClassification[];
   strikeouts: StrikeoutClassification[];
@@ -60,15 +70,11 @@ export function classifyWooSoxEvents(
     (a, b) => a.about.atBatIndex - b.about.atBatIndex,
   );
 
-  const firstTwoOutPlayInHalf = new Map<string, number>();
   for (const play of playsSorted) {
     const halfKey = `${play.about.inning}-${play.about.halfInning}`;
     if (!seenHalfInnings.has(halfKey)) {
       seenHalfInnings.add(halfKey);
       firstPlayInHalf.set(halfKey, play.about.atBatIndex);
-    }
-    if (!firstTwoOutPlayInHalf.has(halfKey) && outsAtStart(play) === 2) {
-      firstTwoOutPlayInHalf.set(halfKey, play.about.atBatIndex);
     }
   }
 
@@ -156,7 +162,7 @@ export function classifyWooSoxEvents(
     if (evType === "walk") {
       const isLeadoff = firstPlayInHalf.get(halfKey) === play.about.atBatIndex;
       const isTwoOut =
-        firstTwoOutPlayInHalf.get(halfKey) === play.about.atBatIndex;
+        outsAtStart(play) === 2 && basesEmptyBeforePlay(play);
       walks.push({
         pitcherId: play.matchup.pitcher.id,
         pitcherName: play.matchup.pitcher.fullName,

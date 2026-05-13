@@ -78,8 +78,8 @@ const K_TAG_LABELS: Record<StrikeoutType, string> = {
   side: "3-Up",
 };
 
-const PILL_WALK = "bg-[var(--color-sox-red)]/10 text-[var(--color-sox-red)] dark:bg-[var(--color-sox-red)]/20 dark:text-rose-200";
-const PILL_K = "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300";
+const PILL_WALK = "border border-rose-300 text-rose-700 dark:border-rose-400/50 dark:text-rose-300";
+const PILL_K = "border border-emerald-400 text-emerald-700 dark:border-emerald-400/50 dark:text-emerald-300";
 
 function feesOwed(p: PitcherStats): number {
   return (
