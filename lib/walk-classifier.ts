@@ -1,6 +1,11 @@
 import { WOOSOX_TEAM_ID } from "./constants";
 import type { LiveFeed, LivePlay, PlayEvent } from "./mlb-api";
-import type { StrikeoutClassification, WalkClassification } from "./types";
+import type {
+  AppearanceVelo,
+  PitchTypeStats,
+  StrikeoutClassification,
+  WalkClassification,
+} from "./types";
 
 const STRIKEOUT_EVENTS = new Set(["strikeout", "strikeout_double_play"]);
 
@@ -32,7 +37,10 @@ export type Classified = {
   walks: WalkClassification[];
   strikeouts: StrikeoutClassification[];
   outsByPitcher: Record<number, number>;
+  veloByPitcher: Record<number, AppearanceVeloPartial>;
 };
+
+export type AppearanceVeloPartial = Omit<AppearanceVelo, "gamePk" | "date" | "opponent">;
 
 export function classifyWooSoxEvents(
   feed: LiveFeed,
@@ -41,6 +49,10 @@ export function classifyWooSoxEvents(
   const walks: WalkClassification[] = [];
   const strikeouts: StrikeoutClassification[] = [];
   const outsByPitcher: Record<number, number> = {};
+  const veloRaw: Record<
+    number,
+    { all: number[]; byType: Map<string, number[]> }
+  > = {};
 
   const seenHalfInnings = new Set<string>();
   const firstPlayInHalf = new Map<string, number>();
@@ -72,12 +84,51 @@ export function classifyWooSoxEvents(
     playsByHalf.get(halfKey)!.push({ play, outsAdded });
 
     const pitchingTeamId = teamPitchingInHalf(feed, play.about.halfInning);
-    if (pitchingTeamId === WOOSOX_TEAM_ID && outsAdded > 0) {
+    if (pitchingTeamId === WOOSOX_TEAM_ID) {
       const pid = play.matchup.pitcher.id;
-      outsByPitcher[pid] = (outsByPitcher[pid] ?? 0) + outsAdded;
+      if (outsAdded > 0) {
+        outsByPitcher[pid] = (outsByPitcher[pid] ?? 0) + outsAdded;
+      }
+      if (!veloRaw[pid]) veloRaw[pid] = { all: [], byType: new Map() };
+      const bucket = veloRaw[pid];
+      for (const ev of play.playEvents ?? []) {
+        if (!ev.isPitch) continue;
+        const v = ev.pitchData?.startSpeed;
+        if (typeof v !== "number" || !Number.isFinite(v)) continue;
+        bucket.all.push(v);
+        const t = ev.details?.type?.code ?? "??";
+        if (!bucket.byType.has(t)) bucket.byType.set(t, []);
+        bucket.byType.get(t)!.push(v);
+      }
     }
 
     prevOuts = play.count.outs;
+  }
+
+  const veloByPitcher: Record<number, AppearanceVeloPartial> = {};
+  for (const [pidStr, bucket] of Object.entries(veloRaw)) {
+    const pid = Number(pidStr);
+    if (bucket.all.length === 0) continue;
+    const avg = bucket.all.reduce((s, n) => s + n, 0) / bucket.all.length;
+    const max = Math.max(...bucket.all);
+    const byType: PitchTypeStats[] = [];
+    for (const [type, arr] of bucket.byType) {
+      const tAvg = arr.reduce((s, n) => s + n, 0) / arr.length;
+      const tMax = Math.max(...arr);
+      byType.push({
+        type,
+        count: arr.length,
+        avgVelo: Number(tAvg.toFixed(2)),
+        maxVelo: Number(tMax.toFixed(2)),
+      });
+    }
+    byType.sort((a, b) => b.count - a.count);
+    veloByPitcher[pid] = {
+      pitchCount: bucket.all.length,
+      avgVelo: Number(avg.toFixed(2)),
+      maxVelo: Number(max.toFixed(2)),
+      byType,
+    };
   }
 
   const sidePitcherByHalf = new Map<string, number>();
@@ -134,7 +185,7 @@ export function classifyWooSoxEvents(
     }
   }
 
-  return { walks, strikeouts, outsByPitcher };
+  return { walks, strikeouts, outsByPitcher, veloByPitcher };
 }
 
 export function classifyWooSoxWalks(

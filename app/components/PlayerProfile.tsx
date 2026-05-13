@@ -71,7 +71,6 @@ export function PlayerProfile({
   );
   const entry = fundReport.entries.find((e) => e.pitcherId === pitcher.pitcherId);
   const fees = entry?.feesOwed ?? 0;
-  const bonus = entry?.bonusEarned ?? 0;
 
   const playerWalks = useMemo(
     () => walks.filter((w) => w.pitcherId === pitcher.pitcherId),
@@ -125,18 +124,12 @@ export function PlayerProfile({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-5">
           <MoneyCard
             label="Owes the fund"
             value={formatMoney(fees)}
             sub={`${pitcher.fourPitchWalks + pitcher.ohTwoWalks + pitcher.leadoffWalks + pitcher.twoOutWalks} fee triggers · $1 each`}
             tone="rose"
-          />
-          <MoneyCard
-            label="Coaches owe player"
-            value={formatMoney(bonus)}
-            sub={`${pitcher.threePitchStrikeouts} 3-pitch K + ${pitcher.sideStrikeouts} 3-up-3-down`}
-            tone="emerald"
           />
         </div>
       </section>

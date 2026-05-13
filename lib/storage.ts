@@ -1,7 +1,9 @@
 import { put, list, del } from "@vercel/blob";
 import { BLOB_KEY, SEASON, WOOSOX_TEAM_ID } from "./constants";
 import { computeAchievements, headshotUrl } from "./achievements";
+import type { AppearanceVeloPartial } from "./walk-classifier";
 import type {
+  AppearanceVelo,
   GameSummary,
   PitcherStats,
   SeasonState,
@@ -21,6 +23,7 @@ const emptyState = (): SeasonState => ({
   games: [],
   walks: [],
   strikeouts: [],
+  velocity: {},
   meta: {
     lastRefreshAt: null,
     lastGameDate: null,
@@ -51,6 +54,7 @@ function mergeWithDefaults(parsed: SeasonState): SeasonState {
     games: parsed.games ?? [],
     processedGamePks: parsed.processedGamePks ?? [],
     pitchers: parsed.pitchers ?? {},
+    velocity: parsed.velocity ?? {},
     meta: { ...empty.meta, ...(parsed.meta ?? {}) },
   };
 }
@@ -148,6 +152,7 @@ export function applyEventsToState(
   walks: WalkClassification[],
   strikeouts: StrikeoutClassification[],
   outsByPitcher: Record<number, number>,
+  veloByPitcher: Record<number, AppearanceVeloPartial>,
   game: GameSummary,
 ): SeasonState {
   const next: SeasonState = {
@@ -157,9 +162,27 @@ export function applyEventsToState(
     processedGamePks: [...state.processedGamePks],
     walks: [...state.walks],
     strikeouts: [...state.strikeouts],
+    velocity: { ...state.velocity },
   };
 
   if (next.processedGamePks.includes(game.gamePk)) return next;
+
+  for (const [pidStr, partial] of Object.entries(veloByPitcher)) {
+    const key = pidStr;
+    const list: AppearanceVelo[] = next.velocity[key]
+      ? [...next.velocity[key]]
+      : [];
+    list.push({
+      gamePk: game.gamePk,
+      date: game.date,
+      opponent: game.opponent,
+      ...partial,
+    });
+    list.sort((a, b) =>
+      a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
+    );
+    next.velocity[key] = list;
+  }
 
   const pitcherIdsThisGame = new Set<number>();
 

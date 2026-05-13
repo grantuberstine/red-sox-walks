@@ -16,10 +16,8 @@ async function main() {
     i += 1;
     process.stdout.write(`\r[${i}/${games.length}] gamePk ${g.gamePk}    `);
     const feed = await fetchGameFeed(g.gamePk);
-    const { walks, strikeouts, outsByPitcher } = classifyWooSoxEvents(
-      feed,
-      g.date,
-    );
+    const { walks, strikeouts, outsByPitcher, veloByPitcher } =
+      classifyWooSoxEvents(feed, g.date);
     const isHome = g.homeTeamId === WOOSOX_TEAM_ID;
     const teamScore = isHome ? g.homeScore : g.awayScore;
     const opponentScore = isHome ? g.awayScore : g.homeScore;
@@ -40,7 +38,7 @@ async function main() {
       opponentScore,
       result,
     };
-    state = applyEventsToState(state, walks, strikeouts, outsByPitcher, summary);
+    state = applyEventsToState(state, walks, strikeouts, outsByPitcher, veloByPitcher, summary);
   }
   process.stdout.write("\n");
 

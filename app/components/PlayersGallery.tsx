@@ -3,25 +3,18 @@
 import { useMemo, useState } from "react";
 import type { PitcherStats } from "@/lib/types";
 import { inningsPitched } from "@/lib/filters";
-import {
-  WALK_FEE_PER_CATEGORY,
-  THREE_PITCH_K_BONUS,
-  SIDE_K_BONUS,
-  formatMoney,
-} from "@/lib/fund";
+import { WALK_FEE_PER_CATEGORY, formatMoney } from "@/lib/fund";
 import { PitcherAvatar } from "./PitcherAvatar";
 
 type SortKey =
   | "name"
   | "owes"
-  | "coachesOwe"
   | "totalWalks"
   | "totalStrikeouts"
   | "outsRecorded";
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: "owes", label: "Owes most" },
-  { key: "coachesOwe", label: "Coaches owe most" },
   { key: "totalWalks", label: "Most walks" },
   { key: "totalStrikeouts", label: "Most strikeouts" },
   { key: "outsRecorded", label: "Innings pitched" },
@@ -32,13 +25,6 @@ function feesOwed(p: PitcherStats): number {
   return (
     (p.fourPitchWalks + p.ohTwoWalks + p.leadoffWalks + p.twoOutWalks) *
     WALK_FEE_PER_CATEGORY
-  );
-}
-
-function coachesOwe(p: PitcherStats): number {
-  return (
-    p.threePitchStrikeouts * THREE_PITCH_K_BONUS +
-    p.sideStrikeouts * SIDE_K_BONUS
   );
 }
 
@@ -57,7 +43,6 @@ export function PlayersGallery({
       if (sortKey === "name") return a.name.localeCompare(b.name);
       const valOf = (p: PitcherStats): number => {
         if (sortKey === "owes") return feesOwed(p);
-        if (sortKey === "coachesOwe") return coachesOwe(p);
         return p[sortKey as keyof PitcherStats] as number;
       };
       return valOf(b) - valOf(a);
@@ -98,7 +83,6 @@ export function PlayersGallery({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {sorted.map((p) => {
           const owes = feesOwed(p);
-          const owed = coachesOwe(p);
           return (
             <button
               key={p.pitcherId}
@@ -118,9 +102,8 @@ export function PlayersGallery({
                   </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <MoneyBlock label="Owes the fund" value={owes} tone="rose" />
-                <MoneyBlock label="Coaches owe" value={owed} tone="emerald" />
+              <div className="mt-4">
+                <MoneyBlock label="Owes the fund" value={owes} />
               </div>
               <div className="mt-3 flex flex-wrap gap-1">
                 <Pill label="4P" value={p.fourPitchWalks} tone="walk" />
@@ -144,22 +127,16 @@ export function PlayersGallery({
 function MoneyBlock({
   label,
   value,
-  tone,
 }: {
   label: string;
   value: number;
-  tone: "rose" | "emerald";
 }) {
-  const valueColor =
-    tone === "rose"
-      ? "text-[var(--color-sox-red)]"
-      : "text-emerald-700 dark:text-emerald-400";
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-2.5 py-2">
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2.5">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
         {label}
       </div>
-      <div className={`mt-0.5 text-xl font-bold tabular leading-none ${valueColor}`}>
+      <div className="mt-1 text-2xl font-bold tabular leading-none text-[var(--color-sox-red)]">
         {formatMoney(value)}
       </div>
     </div>

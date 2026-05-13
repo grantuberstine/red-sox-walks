@@ -59,10 +59,9 @@ const WALK_COLS: Array<{ key: WalkSortKey; label: string; align?: "left" | "righ
 
 const K_COLS: Array<{ key: KSortKey; label: string; align?: "left" | "right" }> = [
   { key: "name", label: "Pitcher", align: "left" },
-  { key: "coachesOwe", label: "Coaches owe", align: "right" },
+  { key: "totalStrikeouts", label: "K's", align: "right" },
   { key: "threePitchStrikeouts", label: "3-Pitch", align: "right" },
   { key: "sideStrikeouts", label: "3-Up-3-Dn", align: "right" },
-  { key: "totalStrikeouts", label: "K's", align: "right" },
   { key: "inningsPitched", label: "IP", align: "right" },
   { key: "ksPerNine", label: "K/9", align: "right" },
 ];
@@ -123,7 +122,7 @@ export function PitcherTable({
 }) {
   const cols = mode === "walks" ? WALK_COLS : K_COLS;
   const defaultSort: WalkSortKey | KSortKey =
-    mode === "walks" ? "owes" : "coachesOwe";
+    mode === "walks" ? "owes" : "totalStrikeouts";
   const [sortKey, setSortKey] = useState<WalkSortKey | KSortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -263,11 +262,12 @@ export function PitcherTable({
         <ul className="divide-y divide-[var(--border)]">
           {sorted.map((p) => {
             const open = expanded === p.pitcherId;
-            const owed = mode === "walks" ? feesOwed(p) : coachesOwe(p);
-            const moneyColor =
+            const primary =
+              mode === "walks" ? formatMoney(feesOwed(p)) : `${p.totalStrikeouts}`;
+            const primaryColor =
               mode === "walks"
                 ? "text-[var(--color-sox-red)]"
-                : "text-emerald-700 dark:text-emerald-300";
+                : "text-[var(--text)]";
             return (
               <li key={p.pitcherId}>
                 <button
@@ -281,8 +281,8 @@ export function PitcherTable({
                       <span className="truncate font-semibold text-[var(--text)]">
                         {p.name}
                       </span>
-                      <span className={`text-xl font-bold tabular ${moneyColor}`}>
-                        {formatMoney(owed)}
+                      <span className={`text-xl font-bold tabular ${primaryColor}`}>
+                        {primary}
                       </span>
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
@@ -354,11 +354,6 @@ function PitcherRowDesktop({
   onToggle: () => void;
   colCount: number;
 }) {
-  const owed = mode === "walks" ? feesOwed(p) : coachesOwe(p);
-  const moneyColor =
-    mode === "walks"
-      ? "text-[var(--color-sox-red)]"
-      : "text-emerald-700 dark:text-emerald-300";
   return (
     <>
       <tr
@@ -375,11 +370,11 @@ function PitcherRowDesktop({
             </span>
           </div>
         </td>
-        <td className={`border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-semibold tabular ${moneyColor}`}>
-          {formatMoney(owed)}
-        </td>
         {mode === "walks" ? (
           <>
+            <td className="border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)]">
+              {formatMoney(feesOwed(p))}
+            </td>
             <NumberCell value={p.fourPitchWalks} />
             <NumberCell value={p.ohTwoWalks} />
             <NumberCell value={p.leadoffWalks} />
@@ -396,11 +391,11 @@ function PitcherRowDesktop({
           </>
         ) : (
           <>
-            <NumberCell value={p.threePitchStrikeouts} />
-            <NumberCell value={p.sideStrikeouts} />
-            <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
+            <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--text)]">
               {p.totalStrikeouts}
             </td>
+            <NumberCell value={p.threePitchStrikeouts} />
+            <NumberCell value={p.sideStrikeouts} />
             <td className="px-3 py-2.5 text-right text-sm tabular text-[var(--text)]">
               {inningsPitched(p)}
             </td>

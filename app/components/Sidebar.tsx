@@ -3,7 +3,13 @@
 import { WooSoxLogo } from "./WooSoxLogo";
 import type { Theme } from "@/lib/theme";
 
-export type Section = "walks" | "strikeouts" | "players" | "team" | "fund";
+export type Section =
+  | "walks"
+  | "strikeouts"
+  | "players"
+  | "team"
+  | "analytics"
+  | "fund";
 
 const NAV: Array<{
   key: Section;
@@ -64,6 +70,18 @@ const NAV: Array<{
         <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
         <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
         <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+      </svg>
+    ),
+  },
+  {
+    key: "analytics",
+    label: "Analytics",
+    short: "Analytics",
+    description: "Velocity & pitch mix",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="m7 14 4-4 4 4 5-5" />
       </svg>
     ),
   },
@@ -220,7 +238,7 @@ export function MobileTabBar({
 }) {
   return (
     <nav
-      className="sticky bottom-0 z-30 grid grid-cols-5 border-t border-[var(--border)] bg-[var(--surface)] shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
+      className="sticky bottom-0 z-30 grid grid-cols-6 border-t border-[var(--border)] bg-[var(--surface)] shadow-[0_-2px_8px_rgba(12,35,64,0.05)] lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {NAV.map((item) => {

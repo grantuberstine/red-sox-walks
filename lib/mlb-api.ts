@@ -87,11 +87,16 @@ export type PlayEvent = {
     description?: string;
     isBall?: boolean;
     isStrike?: boolean;
+    type?: { code: string; description: string };
   };
   count?: {
     balls: number;
     strikes: number;
     outs: number;
+  };
+  pitchData?: {
+    startSpeed?: number;
+    endSpeed?: number;
   };
 };
 

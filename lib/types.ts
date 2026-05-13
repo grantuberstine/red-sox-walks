@@ -59,6 +59,23 @@ export type StrikeoutRecord = {
   tags: StrikeoutType[];
 };
 
+export type PitchTypeStats = {
+  type: string;
+  count: number;
+  avgVelo: number;
+  maxVelo: number;
+};
+
+export type AppearanceVelo = {
+  gamePk: number;
+  date: string;
+  opponent: string;
+  pitchCount: number;
+  avgVelo: number;
+  maxVelo: number;
+  byType: PitchTypeStats[];
+};
+
 export type SeasonState = {
   season: number;
   teamId: number;
@@ -67,6 +84,7 @@ export type SeasonState = {
   games: GameSummary[];
   walks: WalkRecord[];
   strikeouts: StrikeoutRecord[];
+  velocity: Record<string, AppearanceVelo[]>;
   meta: {
     lastRefreshAt: string | null;
     lastGameDate: string | null;

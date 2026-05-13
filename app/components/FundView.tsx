@@ -53,7 +53,7 @@ export function FundView({
             tone="rose"
           />
           <BigStat
-            label="Coaches owe players"
+            label="Coaches owe the fund"
             value={formatMoney(report.team.totalBonus)}
             sub={`${report.team.threePitchCount} 3-pitch K × $${THREE_PITCH_K_BONUS} + ${report.team.sideInningCount} 3-up-3-down × $${SIDE_K_BONUS}`}
             tone="emerald"
@@ -71,9 +71,9 @@ export function FundView({
           )}
           {topEarner && topEarner.bonusEarned > 0 && (
             <TopCallout
-              title="Coaches owe most to"
+              title="Biggest K-bonus generator"
               entry={topEarner}
-              valueLabel={`${formatMoney(topEarner.bonusEarned)} owed`}
+              valueLabel={`${formatMoney(topEarner.bonusEarned)} into fund`}
               tone="emerald"
             />
           )}
@@ -105,14 +105,14 @@ export function FundView({
             footnote="A walk that hits multiple categories gets charged for each."
           />
           <RuleBlock
-            title="Coaches → Players"
-            description="Coaches owe each pitcher a bonus for these K achievements:"
+            title="Coaches → No Pass Fund"
+            description="Coaches pay the fund for every team K achievement:"
             color="emerald"
             rules={[
               { label: "3-pitch strikeout", amount: `${formatMoney(THREE_PITCH_K_BONUS)} each` },
               { label: "3-up-3-down inning", amount: `${formatMoney(SIDE_K_BONUS)} per inning` },
             ]}
-            footnote="Paid out per pitcher — independent of what they owe the fund."
+            footnote="Pool grows from coaches' contributions, not paid out per pitcher."
           />
         </div>
       </section>
@@ -144,19 +144,14 @@ export function FundView({
         <div className="hidden md:block">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                 <th className="px-4 py-2.5 text-left">Pitcher</th>
                 <th className="px-3 py-2.5 text-right">4P</th>
                 <th className="px-3 py-2.5 text-right">0-2</th>
                 <th className="px-3 py-2.5 text-right">LO</th>
                 <th className="px-3 py-2.5 text-right">2O</th>
-                <th className="px-3 py-2.5 text-right text-rose-700 dark:text-rose-300">
-                  Player owes
-                </th>
-                <th className="px-3 py-2.5 text-right">3P-K</th>
-                <th className="px-3 py-2.5 text-right">3UP</th>
-                <th className="px-3 py-2.5 text-right text-emerald-700 dark:text-emerald-300">
-                  Coaches owe
+                <th className="px-3 py-2.5 text-right text-[var(--color-sox-red)]">
+                  Owes the fund
                 </th>
               </tr>
             </thead>
@@ -180,17 +175,11 @@ export function FundView({
                       </span>
                     </div>
                   </td>
-                  <NumCell value={e.walkBuckets.fourPitch} tint="text-amber-700 dark:text-amber-300" />
-                  <NumCell value={e.walkBuckets.ohTwo} tint="text-rose-700 dark:text-rose-300" />
-                  <NumCell value={e.walkBuckets.leadoff} tint="text-sky-700 dark:text-sky-300" />
-                  <NumCell value={e.walkBuckets.twoOut} tint="text-violet-700 dark:text-violet-300" />
+                  <NumCell value={e.walkBuckets.fourPitch} tint="text-[var(--text)]" />
+                  <NumCell value={e.walkBuckets.ohTwo} tint="text-[var(--text)]" />
+                  <NumCell value={e.walkBuckets.leadoff} tint="text-[var(--text)]" />
+                  <NumCell value={e.walkBuckets.twoOut} tint="text-[var(--text)]" />
                   <MoneyCell value={e.feesOwed} tint="rose" />
-                  <NumCell value={e.threePitchKs} tint="text-emerald-700 dark:text-emerald-300" />
-                  <NumCell
-                    value={e.threeUpThreeDownInnings}
-                    tint="text-indigo-700 dark:text-indigo-300"
-                  />
-                  <MoneyCell value={e.bonusEarned} tint="emerald" />
                 </tr>
               ))}
             </tbody>
@@ -207,36 +196,24 @@ export function FundView({
                   size={48}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold text-[var(--text)]">
-                    {e.name}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="truncate font-semibold text-[var(--text)]">
+                      {e.name}
+                    </span>
+                    <span className="text-xl font-bold tabular text-[var(--color-sox-red)]">
+                      {formatMoney(e.feesOwed)}
+                    </span>
                   </div>
-                  <div className="mt-1 grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="rounded-md bg-rose-50 dark:bg-rose-500/15 px-2 py-1 dark:bg-rose-50 dark:bg-rose-500/150/10">
-                      <div className="text-[9px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-300">
-                        Player owes
-                      </div>
-                      <div className="text-base font-bold tabular text-rose-700 dark:text-rose-300">
-                        {formatMoney(e.feesOwed)}
-                      </div>
-                    </div>
-                    <div className="rounded-md bg-emerald-50 dark:bg-emerald-500/15 px-2 py-1 dark:bg-emerald-50 dark:bg-emerald-500/150/10">
-                      <div className="text-[9px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                        Coaches owe
-                      </div>
-                      <div className="text-base font-bold tabular text-emerald-700 dark:text-emerald-300">
-                        {formatMoney(e.bonusEarned)}
-                      </div>
-                    </div>
+                  <div className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                    Owes the fund
                   </div>
                 </div>
               </div>
-              <div className="mt-2 grid grid-cols-6 gap-1 text-center text-[10px]">
-                <SmallCell label="4P" value={e.walkBuckets.fourPitch} on="bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300" />
-                <SmallCell label="0-2" value={e.walkBuckets.ohTwo} on="bg-rose-50 dark:bg-rose-500/15 text-rose-800 dark:text-rose-300" />
-                <SmallCell label="LO" value={e.walkBuckets.leadoff} on="bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300" />
-                <SmallCell label="2O" value={e.walkBuckets.twoOut} on="bg-violet-50 dark:bg-violet-500/15 text-violet-800 dark:text-violet-300" />
-                <SmallCell label="3P-K" value={e.threePitchKs} on="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300" />
-                <SmallCell label="3UP" value={e.threeUpThreeDownInnings} on="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-300" />
+              <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
+                <SmallCell label="4P" value={e.walkBuckets.fourPitch} />
+                <SmallCell label="0-2" value={e.walkBuckets.ohTwo} />
+                <SmallCell label="LO" value={e.walkBuckets.leadoff} />
+                <SmallCell label="2O" value={e.walkBuckets.twoOut} />
               </div>
             </li>
           ))}
@@ -383,15 +360,17 @@ function MoneyCell({ value, tint }: { value: number; tint: "rose" | "emerald" })
 function SmallCell({
   label,
   value,
-  on,
 }: {
   label: string;
   value: number;
-  on: string;
 }) {
   return (
     <div
-      className={`rounded-md py-1 ${value > 0 ? on : "bg-[var(--surface-hover)] text-[var(--text-muted)]/60"}`}
+      className={`rounded-md py-1 ${
+        value > 0
+          ? "bg-[var(--surface-hover)] text-[var(--text)]"
+          : "bg-[var(--surface-hover)]/50 text-[var(--text-muted)]/60"
+      }`}
     >
       <div className="text-[8px] font-medium uppercase tracking-wider opacity-80">
         {label}

@@ -38,6 +38,7 @@ import { TeamView } from "./components/TeamView";
 import { FundView } from "./components/FundView";
 import { PlayersGallery } from "./components/PlayersGallery";
 import { PlayerProfile } from "./components/PlayerProfile";
+import { AnalyticsView } from "./components/AnalyticsView";
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "never";
@@ -172,6 +173,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
     strikeouts: "Strikeouts",
     players: profilePitcher ? profilePitcher.name : "Players",
     team: "Team",
+    analytics: "Analytics",
     fund: "No Pass Fund",
   };
 
@@ -195,6 +197,8 @@ export function Dashboard({ state }: { state: SeasonState }) {
         return allPitchersFiltered.length;
       case "team":
         return filteredWalks.length + filteredK.length;
+      case "analytics":
+        return Object.keys(state.velocity).length;
       case "fund":
         return fundReport.entries.length;
     }
@@ -210,12 +214,16 @@ export function Dashboard({ state }: { state: SeasonState }) {
         return "pitcher";
       case "team":
         return "event";
+      case "analytics":
+        return "pitcher";
       case "fund":
         return "pitcher";
     }
   })();
 
-  const showFilters = section !== "players" || profileId === null;
+  const showFilters =
+    section !== "analytics" &&
+    (section !== "players" || profileId === null);
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)] lg:flex-row">
@@ -366,6 +374,10 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 filteredK={filteredK}
                 rangeLabel={RANGE_LABELS[range]}
               />
+            )}
+
+            {section === "analytics" && (
+              <AnalyticsView state={state} pitchers={allPitchers} />
             )}
 
             {section === "fund" && (

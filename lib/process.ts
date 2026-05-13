@@ -69,12 +69,17 @@ export async function processGames(options?: {
     }
     try {
       const feed = await fetchGameFeed(g.gamePk);
-      const { walks, strikeouts, outsByPitcher } = classifyWooSoxEvents(
-        feed,
-        g.date,
-      );
+      const { walks, strikeouts, outsByPitcher, veloByPitcher } =
+        classifyWooSoxEvents(feed, g.date);
       const summary = toGameSummary(g, walks.length, strikeouts.length);
-      state = applyEventsToState(state, walks, strikeouts, outsByPitcher, summary);
+      state = applyEventsToState(
+        state,
+        walks,
+        strikeouts,
+        outsByPitcher,
+        veloByPitcher,
+        summary,
+      );
       report.processedNew += 1;
       report.totalWalksAdded += walks.length;
       report.totalStrikeoutsAdded += strikeouts.length;
