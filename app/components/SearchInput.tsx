@@ -134,7 +134,7 @@ export function SearchInput({
                   select(s);
                 }}
                 className={`flex cursor-pointer items-center gap-2.5 px-3 py-1.5 text-sm ${
-                  active ? "bg-slate-50" : ""
+                  active ? "bg-[var(--surface-subtle)]" : ""
                 }`}
               >
                 <PitcherAvatar name={s.name} src={s.headshotUrl} size={28} />

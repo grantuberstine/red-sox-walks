@@ -348,7 +348,7 @@ function CategoryRow({
         <span>{label}</span>
       </div>
       <span
-        className={`tabular font-bold ${value > 0 ? "text-[var(--text)]" : "text-slate-300"}`}
+        className={`tabular font-bold ${value > 0 ? "text-[var(--text)]" : "text-[var(--text-muted)]/60"}`}
       >
         {value}
       </span>

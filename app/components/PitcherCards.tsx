@@ -310,12 +310,12 @@ export function PitcherCards({
 }
 
 const CELL_TONES = {
-  amber: { on: "bg-amber-50 text-amber-800", off: "bg-[var(--surface-hover)] text-slate-300" },
-  rose: { on: "bg-rose-50 text-rose-800", off: "bg-[var(--surface-hover)] text-slate-300" },
-  sky: { on: "bg-sky-50 text-sky-800", off: "bg-[var(--surface-hover)] text-slate-300" },
-  violet: { on: "bg-violet-50 text-violet-800", off: "bg-[var(--surface-hover)] text-slate-300" },
-  emerald: { on: "bg-emerald-50 text-emerald-800", off: "bg-[var(--surface-hover)] text-slate-300" },
-  indigo: { on: "bg-indigo-50 text-indigo-800", off: "bg-[var(--surface-hover)] text-slate-300" },
+  amber: { on: "bg-amber-50 text-amber-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  rose: { on: "bg-rose-50 text-rose-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  sky: { on: "bg-sky-50 text-sky-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  violet: { on: "bg-violet-50 text-violet-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  emerald: { on: "bg-emerald-50 text-emerald-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  indigo: { on: "bg-indigo-50 text-indigo-800", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
 } as const;
 
 function Cell({

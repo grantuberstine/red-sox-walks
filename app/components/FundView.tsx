@@ -160,7 +160,7 @@ export function FundView({ report, rangeLabel }: { report: FundReport; rangeLabe
                 <tr
                   key={e.pitcherId}
                   className={`border-b border-[var(--border)] last:border-0 ${
-                    idx % 2 === 1 ? "bg-slate-50/30" : ""
+                    idx % 2 === 1 ? "bg-[var(--row-stripe)]" : ""
                   }`}
                 >
                   <td className="px-4 py-2.5">
@@ -348,7 +348,7 @@ function NumCell({ value, tint }: { value: number; tint: string }) {
   return (
     <td
       className={`px-3 py-2.5 text-right tabular ${
-        value > 0 ? `font-semibold ${tint}` : "text-slate-300"
+        value > 0 ? `font-semibold ${tint}` : "text-[var(--text-muted)]/60"
       }`}
     >
       {value}
@@ -360,7 +360,7 @@ function MoneyCell({ value, tint }: { value: number; tint: string }) {
   return (
     <td
       className={`px-3 py-2.5 text-right tabular ${
-        value > 0 ? `font-semibold ${tint}` : "text-slate-300"
+        value > 0 ? `font-semibold ${tint}` : "text-[var(--text-muted)]/60"
       }`}
     >
       {formatMoney(value)}
@@ -370,7 +370,7 @@ function MoneyCell({ value, tint }: { value: number; tint: string }) {
 
 function SmallCell({ label, value, on }: { label: string; value: number; on: string }) {
   return (
-    <div className={`rounded-md py-1 ${value > 0 ? on : "bg-[var(--surface-hover)] text-slate-300"}`}>
+    <div className={`rounded-md py-1 ${value > 0 ? on : "bg-[var(--surface-hover)] text-[var(--text-muted)]/60"}`}>
       <div className="text-[8px] font-medium uppercase tracking-wider opacity-80">
         {label}
       </div>

@@ -241,7 +241,7 @@ export function PitcherTable({
                 <button
                   type="button"
                   onClick={() => toggleExpand(p.pitcherId)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-slate-50"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[var(--surface-subtle)]"
                 >
                   <PitcherAvatar
                     name={p.name}
@@ -287,7 +287,7 @@ export function PitcherTable({
                   )}
                 </div>
                 {open && (
-                  <div className="border-t border-[var(--border)] bg-slate-50/50 px-4 py-3">
+                  <div className="border-t border-[var(--border)] bg-[var(--surface-subtle)]/50 px-4 py-3">
                     {mode === "walks" ? (
                       <WalkDetail p={p} walks={walksByPitcher.get(p.pitcherId) ?? []} />
                     ) : (
@@ -328,8 +328,8 @@ function PitcherRowDesktop({
       <tr
         onClick={onToggle}
         className={`cursor-pointer border-b border-[var(--border)] last:border-0 transition hover:bg-[var(--color-sox-navy)]/5 ${
-          idx % 2 === 1 ? "bg-slate-50/30" : ""
-        } ${open ? "bg-slate-50" : ""}`}
+          idx % 2 === 1 ? "bg-[var(--row-stripe)]" : ""
+        } ${open ? "bg-[var(--surface-subtle)]" : ""}`}
       >
         <td className="px-4 py-2.5">
           <div className="flex items-center gap-3">
@@ -384,7 +384,7 @@ function PitcherRowDesktop({
         )}
       </tr>
       {open && (
-        <tr className="bg-slate-50">
+        <tr className="bg-[var(--surface-subtle)]">
           <td colSpan={colCount} className="px-4 py-4">
             {mode === "walks" ? (
               <WalkDetail p={p} walks={walks} />
@@ -522,7 +522,7 @@ function NumberCell({ value, color }: { value: number; color: string }) {
   return (
     <td
       className={`px-4 py-2.5 text-right tabular ${
-        value > 0 ? `font-semibold ${color}` : "text-slate-300"
+        value > 0 ? `font-semibold ${color}` : "text-[var(--text-muted)]/60"
       }`}
     >
       {value}
@@ -532,7 +532,7 @@ function NumberCell({ value, color }: { value: number; color: string }) {
 
 function Pill({ label, value, classes }: { label: string; value: number; classes: string }) {
   return (
-    <div className={`rounded-md px-2 py-1.5 ${value > 0 ? classes : "bg-[var(--surface-hover)] text-slate-300"}`}>
+    <div className={`rounded-md px-2 py-1.5 ${value > 0 ? classes : "bg-[var(--surface-hover)] text-[var(--text-muted)]/60"}`}>
       <div className="text-[10px] font-medium uppercase tracking-wider opacity-80">
         {label}
       </div>
