@@ -25,6 +25,8 @@ const PITCH_TYPE_LABELS: Record<string, string> = {
   PO: "Pitchout",
 };
 
+const FASTBALL_CODES = new Set(["FF", "FT", "SI", "FC"]);
+
 function labelFor(type: string): string {
   return PITCH_TYPE_LABELS[type] ?? type;
 }
@@ -58,6 +60,9 @@ export function AnalyticsView({
         totalPitches: 0,
         appearances: 0,
         byType: [] as Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>,
+        fastballAvg: 0,
+        fastballMax: 0,
+        fastballCount: 0,
       };
     }
     let total = 0;
@@ -84,12 +89,27 @@ export function AnalyticsView({
         maxVelo: v.maxVelo,
       }))
       .sort((a, b) => b.count - a.count);
+
+    let fbCount = 0;
+    let fbSumVelo = 0;
+    let fbMax = 0;
+    for (const t of byType) {
+      if (!FASTBALL_CODES.has(t.type)) continue;
+      fbCount += t.count;
+      fbSumVelo += t.avgVelo * t.count;
+      if (t.maxVelo > fbMax) fbMax = t.maxVelo;
+    }
+    const fastballAvg = fbCount > 0 ? fbSumVelo / fbCount : 0;
+
     return {
       avgVelo: sumVelo / Math.max(1, total),
       maxVelo: max,
       totalPitches: total,
       appearances: appearances.length,
       byType,
+      fastballAvg,
+      fastballMax: fbMax,
+      fastballCount: fbCount,
     };
   }, [appearances]);
 
@@ -126,9 +146,13 @@ export function AnalyticsView({
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <BigStat
-            label="Avg velocity"
-            value={career.avgVelo.toFixed(1)}
-            suffix="mph"
+            label="Fastball avg"
+            value={
+              career.fastballCount > 0
+                ? career.fastballAvg.toFixed(1)
+                : "—"
+            }
+            suffix={career.fastballCount > 0 ? "mph" : ""}
           />
           <BigStat
             label="Max velocity"
