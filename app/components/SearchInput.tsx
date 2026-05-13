@@ -186,7 +186,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-[var(--color-woo-gold)]/40 px-0.5 text-[var(--text)]">
+      <mark className="rounded bg-rose-200 px-0.5 text-[var(--text)] dark:bg-rose-500/40 dark:text-white">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}

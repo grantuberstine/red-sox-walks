@@ -109,9 +109,23 @@ export function PlayerProfile({
         <div className="flex items-center gap-4">
           <PitcherAvatar name={pitcher.name} src={pitcher.headshotUrl} size={72} />
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold leading-tight text-[var(--text)]">
-              {pitcher.name}
-            </h1>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="text-2xl font-bold leading-tight text-[var(--text)]">
+                {pitcher.name}
+              </h1>
+              <a
+                href={`https://www.mlb.com/player/${pitcher.pitcherId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)] underline-offset-2 transition hover:text-[var(--color-sox-red)] hover:underline"
+              >
+                MLB.com profile
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17 17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
+              </a>
+            </div>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               {inningsPitched(pitcher)} IP · {pitcher.appearances} appearances ·{" "}
               {pitcher.totalWalks} walks · {pitcher.totalStrikeouts} K
@@ -141,22 +155,22 @@ export function PlayerProfile({
           <CategoryRow
             label="4-Pitch walks"
             value={pitcher.fourPitchWalks}
-            tone="amber"
+            tone="walk"
           />
           <CategoryRow
             label="0-2 walks"
             value={pitcher.ohTwoWalks}
-            tone="rose"
+            tone="walk"
           />
           <CategoryRow
             label="Leadoff walks"
             value={pitcher.leadoffWalks}
-            tone="sky"
+            tone="walk"
           />
           <CategoryRow
             label="2-out walks"
             value={pitcher.twoOutWalks}
-            tone="violet"
+            tone="walk"
           />
         </Card>
 
@@ -164,12 +178,12 @@ export function PlayerProfile({
           <CategoryRow
             label="3-pitch strikeouts"
             value={pitcher.threePitchStrikeouts}
-            tone="emerald"
+            tone="k"
           />
           <CategoryRow
             label="3-up-3-down innings"
             value={pitcher.sideStrikeouts}
-            tone="indigo"
+            tone="k"
           />
         </Card>
       </section>
@@ -330,16 +344,12 @@ function CategoryRow({
 }: {
   label: string;
   value: number;
-  tone: "amber" | "rose" | "sky" | "violet" | "emerald" | "indigo";
+  tone: "walk" | "k";
 }) {
-  const dot = {
-    amber: "bg-amber-400",
-    rose: "bg-rose-400",
-    sky: "bg-sky-400",
-    violet: "bg-violet-400",
-    emerald: "bg-emerald-400",
-    indigo: "bg-indigo-400",
-  }[tone];
+  const dot =
+    tone === "walk"
+      ? "bg-[var(--color-sox-red)] dark:bg-rose-400"
+      : "bg-emerald-500 dark:bg-emerald-400";
   return (
     <div className="flex items-center justify-between py-1.5 text-sm">
       <div className="flex items-center gap-2 text-[var(--text-secondary)]">

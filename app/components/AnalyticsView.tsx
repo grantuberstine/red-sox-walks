@@ -215,7 +215,7 @@ function BigStat({
         <span
           className={`text-3xl font-bold tabular leading-none ${
             highlight
-              ? "text-orange-600 dark:text-orange-400"
+              ? "text-[var(--color-sox-red)] dark:text-red-400"
               : "text-[var(--text)]"
           }`}
         >
@@ -277,7 +277,7 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
           avg
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 bg-orange-500 dark:bg-orange-400" />
+          <span className="inline-block h-0.5 w-4 bg-[var(--color-sox-red)] dark:bg-red-400" />
           max
         </span>
         <span className="ml-auto tabular">
@@ -318,11 +318,11 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
             <path
               d={maxPath}
               fill="none"
-              stroke="#f97316"
+              stroke="var(--color-sox-red)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="dark:stroke-orange-400"
+              className="dark:stroke-red-400"
             />
             <path
               d={avgPath}
@@ -339,8 +339,8 @@ function VeloLineChart({ appearances }: { appearances: AppearanceVelo[] }) {
                   cx={x(i)}
                   cy={y(a.maxVelo)}
                   r="3"
-                  fill="#f97316"
-                  className="dark:fill-orange-400"
+                  fill="var(--color-sox-red)"
+                  className="dark:fill-red-400"
                 >
                   <title>{`${formatDate(a.date)}: max ${a.maxVelo.toFixed(1)}`}</title>
                 </circle>
@@ -393,7 +393,7 @@ function VeloBarChart({ appearances }: { appearances: AppearanceVelo[] }) {
           avg
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-2 w-3 rounded-sm bg-orange-500 dark:bg-orange-400" />
+          <span className="inline-block h-2 w-3 rounded-sm bg-[var(--color-sox-red)] dark:bg-red-400" />
           max
         </span>
         <span className="ml-auto tabular">
@@ -418,7 +418,7 @@ function VeloBarChart({ appearances }: { appearances: AppearanceVelo[] }) {
             >
               <div className="relative h-full w-full">
                 <div
-                  className="absolute bottom-0 w-full rounded-t bg-orange-500/80 dark:bg-orange-400/60"
+                  className="absolute bottom-0 w-full rounded-t bg-[var(--color-sox-red)]/85 dark:bg-red-400/70"
                   style={{ height: `${maxPct}%` }}
                 />
                 <div
@@ -487,7 +487,7 @@ function PitchMixTable({
               <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
                 {t.avgVelo.toFixed(1)}
               </td>
-              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-orange-600 dark:text-orange-400">
+              <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
                 {t.maxVelo.toFixed(1)}
               </td>
             </tr>
@@ -526,7 +526,7 @@ function OutingsTable({ appearances }: { appearances: AppearanceVelo[] }) {
             <td className="px-3 py-2.5 text-right tabular text-[var(--text)]">
               {a.avgVelo.toFixed(1)}
             </td>
-            <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-orange-600 dark:text-orange-400">
+            <td className="px-3 py-2.5 text-right text-sm font-semibold tabular text-[var(--color-sox-red)] dark:text-red-400">
               {a.maxVelo.toFixed(1)}
             </td>
           </tr>

@@ -15,14 +15,12 @@ const NAV: Array<{
   key: Section;
   label: string;
   short: string;
-  description: string;
   icon: React.ReactNode;
 }> = [
   {
     key: "walks",
     label: "Walks",
     short: "Walks",
-    description: "Free passes by category",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="5" r="1.5" />
@@ -36,7 +34,6 @@ const NAV: Array<{
     key: "strikeouts",
     label: "Strikeouts",
     short: "Ks",
-    description: "Punchouts & 3-up-3-down",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
@@ -47,7 +44,6 @@ const NAV: Array<{
     key: "players",
     label: "Players",
     short: "Players",
-    description: "Profiles & gallery",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -61,7 +57,6 @@ const NAV: Array<{
     key: "team",
     label: "Team",
     short: "Team",
-    description: "Record & game log",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
@@ -77,7 +72,6 @@ const NAV: Array<{
     key: "analytics",
     label: "Analytics",
     short: "Analytics",
-    description: "Velocity & pitch mix",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 3v18h18" />
@@ -89,7 +83,6 @@ const NAV: Array<{
     key: "fund",
     label: "No Pass Fund",
     short: "Fund",
-    description: "Walk fees & K bonus",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -179,13 +172,8 @@ export function Sidebar({
               <span className={active ? "text-white" : ""}>
                 {item.icon}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs font-semibold">{item.label}</span>
-                <span
-                  className={`block truncate text-[10px] ${active ? "text-white/70" : "text-[var(--text-muted)]"}`}
-                >
-                  {item.description}
-                </span>
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                {item.label}
               </span>
             </button>
           );
@@ -252,7 +240,7 @@ export function MobileTabBar({
             aria-label={item.label}
             className={`flex min-h-[56px] cursor-pointer flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold transition active:bg-[var(--surface-hover)] ${
               active
-                ? "text-[var(--color-sox-red)] dark:text-[var(--color-woo-gold)]"
+                ? "text-[var(--color-sox-red)] dark:text-rose-300"
                 : "text-[var(--text-muted)]"
             }`}
           >

@@ -2,15 +2,10 @@ import type { StrikeoutRecord, StrikeoutType } from "@/lib/types";
 import { PitcherAvatar } from "./PitcherAvatar";
 import { headshotUrl } from "@/lib/achievements";
 
+const K_TAG_OUTLINE = "text-emerald-700 ring-emerald-300 dark:text-emerald-300 dark:ring-emerald-400/50";
 const TAG_META: Record<StrikeoutType, { label: string; className: string }> = {
-  threePitch: {
-    label: "3-pitch",
-    className: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 ring-emerald-200 dark:ring-emerald-500/30",
-  },
-  side: {
-    label: "side",
-    className: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 ring-indigo-200 dark:ring-indigo-500/30",
-  },
+  threePitch: { label: "3-pitch", className: K_TAG_OUTLINE },
+  side: { label: "3-up-3-dn", className: K_TAG_OUTLINE },
 };
 
 function formatDate(iso: string): string {

@@ -2,12 +2,12 @@ import type { ToneKey } from "./CategoryChips";
 
 const HERO_TONES: Record<ToneKey, string> = {
   neutral: "from-white/10 to-white/0 text-white",
-  amber: "from-amber-400/20 to-amber-300/5 text-amber-100",
-  rose: "from-rose-400/20 to-rose-300/5 text-rose-100",
-  sky: "from-sky-400/20 to-sky-300/5 text-sky-100",
-  violet: "from-violet-400/20 to-violet-300/5 text-violet-100",
-  emerald: "from-emerald-400/25 to-emerald-300/5 text-emerald-100",
-  indigo: "from-indigo-400/25 to-indigo-300/5 text-indigo-100",
+  amber: "from-white/10 to-white/0 text-white",
+  rose: "from-white/10 to-white/0 text-white",
+  sky: "from-white/10 to-white/0 text-white",
+  violet: "from-white/10 to-white/0 text-white",
+  emerald: "from-white/10 to-white/0 text-white",
+  indigo: "from-white/10 to-white/0 text-white",
 };
 
 const ACCENT_GRADIENTS = {
@@ -70,11 +70,11 @@ export function HeroBar({
       </div>
 
       {fundLine && (
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-[var(--color-woo-gold)]/30 bg-[var(--color-woo-gold)]/10 px-4 py-2.5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-woo-gold)]">
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/25 bg-white/10 px-4 py-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-white/85">
             {fundLine.label}
           </span>
-          <span className="text-2xl font-bold tabular text-[var(--color-woo-gold)]">
+          <span className="text-2xl font-bold tabular text-white">
             {fundLine.value}
           </span>
         </div>
@@ -96,7 +96,7 @@ function HeroStat({
 }) {
   return (
     <div
-      className={`rounded-xl bg-gradient-to-br ${HERO_TONES[tone]} px-2.5 py-2 sm:px-3 sm:py-2.5 ring-1 ring-inset ${highlight ? "ring-[var(--color-woo-gold)]/40" : "ring-white/10"}`}
+      className={`rounded-xl bg-gradient-to-br ${HERO_TONES[tone]} px-2.5 py-2 sm:px-3 sm:py-2.5 ring-1 ring-inset ${highlight ? "ring-white/40" : "ring-white/10"}`}
     >
       <div className="text-[9px] font-semibold uppercase tracking-widest opacity-80 sm:text-[10px]">
         {label}

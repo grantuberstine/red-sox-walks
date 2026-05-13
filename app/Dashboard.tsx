@@ -41,16 +41,6 @@ import { PlayerProfile } from "./components/PlayerProfile";
 import { AnalyticsView } from "./components/AnalyticsView";
 import { PitcherPicker } from "./components/PitcherPicker";
 
-function formatTimestamp(iso: string | null): string {
-  if (!iso) return "never";
-  const d = new Date(iso);
-  return d.toLocaleString("en-US", {
-    timeZone: "America/New_York",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
-
 export function Dashboard({ state }: { state: SeasonState }) {
   const [section, setSection] = useState<Section>("walks");
   const [range, setRange] = useState<RangeKey>("season");
@@ -209,40 +199,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
     if (s !== "players") setProfileId(null);
   };
 
-  const resultCount = (() => {
-    switch (section) {
-      case "walks":
-        return filteredWalks.length;
-      case "strikeouts":
-        return filteredK.length;
-      case "players":
-        return allPitchersFiltered.length;
-      case "team":
-        return filteredWalks.length + filteredK.length;
-      case "analytics":
-        return Object.keys(state.velocity).length;
-      case "fund":
-        return fundReport.entries.length;
-    }
-  })();
-
-  const resultUnit = (() => {
-    switch (section) {
-      case "walks":
-        return "walk";
-      case "strikeouts":
-        return "K";
-      case "players":
-        return "pitcher";
-      case "team":
-        return "event";
-      case "analytics":
-        return "pitcher";
-      case "fund":
-        return "pitcher";
-    }
-  })();
-
   const showFilters =
     section !== "analytics" &&
     (section !== "players" || profileId === null);
@@ -283,17 +239,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 <h1 className="truncate text-lg font-bold leading-tight text-[var(--text)] sm:text-xl">
                   {sectionLabel[section]}
                 </h1>
-                <p className="truncate text-[11px] leading-tight text-[var(--text-muted)]">
-                  {state.season} season ·{" "}
-                  <span className="tabular">
-                    {resultCount.toLocaleString()}{" "}
-                    {resultCount === 1 ? resultUnit : `${resultUnit}s`}
-                  </span>{" "}
-                  · refreshed{" "}
-                  <span className="tabular">
-                    {formatTimestamp(state.meta.lastRefreshAt)}
-                  </span>
-                </p>
               </div>
             </div>
 

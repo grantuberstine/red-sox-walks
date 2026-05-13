@@ -201,15 +201,15 @@ export function PitcherCards({
                 </div>
                 {mode === "walks" ? (
                   <div className="mt-3 grid grid-cols-4 gap-1 text-center">
-                    <Cell label="4P" value={p.fourPitchWalks} color="amber" />
-                    <Cell label="0-2" value={p.ohTwoWalks} color="rose" />
-                    <Cell label="LO" value={p.leadoffWalks} color="sky" />
-                    <Cell label="2O" value={p.twoOutWalks} color="violet" />
+                    <Cell label="4P" value={p.fourPitchWalks} tone="walk" />
+                    <Cell label="0-2" value={p.ohTwoWalks} tone="walk" />
+                    <Cell label="LO" value={p.leadoffWalks} tone="walk" />
+                    <Cell label="2O" value={p.twoOutWalks} tone="walk" />
                   </div>
                 ) : (
                   <div className="mt-3 grid grid-cols-2 gap-1 text-center">
-                    <Cell label="3-Pitch" value={p.threePitchStrikeouts} color="emerald" />
-                    <Cell label="Sat-Side" value={p.sideStrikeouts} color="indigo" />
+                    <Cell label="3-Pitch" value={p.threePitchStrikeouts} tone="k" />
+                    <Cell label="3-Up-3-Dn" value={p.sideStrikeouts} tone="k" />
                   </div>
                 )}
                 {p.achievements.length > 0 && (
@@ -305,26 +305,28 @@ export function PitcherCards({
 }
 
 const CELL_TONES = {
-  amber: { on: "bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  rose: { on: "bg-rose-50 dark:bg-rose-500/15 text-rose-800 dark:text-rose-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  sky: { on: "bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  violet: { on: "bg-violet-50 dark:bg-violet-500/15 text-violet-800 dark:text-violet-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  emerald: { on: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
-  indigo: { on: "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-300", off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60" },
+  walk: {
+    on: "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300",
+    off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60",
+  },
+  k: {
+    on: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    off: "bg-[var(--surface-hover)] text-[var(--text-muted)]/60",
+  },
 } as const;
 
 function Cell({
   label,
   value,
-  color,
+  tone,
 }: {
   label: string;
   value: number;
-  color: keyof typeof CELL_TONES;
+  tone: keyof typeof CELL_TONES;
 }) {
-  const tone = CELL_TONES[color];
+  const t = CELL_TONES[tone];
   return (
-    <div className={`rounded-md py-1 ${value > 0 ? tone.on : tone.off}`}>
+    <div className={`rounded-md py-1 ${value > 0 ? t.on : t.off}`}>
       <div className="text-[9px] font-medium uppercase tracking-wider opacity-80">{label}</div>
       <div className="text-base font-bold tabular leading-none">{value}</div>
     </div>
@@ -340,7 +342,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-yellow-200 px-0.5 text-[var(--text)]">
+      <mark className="rounded bg-rose-200 px-0.5 text-[var(--text)] dark:bg-rose-500/40 dark:text-white">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}
