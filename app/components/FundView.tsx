@@ -33,7 +33,13 @@ const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: "name", label: "Name (A→Z)" },
 ];
 
-export function FundView({ report }: { report: FundReport }) {
+export function FundView({
+  report,
+  onSelect,
+}: {
+  report: FundReport;
+  onSelect?: (pitcherId: number) => void;
+}) {
   const [sortKey, setSortKey] = useState<SortKey>("feesOwed");
   const sorted = useMemo(() => {
     const rows = [...report.entries];
@@ -146,9 +152,10 @@ export function FundView({ report }: { report: FundReport }) {
               {sorted.map((e, idx) => (
                 <tr
                   key={e.pitcherId}
-                  className={`border-b border-[var(--border)] last:border-0 ${
-                    idx % 2 === 1 ? "bg-[var(--row-stripe)]" : ""
-                  }`}
+                  onClick={() => onSelect?.(e.pitcherId)}
+                  className={`border-b border-[var(--border)] last:border-0 transition ${
+                    onSelect ? "cursor-pointer hover:bg-[var(--surface-hover)]" : ""
+                  } ${idx % 2 === 1 ? "bg-[var(--row-stripe)]" : ""}`}
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
@@ -177,46 +184,59 @@ export function FundView({ report }: { report: FundReport }) {
         </div>
 
         <ul className="divide-y divide-[var(--border)] md:hidden">
-          {sorted.map((e) => (
-            <li key={e.pitcherId} className="px-4 py-3">
-              <div className="flex items-center gap-3">
-                <PitcherAvatar
-                  name={e.name}
-                  src={e.headshotUrl}
-                  size={48}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-semibold text-[var(--text)]">
-                    {e.name}
+          {sorted.map((e) => {
+            const Wrapper = onSelect ? "button" : "div";
+            return (
+              <li key={e.pitcherId}>
+                <Wrapper
+                  type={onSelect ? "button" : undefined}
+                  onClick={onSelect ? () => onSelect(e.pitcherId) : undefined}
+                  className={`block w-full px-4 py-3 text-left transition ${
+                    onSelect
+                      ? "cursor-pointer active:bg-[var(--surface-hover)]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <PitcherAvatar
+                      name={e.name}
+                      src={e.headshotUrl}
+                      size={48}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold text-[var(--text)]">
+                        {e.name}
+                      </div>
+                      <div className="mt-1 flex items-baseline gap-4 text-[11px]">
+                        <span className="text-[var(--text-secondary)]">
+                          Owes{" "}
+                          <span className="font-bold tabular text-[var(--color-sox-red)]">
+                            {formatMoney(e.feesOwed)}
+                          </span>
+                        </span>
+                        <span className="text-[var(--text-secondary)]">
+                          Coaches Owe{" "}
+                          <span className="font-bold tabular text-emerald-700 dark:text-emerald-400">
+                            {formatMoney(e.bonusEarned)}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-baseline gap-4 text-[11px]">
-                    <span className="text-[var(--text-secondary)]">
-                      Owes{" "}
-                      <span className="font-bold tabular text-[var(--color-sox-red)]">
-                        {formatMoney(e.feesOwed)}
-                      </span>
-                    </span>
-                    <span className="text-[var(--text-secondary)]">
-                      Coaches Owe{" "}
-                      <span className="font-bold tabular text-emerald-700 dark:text-emerald-400">
-                        {formatMoney(e.bonusEarned)}
-                      </span>
-                    </span>
+                  <div className="mt-3 grid grid-cols-4 gap-1 text-center text-[10px]">
+                    <SmallCell label="4P" value={e.walkBuckets.fourPitch} />
+                    <SmallCell label="0-2" value={e.walkBuckets.ohTwo} />
+                    <SmallCell label="LO" value={e.walkBuckets.leadoff} />
+                    <SmallCell label="2O" value={e.walkBuckets.twoOut} />
                   </div>
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-4 gap-1 text-center text-[10px]">
-                <SmallCell label="4P" value={e.walkBuckets.fourPitch} />
-                <SmallCell label="0-2" value={e.walkBuckets.ohTwo} />
-                <SmallCell label="LO" value={e.walkBuckets.leadoff} />
-                <SmallCell label="2O" value={e.walkBuckets.twoOut} />
-              </div>
-              <div className="mt-1.5 grid grid-cols-2 gap-1 text-center text-[10px]">
-                <SmallCell label="3-Pitch K" value={e.threePitchKs} />
-                <SmallCell label="3-Up-3-Dn" value={e.threeUpThreeDownInnings} />
-              </div>
-            </li>
-          ))}
+                  <div className="mt-1.5 grid grid-cols-2 gap-1 text-center text-[10px]">
+                    <SmallCell label="3-Pitch K" value={e.threePitchKs} />
+                    <SmallCell label="3-Up-3-Dn" value={e.threeUpThreeDownInnings} />
+                  </div>
+                </Wrapper>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </div>

@@ -452,7 +452,9 @@ export function Dashboard({ state }: { state: SeasonState }) {
               <AnalyticsView state={state} pitcher={analyticsPitcher} />
             )}
 
-            {section === "fund" && <FundView report={fundReport} />}
+            {section === "fund" && (
+              <FundView report={fundReport} onSelect={openProfile} />
+            )}
           </div>
         </main>
 
