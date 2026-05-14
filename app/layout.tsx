@@ -21,13 +21,10 @@ export const viewport: Viewport = {
 
 const themeBootstrap = `
 (function(){
+  // Default to dark on first visit; user can toggle to light explicitly.
   try {
     var t = localStorage.getItem('woosox.theme.v1');
-    if (t !== 'light' && t !== 'dark') {
-      // Default to dark unless OS explicitly prefers light
-      t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    }
-    if (t === 'dark') document.documentElement.classList.add('dark');
+    if (t !== 'light') document.documentElement.classList.add('dark');
   } catch (e) {
     document.documentElement.classList.add('dark');
   }

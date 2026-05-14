@@ -11,10 +11,9 @@ export function getInitialTheme(): Theme {
     const stored = window.localStorage.getItem(KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch {}
-  // Default to dark unless the OS explicitly prefers light
-  return window.matchMedia?.("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
+  // Always default to dark on first visit. OS preference ignored —
+  // user can toggle to light explicitly via the sidebar footer.
+  return "dark";
 }
 
 export function applyTheme(theme: Theme): void {

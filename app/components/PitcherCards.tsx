@@ -8,7 +8,6 @@ import type {
   WalkRecord,
   WalkType,
 } from "@/lib/types";
-import { achievementById } from "@/lib/achievements";
 import { inningsPitched, strikeoutsPerNine, walksPerNine } from "@/lib/filters";
 import { PitcherAvatar } from "./PitcherAvatar";
 
@@ -210,16 +209,6 @@ export function PitcherCards({
                   <div className="mt-3 grid grid-cols-2 gap-1 text-center">
                     <Cell label="3-Pitch" value={p.threePitchStrikeouts} tone="k" />
                     <Cell label="3-Up-3-Dn" value={p.sideStrikeouts} tone="k" />
-                  </div>
-                )}
-                {p.achievements.length > 0 && (
-                  <div className="mt-2 truncate text-[10px] text-[var(--text-muted)]">
-                    {p.achievements
-                      .slice(0, 3)
-                      .map((id) => achievementById(id)?.label)
-                      .filter(Boolean)
-                      .join(" · ")}
-                    {p.achievements.length > 3 && ` +${p.achievements.length - 3}`}
                   </div>
                 )}
               </button>
