@@ -237,25 +237,6 @@ export function aggregatePitchersFromStrikeouts(
   return [...map.values()];
 }
 
-export function formatRangeContext(
-  range: RangeKey,
-  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
-): string {
-  if (range === "season") return "Full season";
-  const { start, end } = rangeBounds(range, state);
-  if (!start || !end) return "Full season";
-  if (start === end) return `Games on ${formatDate(start)}`;
-  return `${formatDate(start)} — ${formatDate(end)}`;
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso + "T12:00:00Z");
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "America/New_York",
-  });
-}
 
 export type Insights = {
   bestGame: { date: string; opponent: string; count: number; gamePk: number } | null;

@@ -8,14 +8,10 @@ import type {
   WalkRecord,
 } from "@/lib/types";
 import {
-  RANGE_LABELS,
   RangeKey,
   buildGameLog,
   computeInsights,
   filterGames,
-  walksPerNine as walksPerNineFn,
-  strikeoutsPerNine as strikeoutsPerNineFn,
-  inningsPitched as inningsPitchedFn,
 } from "@/lib/filters";
 import { TrendChart } from "./TrendChart";
 import { InningChart } from "./InningChart";

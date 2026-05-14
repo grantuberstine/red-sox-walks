@@ -393,7 +393,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
               <WalksView
                 range={range}
                 totals={walkTotals}
-                feeCount={walkFeeCount}
                 feeTotal={walkFeeCount * WALK_FEE_PER_CATEGORY}
                 pitchers={walkPitchers}
                 walks={filteredWalks}
@@ -467,7 +466,6 @@ export function Dashboard({ state }: { state: SeasonState }) {
 function WalksView({
   range,
   totals,
-  feeCount,
   feeTotal,
   pitchers,
   walks,
@@ -478,7 +476,6 @@ function WalksView({
 }: {
   range: RangeKey;
   totals: { total: number; fourPitch: number; ohTwo: number; leadoff: number; twoOut: number };
-  feeCount: number;
   feeTotal: number;
   pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
   walks: ReturnType<typeof filterWalks>;

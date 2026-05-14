@@ -27,22 +27,32 @@ Two K achievements tracked for the "Coaches Owe" side of the fund:
 | **3-up-3-down inning** | All 3 outs by K, same pitcher, in a row | $10 |
 
 ### No Pass Fund
-The money game: players pay the fund per walk-category trigger; coaches pay the fund per K achievement. Both sides accumulate independently — they don't cancel out. The Fund page shows totals, rules, and a per-pitcher ledger with both sides side-by-side.
+The money game: players pay the fund per walk-category trigger; coaches pay the fund per K achievement. Both sides accumulate independently — they don't cancel out.
+- **Two filled-card hero**: Players Owe / Coaches Owe with totals.
+- **Rules card** with all six categories + amounts.
+- **Ledger** with all walk categories AND K categories on one row per pitcher (4P · 0-2 · LO · 2O · Owes ‖ 3-Pitch K · 3-Up-3-Dn · Coaches Owe). **Click any column header to sort by it**, click any row to open that pitcher's profile.
 
-### Analytics (velocity)
-Per-pitcher velocity tracking pulled from Statcast pitch data:
-- **Velocity** line chart — avg + max for a selected pitch type per outing
-- **Pitch usage** chart — 100%-stacked bars showing pitch mix percentage per outing, with pitch codes inside each segment
-- **Pitch count** line chart — total pitches thrown per outing
-- Pitch-type filter, range filter, and hover tooltips throughout
-- Pitch mix table + outing log with fastball-specific avg per outing
+### Analytics (velocity + outcomes)
+Per-pitcher velocity + per-outing pitching line, pulled from Statcast + MLB boxscore:
+- **Top card** pairs velocity (Fastball avg / Max velo / Total pitches) with performance rates (ERA / WHIP / FIP / K/9 / BB/9).
+- **Chart card** (toggle between three views):
+  - **Velocity** line chart — avg + max for a selected pitch type per outing, hover for detail
+  - **Pitch usage** chart — 100%-stacked bars with pitch codes inside each segment
+  - **Pitch count** line chart — total pitches per outing
+- **Pitch mix** table — career totals + per-type velo.
+- **Outings** section — each appearance as a card with Pitches · FB avg · Max + IP/H/BB/K + ERA/WHIP/K/9/BB/9 + a stacked pitch-mix % bar. Season-best max velo and most-pitches outings get badges.
 
 ### Players
-- Gallery with per-pitcher cards (filtered by hidden-pitcher list)
-- Player profile: stats, walk/K breakdown, fund line, achievements, MLB.com profile link
+- **Gallery**: per-pitcher cards with ERA / WHIP / FIP rates inline, walk + K pill summary, owes-the-fund total. Tap to open profile.
+- **Player profile**: 10-stat grid (IP · K · BB · H · HR · ERA · WHIP · FIP · K/9 · BB/9), walk and K logs, owes-the-fund money card, MLB.com profile link, **Copy link** button (clipboard).
 
 ### Team
 - Win/loss record + game log with walks/Ks per game
+
+### Theme & navigation
+- **Dark mode by default** (Sox navy palette). Toggle in the sidebar footer; preference saved per browser.
+- **URL deep linking**: every section/range/profile encoded in the URL. Share `/?section=players&pitcher=664918` to send a profile directly. Bookmarks work. Browser back/forward respected.
+- **Scroll-to-top** on every nav action (tab change, profile open/close, switching analytics pitcher).
 
 ---
 

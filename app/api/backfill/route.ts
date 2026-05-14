@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth";
 import { processGames } from "@/lib/process";
-import { saveState, emptyState } from "@/lib/storage";
+import { emptyState } from "@/lib/storage";
 import { SEASON_END, SEASON_START } from "@/lib/constants";
 
 export const runtime = "nodejs";

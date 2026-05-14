@@ -1,4 +1,11 @@
-import type { ToneKey } from "./CategoryChips";
+export type ToneKey =
+  | "neutral"
+  | "amber"
+  | "rose"
+  | "sky"
+  | "violet"
+  | "emerald"
+  | "indigo";
 
 const HERO_TONES: Record<ToneKey, string> = {
   neutral: "from-white/10 to-white/0 text-white",

@@ -101,15 +101,6 @@ function formatIp(outs: number | undefined): string {
 // Constant ~3.10 is a reasonable approximation; varies by league but
 // good enough for relative comparison between a pitcher's own outings.
 const FIP_CONSTANT = 3.1;
-function computeFip(a: AppearanceVelo): number {
-  if (!a.outs) return 0;
-  const ip = a.outs / 3;
-  const hr = a.homeRuns ?? 0;
-  const bb = a.walks ?? 0;
-  const hbp = a.hitByPitch ?? 0;
-  const k = a.strikeouts ?? 0;
-  return (13 * hr + 3 * (bb + hbp) - 2 * k) / ip + FIP_CONSTANT;
-}
 
 function labelFor(type: string): string {
   return PITCH_TYPE_LABELS[type] ?? type;
@@ -1276,7 +1267,8 @@ function OutingsGrid({
       </div>
     );
   }
-  const bestMaxVelo = Math.max(...appearances.map((a) => a.maxVelo));
+  const maxVeloValues = appearances.map((a) => a.maxVelo).filter((v) => v > 0);
+  const bestMaxVelo = maxVeloValues.length > 0 ? Math.max(...maxVeloValues) : 0;
   const bestPitchCount = Math.max(...appearances.map((a) => a.pitchCount));
   const orderedTypes = byType.map((b) => b.type);
 
@@ -1292,7 +1284,7 @@ function OutingsGrid({
         );
         const primary = ff ?? otherFb;
         const fbAvg = primary ? primary.avgVelo : null;
-        const isBestMax = a.maxVelo === bestMaxVelo;
+        const isBestMax = bestMaxVelo > 0 && a.maxVelo === bestMaxVelo;
         const isBestPitches = a.pitchCount === bestPitchCount;
 
         return (
