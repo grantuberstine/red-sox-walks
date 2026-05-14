@@ -119,19 +119,27 @@ export function FundView({ report }: { report: FundReport }) {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)] text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                <th className="px-4 py-2.5 text-left">Pitcher</th>
-                <th className="w-[64px] px-3 py-2.5 text-right">4P</th>
-                <th className="w-[64px] px-3 py-2.5 text-right">0-2</th>
-                <th className="w-[64px] px-3 py-2.5 text-right">LO</th>
-                <th className="w-[64px] px-3 py-2.5 text-right">2O</th>
-                <th className="w-[110px] border-r border-[var(--border-strong)] px-3 py-2.5 text-right text-[var(--color-sox-red)]">
-                  Owes
-                </th>
-                <th className="w-[80px] px-3 py-2.5 text-right">3-Pitch K</th>
-                <th className="w-[90px] px-3 py-2.5 text-right">3-Up-3-Dn</th>
-                <th className="w-[120px] px-3 py-2.5 text-right text-emerald-700 dark:text-emerald-400">
-                  Coaches Owe
-                </th>
+                <SortTh label="Pitcher" sortKey="name" current={sortKey} onSort={setSortKey} align="left" className="px-4 py-2.5" />
+                <SortTh label="4P" sortKey="fourPitch" current={sortKey} onSort={setSortKey} className="w-[64px] px-3 py-2.5" />
+                <SortTh label="0-2" sortKey="ohTwo" current={sortKey} onSort={setSortKey} className="w-[64px] px-3 py-2.5" />
+                <SortTh label="LO" sortKey="leadoff" current={sortKey} onSort={setSortKey} className="w-[64px] px-3 py-2.5" />
+                <SortTh label="2O" sortKey="twoOut" current={sortKey} onSort={setSortKey} className="w-[64px] px-3 py-2.5" />
+                <SortTh
+                  label="Owes"
+                  sortKey="feesOwed"
+                  current={sortKey}
+                  onSort={setSortKey}
+                  className="w-[110px] border-r border-[var(--border-strong)] px-3 py-2.5 text-[var(--color-sox-red)]"
+                />
+                <SortTh label="3-Pitch K" sortKey="threePitchKs" current={sortKey} onSort={setSortKey} className="w-[80px] px-3 py-2.5" />
+                <SortTh label="3-Up-3-Dn" sortKey="threeUpThreeDownInnings" current={sortKey} onSort={setSortKey} className="w-[90px] px-3 py-2.5" />
+                <SortTh
+                  label="Coaches Owe"
+                  sortKey="bonusEarned"
+                  current={sortKey}
+                  onSort={setSortKey}
+                  className="w-[120px] px-3 py-2.5 text-emerald-700 dark:text-emerald-400"
+                />
               </tr>
             </thead>
             <tbody>
@@ -296,6 +304,38 @@ function RuleBlock({
         {footnote}
       </p>
     </div>
+  );
+}
+
+function SortTh({
+  label,
+  sortKey,
+  current,
+  onSort,
+  align = "right",
+  className = "",
+}: {
+  label: string;
+  sortKey: SortKey;
+  current: SortKey;
+  onSort: (k: SortKey) => void;
+  align?: "left" | "right";
+  className?: string;
+}) {
+  const active = sortKey === current;
+  return (
+    <th className={`${className} ${align === "right" ? "text-right" : "text-left"}`}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex cursor-pointer items-center gap-1 transition ${
+          active ? "text-[var(--text)]" : "hover:text-[var(--text)]"
+        }`}
+      >
+        <span>{label}</span>
+        <span className="text-[10px] opacity-50">{active ? "▼" : "↕"}</span>
+      </button>
+    </th>
   );
 }
 
