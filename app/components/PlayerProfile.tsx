@@ -144,7 +144,7 @@ export function PlayerProfile({
           </svg>
           Back to gallery
         </button>
-        <ShareButton pitcherName={pitcher.name} />
+        <ShareButton />
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
@@ -333,27 +333,13 @@ export function PlayerProfile({
   );
 }
 
-function ShareButton({ pitcherName }: { pitcherName: string }) {
+function ShareButton() {
   const [copied, setCopied] = useState(false);
 
-  const share = async () => {
+  const copy = async () => {
     if (typeof window === "undefined") return;
-    const url = window.location.href;
-    const title = `${pitcherName} — WooSox Walk Tracker`;
-    // Use native share sheet when available (mobile/PWA)
-    const nav = window.navigator as Navigator & {
-      share?: (data: { title: string; url: string }) => Promise<void>;
-    };
-    if (nav.share) {
-      try {
-        await nav.share({ title, url });
-        return;
-      } catch {
-        // user cancelled or denied — fall through to clipboard
-      }
-    }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -364,8 +350,8 @@ function ShareButton({ pitcherName }: { pitcherName: string }) {
   return (
     <button
       type="button"
-      onClick={share}
-      aria-label="Share profile link"
+      onClick={copy}
+      aria-label="Copy profile link"
       className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
     >
       {copied ? (
@@ -384,15 +370,16 @@ function ShareButton({ pitcherName }: { pitcherName: string }) {
       ) : (
         <>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
             <path
-              d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v14"
+              d="M5 15V5a2 2 0 0 1 2-2h10"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
-          Share
+          Copy link
         </>
       )}
     </button>
