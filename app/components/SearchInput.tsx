@@ -80,7 +80,7 @@ export function SearchInput({
   };
 
   return (
-    <div ref={wrapRef} className="relative w-full sm:w-72">
+    <div ref={wrapRef} className="relative w-full">
       <SearchIcon />
       <input
         type="search"
