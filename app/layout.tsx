@@ -23,9 +23,14 @@ const themeBootstrap = `
 (function(){
   try {
     var t = localStorage.getItem('woosox.theme.v1');
-    if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (t !== 'light' && t !== 'dark') {
+      // Default to dark unless OS explicitly prefers light
+      t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
     if (t === 'dark') document.documentElement.classList.add('dark');
-  } catch (e) {}
+  } catch (e) {
+    document.documentElement.classList.add('dark');
+  }
 })();
 `;
 

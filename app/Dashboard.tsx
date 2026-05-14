@@ -240,17 +240,32 @@ export function Dashboard({ state }: { state: SeasonState }) {
     fund: "No Pass Fund",
   };
 
+  const scrollTop = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }
+  };
+
   const openProfile = (id: number) => {
     setProfileId(id);
     setSection("players");
+    scrollTop();
+  };
+
+  const closeProfile = () => {
+    setProfileId(null);
+    scrollTop();
   };
 
   const changeSection = (s: Section) => {
     setSection(s);
     if (s !== "players") setProfileId(null);
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-    }
+    scrollTop();
+  };
+
+  const changeAnalyticsPitcher = (id: number) => {
+    setAnalyticsPitcherId(id);
+    scrollTop();
   };
 
   const goHome = () => {
@@ -325,7 +340,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 <PitcherPicker
                   pitchers={veloPitchers}
                   value={analyticsPitcher?.pitcherId ?? null}
-                  onChange={setAnalyticsPitcherId}
+                  onChange={changeAnalyticsPitcher}
                   placeholder="Pick a pitcher"
                 />
               </div>
@@ -413,7 +428,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
                   walks={filteredWalks}
                   strikeouts={filteredK}
                   appearances={state.velocity[String(profilePitcher.pitcherId)] ?? []}
-                  onBack={() => setProfileId(null)}
+                  onBack={closeProfile}
                 />
               ) : (
                 <PlayersGallery

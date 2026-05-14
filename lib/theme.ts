@@ -6,14 +6,15 @@ const KEY = "woosox.theme.v1";
 export type Theme = "light" | "dark";
 
 export function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   try {
     const stored = window.localStorage.getItem(KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch {}
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  // Default to dark unless the OS explicitly prefers light
+  return window.matchMedia?.("(prefers-color-scheme: light)").matches
+    ? "light"
+    : "dark";
 }
 
 export function applyTheme(theme: Theme): void {
