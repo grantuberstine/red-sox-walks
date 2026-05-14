@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type {
   AppearanceVelo,
   PitcherStats,
@@ -127,7 +127,7 @@ export function PlayerProfile({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={onBack}
@@ -144,6 +144,7 @@ export function PlayerProfile({
           </svg>
           Back to gallery
         </button>
+        <ShareButton pitcherName={pitcher.name} />
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
@@ -329,6 +330,72 @@ export function PlayerProfile({
         </Card>
       </section>
     </div>
+  );
+}
+
+function ShareButton({ pitcherName }: { pitcherName: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const share = async () => {
+    if (typeof window === "undefined") return;
+    const url = window.location.href;
+    const title = `${pitcherName} — WooSox Walk Tracker`;
+    // Use native share sheet when available (mobile/PWA)
+    const nav = window.navigator as Navigator & {
+      share?: (data: { title: string; url: string }) => Promise<void>;
+    };
+    if (nav.share) {
+      try {
+        await nav.share({ title, url });
+        return;
+      } catch {
+        // user cancelled or denied — fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={share}
+      aria-label="Share profile link"
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+    >
+      {copied ? (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M20 6L9 17l-5-5"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Copied
+        </>
+      ) : (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Share
+        </>
+      )}
+    </button>
   );
 }
 
