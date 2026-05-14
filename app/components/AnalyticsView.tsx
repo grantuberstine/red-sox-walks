@@ -420,23 +420,26 @@ function PitcherChartCard({
             </h3>
             <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
               {view === "velocity"
-                ? "Avg + max per outing for the selected pitch type · hover for detail"
+                ? "Avg + max per outing · hover for detail"
                 : view === "usage"
-                  ? "Stacked by pitch type · hover for breakdown"
-                  : "Total pitches thrown per outing"}
+                  ? "Stacked by pitch type · hover for detail"
+                  : "Total pitches per outing"}
             </p>
           </div>
           <ViewPills value={view} onChange={setView} />
         </div>
-        <div className="mt-3 min-h-[30px]">
-          {view === "velocity" && availableTypes.length > 0 ? (
+        {availableTypes.length > 0 && (
+          <div
+            className={`mt-3 ${view === "velocity" ? "" : "invisible"}`}
+            aria-hidden={view !== "velocity"}
+          >
             <PitchTypePills
               types={byType}
               value={selectedType}
               onChange={setSelectedType}
             />
-          ) : null}
-        </div>
+          </div>
+        )}
       </div>
       <div className="min-h-[360px]">
         {view === "velocity" && selectedType ? (
