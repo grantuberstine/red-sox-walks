@@ -144,6 +144,12 @@ export function AnalyticsView({
         appearances: 0,
         byType: [] as Array<{ type: string; count: number; avgVelo: number; maxVelo: number }>,
         primaryFastball: null as null | { type: string; avg: number; max: number; count: number },
+        line: { outs: 0, walks: 0, strikeouts: 0, earnedRuns: 0, homeRuns: 0, hitByPitch: 0, hits: 0 },
+        era: null as number | null,
+        whip: null as number | null,
+        fip: null as number | null,
+        k9: null as number | null,
+        bb9: null as number | null,
       };
     }
     let total = 0;
@@ -177,12 +183,43 @@ export function AnalyticsView({
       ? { type: primary.type, avg: primary.avgVelo, max: primary.maxVelo, count: primary.count }
       : null;
 
+    // Per-pitcher pitching line aggregate from boxscore data
+    const line = appearances.reduce(
+      (acc, a) => ({
+        outs: acc.outs + (a.outs ?? 0),
+        walks: acc.walks + (a.walks ?? 0),
+        strikeouts: acc.strikeouts + (a.strikeouts ?? 0),
+        earnedRuns: acc.earnedRuns + (a.earnedRuns ?? 0),
+        homeRuns: acc.homeRuns + (a.homeRuns ?? 0),
+        hitByPitch: acc.hitByPitch + (a.hitByPitch ?? 0),
+        hits: acc.hits + (a.hits ?? 0),
+      }),
+      { outs: 0, walks: 0, strikeouts: 0, earnedRuns: 0, homeRuns: 0, hitByPitch: 0, hits: 0 },
+    );
+    const ip = line.outs / 3;
+    const era = line.outs > 0 ? (line.earnedRuns * 27) / line.outs : null;
+    const whip = line.outs > 0 ? (line.walks + line.hits) / ip : null;
+    const fip =
+      line.outs > 0
+        ? (13 * line.homeRuns + 3 * (line.walks + line.hitByPitch) - 2 * line.strikeouts) /
+            ip +
+          FIP_CONSTANT
+        : null;
+    const k9 = line.outs > 0 ? (line.strikeouts * 27) / line.outs : null;
+    const bb9 = line.outs > 0 ? (line.walks * 27) / line.outs : null;
+
     return {
       maxVelo: max,
       totalPitches: total,
       appearances: appearances.length,
       byType,
       primaryFastball,
+      line,
+      era,
+      whip,
+      fip,
+      k9,
+      bb9,
     };
   }, [appearances]);
 
@@ -242,6 +279,29 @@ export function AnalyticsView({
             suffix=""
           />
         </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <SmallStat
+            label="ERA"
+            value={career.era !== null ? career.era.toFixed(2) : "—"}
+          />
+          <SmallStat
+            label="WHIP"
+            value={career.whip !== null ? career.whip.toFixed(2) : "—"}
+          />
+          <SmallStat
+            label="FIP"
+            value={career.fip !== null ? career.fip.toFixed(2) : "—"}
+          />
+          <SmallStat
+            label="K/9"
+            value={career.k9 !== null ? career.k9.toFixed(1) : "—"}
+          />
+          <SmallStat
+            label="BB/9"
+            value={career.bb9 !== null ? career.bb9.toFixed(1) : "—"}
+          />
+        </div>
       </section>
 
       <PitcherChartCard appearances={appearances} byType={career.byType} />
@@ -267,6 +327,19 @@ export function AnalyticsView({
         </div>
         <OutingsGrid appearances={appearances} byType={career.byType} />
       </section>
+    </div>
+  );
+}
+
+function SmallStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-2.5 py-2 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-sm">
+      <div className="text-[9px] font-semibold uppercase tracking-widest text-[var(--text-secondary)]">
+        {label}
+      </div>
+      <div className="mt-0.5 text-lg font-bold tabular leading-none text-[var(--text)]">
+        {value}
+      </div>
     </div>
   );
 }
