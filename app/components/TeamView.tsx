@@ -8,7 +8,7 @@ import type {
   WalkRecord,
 } from "@/lib/types";
 import {
-  RangeKey,
+  RangeValue,
   buildGameLog,
   computeInsights,
   filterGames,
@@ -38,7 +38,7 @@ export function TeamView({
   rangeLabel,
 }: {
   state: SeasonState;
-  range: RangeKey;
+  range: RangeValue;
   filteredWalks: WalkRecord[];
   filteredK: StrikeoutRecord[];
   rangeLabel: string;

@@ -133,7 +133,10 @@ lib/
   storage.ts              # Vercel Blob read/write + state mutation
   process.ts              # Schedule-walking pipeline (refresh + backfill share)
   fund.ts                 # Fund report computation
-  filters.ts              # Range / query / hidden-pitcher filters + aggregators
+  filters.ts              # Range / query / hidden-pitcher filters + aggregators.
+                          # Range can be a RangeKey (today/week/month/season) OR
+                          # a `series:<gamePk>`. computeSeries() groups consecutive
+                          # games vs one opponent; a series filters as its date block.
   achievements.ts         # Stub (used to host gamified labels — purged v60).
                           # Still exports headshotUrl() and a no-op
                           # computeAchievements()
@@ -219,6 +222,7 @@ CRON_SECRET lives in Vercel env vars (Settings → Environment Variables). Don't
 - **`light-dark()` CSS function does NOT work in SVG fill attributes** (it works in CSS only). Use `useIsDark()` hook + JS to pick colors in SVG. This bit us in v30.
 - **Vercel Blob `put()` with `addRandomSuffix: false`** — use `allowOverwrite: true` on @vercel/blob ≥ 2.x. Older versions required `del()` then `put()`.
 - **OS `prefers-color-scheme: light` is intentionally ignored.** Default is always dark unless user explicitly toggles. v58 fixed this — don't revert.
+- **The range value is `RangeValue` (`RangeKey | \`series:${number}\``), not `RangeKey`.** Filter/label fns take `RangeValue` + need `state.games`. Series filtering relies on a series being a contiguous date block (consecutive games vs one opponent) — if MLB ever schedules a same-opponent home-and-away split with a gap, revisit `computeSeries`.
 
 ## Version history TL;DR (last 20)
 
@@ -240,5 +244,7 @@ CRON_SECRET lives in Vercel env vars (Settings → Environment Variables). Don't
 - v59: iPad horizontal overflow fix
 - v60: iPad landscape verified + nuked achievement catalog
 - v61: This handoff doc
+- v62: "Last 7/30 days" now calendar-relative to today (was anchored to last game date, so stale games leaked in)
+- v63: Series filter — pick a specific series (consecutive games vs one opponent) from the range dropdown
 
 Full history in `git log` and `PROMPTS.md`.

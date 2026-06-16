@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SeasonState } from "@/lib/types";
 import {
-  RANGE_LABELS,
   RangeKey,
+  RangeValue,
   aggregatePitchersFromStrikeouts,
   aggregatePitchersFromWalks,
+  computeSeries,
   filterStrikeouts,
   filterWalks,
+  parseSeriesId,
+  rangeLabel,
 } from "@/lib/filters";
 import {
   computeFundReport,
@@ -50,9 +53,16 @@ const VALID_SECTIONS: Section[] = [
 ];
 const VALID_RANGES: RangeKey[] = ["season", "month", "week", "today"];
 
+function parseRange(r: string | null): RangeValue {
+  if (VALID_RANGES.includes(r as RangeKey)) return r as RangeKey;
+  // Accept `series:<digits>`; an unknown id degrades gracefully to season bounds.
+  if (r && /^series:\d+$/.test(r)) return r as RangeValue;
+  return "season";
+}
+
 function readInitialUrl(): {
   section: Section;
-  range: RangeKey;
+  range: RangeValue;
   profileId: number | null;
   analyticsPitcherId: number | null;
 } {
@@ -66,12 +76,11 @@ function readInitialUrl(): {
   }
   const params = new URLSearchParams(window.location.search);
   const s = params.get("section");
-  const r = params.get("range");
   const p = Number(params.get("pitcher"));
   const ap = Number(params.get("analyticsPitcher"));
   return {
     section: VALID_SECTIONS.includes(s as Section) ? (s as Section) : "walks",
-    range: VALID_RANGES.includes(r as RangeKey) ? (r as RangeKey) : "season",
+    range: parseRange(params.get("range")),
     profileId: Number.isFinite(p) && p > 0 ? p : null,
     analyticsPitcherId: Number.isFinite(ap) && ap > 0 ? ap : null,
   };
@@ -80,7 +89,7 @@ function readInitialUrl(): {
 export function Dashboard({ state }: { state: SeasonState }) {
   const initial = readInitialUrl();
   const [section, setSection] = useState<Section>(initial.section);
-  const [range, setRange] = useState<RangeKey>(initial.range);
+  const [range, setRange] = useState<RangeValue>(initial.range);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("table");
   const [rosterOpen, setRosterOpen] = useState(false);
@@ -91,6 +100,18 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
   const { hidden, toggle, showAll, hideAll } = useHiddenPitchers();
   const { theme, toggle: toggleTheme } = useTheme();
+
+  const series = useMemo(() => computeSeries(state.games), [state.games]);
+  const currentRangeLabel = useMemo(
+    () => rangeLabel(range, state.games),
+    [range, state.games],
+  );
+
+  // If a deep-linked series id no longer exists, fall back to season.
+  useEffect(() => {
+    const id = parseSeriesId(range);
+    if (id !== null && !series.some((s) => s.id === id)) setRange("season");
+  }, [range, series]);
 
   // Sync state → URL (replaceState so we don't fill browser history on every click)
   useEffect(() => {
@@ -324,7 +345,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
             {showFilters && (
               <div className="hidden items-center gap-2 lg:flex">
-                <TimeRangePills range={range} onRangeChange={setRange} />
+                <TimeRangePills range={range} onRangeChange={setRange} series={series} />
                 <div className="w-72">
                   <SearchInput
                     value={query}
@@ -364,7 +385,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
           {showFilters && (
             <div className="flex items-center gap-2 border-t border-[var(--border)] px-4 py-2 lg:hidden">
-              <TimeRangePills range={range} onRangeChange={setRange} />
+              <TimeRangePills range={range} onRangeChange={setRange} series={series} />
               <div className="ml-auto w-full max-w-[220px]">
                 <SearchInput
                   value={query}
@@ -391,7 +412,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
           <div className="mx-auto w-full max-w-[1400px]">
             {section === "walks" && (
               <WalksView
-                range={range}
+                rangeLabel={currentRangeLabel}
                 totals={walkTotals}
                 feeTotal={walkFeeCount * WALK_FEE_PER_CATEGORY}
                 pitchers={walkPitchers}
@@ -405,7 +426,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
 
             {section === "strikeouts" && (
               <StrikeoutsView
-                range={range}
+                rangeLabel={currentRangeLabel}
                 totals={kTotals}
                 bonusTotal={
                   kTotals.threePitch * THREE_PITCH_K_BONUS +
@@ -443,7 +464,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
                 range={range}
                 filteredWalks={filteredWalks}
                 filteredK={filteredK}
-                rangeLabel={RANGE_LABELS[range]}
+                rangeLabel={currentRangeLabel}
               />
             )}
 
@@ -464,7 +485,7 @@ export function Dashboard({ state }: { state: SeasonState }) {
 }
 
 function WalksView({
-  range,
+  rangeLabel,
   totals,
   feeTotal,
   pitchers,
@@ -474,7 +495,7 @@ function WalksView({
   query,
   onSelect,
 }: {
-  range: RangeKey;
+  rangeLabel: string;
   totals: { total: number; fourPitch: number; ohTwo: number; leadoff: number; twoOut: number };
   feeTotal: number;
   pitchers: ReturnType<typeof aggregatePitchersFromWalks>;
@@ -489,7 +510,7 @@ function WalksView({
       <HeroBar
         accent="red"
         eventLabel="walks"
-        rangeLabel={RANGE_LABELS[range]}
+        rangeLabel={rangeLabel}
         total={totals.total}
         totalSub={undefined}
         breakdown={[
@@ -528,7 +549,7 @@ function WalksView({
 }
 
 function StrikeoutsView({
-  range,
+  rangeLabel,
   totals,
   bonusTotal,
   pitchers,
@@ -538,7 +559,7 @@ function StrikeoutsView({
   query,
   onSelect,
 }: {
-  range: RangeKey;
+  rangeLabel: string;
   totals: { total: number; threePitch: number; side: number };
   bonusTotal: number;
   pitchers: ReturnType<typeof aggregatePitchersFromStrikeouts>;
@@ -553,7 +574,7 @@ function StrikeoutsView({
       <HeroBar
         accent="emerald"
         eventLabel="strikeouts"
-        rangeLabel={RANGE_LABELS[range]}
+        rangeLabel={rangeLabel}
         total={totals.total}
         totalSub={undefined}
         breakdown={[

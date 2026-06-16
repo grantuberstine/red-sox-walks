@@ -10,6 +10,8 @@ import type {
 import { headshotUrl } from "./achievements";
 
 export type RangeKey = "today" | "week" | "month" | "season";
+// A range can also be a specific series, encoded as `series:<first gamePk>`.
+export type RangeValue = RangeKey | `series:${number}`;
 export type WalkCategoryFilter = "all" | WalkType;
 export type StrikeoutCategoryFilter = "all" | StrikeoutType;
 
@@ -20,6 +22,79 @@ export const RANGE_LABELS: Record<RangeKey, string> = {
   season: "Season",
 };
 
+export type Series = {
+  id: number; // first gamePk of the series — stable, unique
+  opponent: string;
+  homeAway: "home" | "away";
+  startDate: string;
+  endDate: string;
+  gameCount: number;
+};
+
+// Group games into series: consecutive games (by date) vs the same opponent at
+// the same venue. Returned in chronological order.
+export function computeSeries(games: GameSummary[]): Series[] {
+  const sorted = [...games].sort((a, b) =>
+    a.date < b.date ? -1 : a.date > b.date ? 1 : a.gamePk - b.gamePk,
+  );
+  const out: Series[] = [];
+  for (const g of sorted) {
+    const last = out[out.length - 1];
+    if (last && last.opponent === g.opponent && last.homeAway === g.homeAway) {
+      last.endDate = g.date;
+      last.gameCount += 1;
+    } else {
+      out.push({
+        id: g.gamePk,
+        opponent: g.opponent,
+        homeAway: g.homeAway,
+        startDate: g.date,
+        endDate: g.date,
+        gameCount: 1,
+      });
+    }
+  }
+  return out;
+}
+
+export function parseSeriesId(range: RangeValue): number | null {
+  if (range.startsWith("series:")) {
+    const n = Number(range.slice(7));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  return null;
+}
+
+function fmtShortDate(iso: string): string {
+  const d = new Date(iso + "T12:00:00Z");
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "America/New_York",
+  });
+}
+
+export function seriesTitle(s: Series): string {
+  return `${s.homeAway === "home" ? "vs" : "@"} ${s.opponent}`;
+}
+
+export function seriesDateLabel(s: Series): string {
+  return s.startDate === s.endDate
+    ? fmtShortDate(s.startDate)
+    : `${fmtShortDate(s.startDate)} – ${fmtShortDate(s.endDate)}`;
+}
+
+// Human label for a range, used by hero bars and the range pill.
+export function rangeLabel(range: RangeValue, games: GameSummary[]): string {
+  const seriesId = parseSeriesId(range);
+  if (seriesId !== null) {
+    const s = computeSeries(games).find((x) => x.id === seriesId);
+    if (s) return `${seriesTitle(s)} · ${seriesDateLabel(s)}`;
+    return RANGE_LABELS.season;
+  }
+  return RANGE_LABELS[range as RangeKey];
+}
+
 function addDays(yyyymmdd: string, days: number): string {
   const d = new Date(yyyymmdd + "T12:00:00Z");
   d.setUTCDate(d.getUTCDate() + days);
@@ -27,9 +102,17 @@ function addDays(yyyymmdd: string, days: number): string {
 }
 
 export function rangeBounds(
-  range: RangeKey,
-  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
+  range: RangeValue,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta" | "games">,
 ): { start: string | null; end: string | null } {
+  const seriesId = parseSeriesId(range);
+  if (seriesId !== null) {
+    const s = computeSeries(state.games).find((x) => x.id === seriesId);
+    // Series games are a contiguous date block, so [start, end] isolates them.
+    if (s) return { start: s.startDate, end: s.endDate };
+    return { start: null, end: null }; // unknown series → fall back to season
+  }
+
   const latest =
     state.meta.lastGameDate ??
     state.walks[0]?.date ??
@@ -55,8 +138,8 @@ export function rangeBounds(
 
 export function filterWalks(
   walks: WalkRecord[],
-  range: RangeKey,
-  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
+  range: RangeValue,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta" | "games">,
   query = "",
   category: WalkCategoryFilter = "all",
   hiddenIds: Set<number> = new Set(),
@@ -81,8 +164,8 @@ export function filterWalks(
 
 export function filterStrikeouts(
   strikeouts: StrikeoutRecord[],
-  range: RangeKey,
-  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
+  range: RangeValue,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta" | "games">,
   query = "",
   category: StrikeoutCategoryFilter = "all",
   hiddenIds: Set<number> = new Set(),
@@ -107,8 +190,8 @@ export function filterStrikeouts(
 
 export function filterGames(
   games: GameSummary[],
-  range: RangeKey,
-  state: Pick<SeasonState, "walks" | "strikeouts" | "meta">,
+  range: RangeValue,
+  state: Pick<SeasonState, "walks" | "strikeouts" | "meta" | "games">,
 ): GameSummary[] {
   const { start, end } = rangeBounds(range, state);
   return games.filter((g) => {
