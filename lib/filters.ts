@@ -36,13 +36,17 @@ export function rangeBounds(
     state.strikeouts[0]?.date ??
     new Date().toISOString().slice(0, 10);
 
+  // "Last game" anchors to the most recent game (so off-days don't show empty).
+  // "Last 7/30 days" are calendar-relative to today, matching their labels.
+  const today = new Date().toISOString().slice(0, 10);
+
   switch (range) {
     case "today":
       return { start: latest, end: latest };
     case "week":
-      return { start: addDays(latest, -6), end: latest };
+      return { start: addDays(today, -6), end: today };
     case "month":
-      return { start: addDays(latest, -29), end: latest };
+      return { start: addDays(today, -29), end: today };
     case "season":
     default:
       return { start: null, end: null };
